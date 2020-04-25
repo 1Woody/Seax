@@ -1,0 +1,68 @@
+Sun Mar 29 17:18:56 2020 OpenVPN 2.4.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] built on Feb 20 2019
+Sun Mar 29 17:18:56 2020 library versions: OpenSSL 1.1.1d  10 Sep 2019, LZO 2.10
+Sun Mar 29 17:18:56 2020 NOTE: your local LAN uses the extremely common subnet address 192.168.0.x or 192.168.1.x.  Be aware that this might create routing conflicts if you connect to the VPN server from public locations such as internet cafes that use the same subnet.
+Sun Mar 29 17:18:56 2020 Diffie-Hellman initialized with 2048 bit key
+Sun Mar 29 17:18:56 2020 Outgoing Control Channel Authentication: Using 160 bit message hash 'SHA1' for HMAC authentication
+Sun Mar 29 17:18:56 2020 Incoming Control Channel Authentication: Using 160 bit message hash 'SHA1' for HMAC authentication
+Sun Mar 29 17:18:56 2020 ROUTE_GATEWAY 192.168.1.1/255.255.255.0 IFACE=enp0s8 HWADDR=08:00:27:35:4f:36
+Sun Mar 29 17:18:56 2020 TUN/TAP device tun0 opened
+Sun Mar 29 17:18:56 2020 TUN/TAP TX queue length set to 100
+Sun Mar 29 17:18:56 2020 /sbin/ip link set dev tun0 up mtu 1500
+Sun Mar 29 17:18:56 2020 /sbin/ip addr add dev tun0 local 10.10.10.1 peer 10.10.10.2
+Sun Mar 29 17:18:56 2020 /sbin/ip route add 10.10.10.0/24 via 10.10.10.2
+Sun Mar 29 17:18:56 2020 Could not determine IPv4/IPv6 protocol. Using AF_INET
+Sun Mar 29 17:18:56 2020 Socket Buffers: R=[212992->212992] S=[212992->212992]
+Sun Mar 29 17:18:56 2020 UDPv4 link local (bound): [AF_INET][undef]:1194
+Sun Mar 29 17:18:56 2020 UDPv4 link remote: [AF_UNSPEC]
+Sun Mar 29 17:18:56 2020 GID set to nogroup
+Sun Mar 29 17:18:56 2020 UID set to nobody
+Sun Mar 29 17:18:56 2020 MULTI: multi_init called, r=256 v=256
+Sun Mar 29 17:18:56 2020 IFCONFIG POOL: base=10.10.10.4 size=62, ipv6=0
+Sun Mar 29 17:18:56 2020 Initialization Sequence Completed
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 TLS: Initial packet from [AF_INET]192.168.1.113:35040, sid=49978fab e73d3caf
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 VERIFY OK: depth=1, CN=seax
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 VERIFY OK: depth=0, CN=seax_client
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_VER=2.4.7
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_PLAT=linux
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_PROTO=2
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_NCP=2
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_LZ4=1
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_LZ4v2=1
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_LZO=1
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_COMP_STUB=1
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_COMP_STUBv2=1
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 peer info: IV_TCPNL=1
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 Control Channel: TLSv1.3, cipher TLSv1.3 TLS_AES_256_GCM_SHA384, 2048 bit RSA
+Sun Mar 29 17:18:59 2020 192.168.1.113:35040 [seax_client] Peer Connection Initiated with [AF_INET]192.168.1.113:35040
+Sun Mar 29 17:18:59 2020 seax_client/192.168.1.113:35040 MULTI_sva: pool returned IPv4=10.10.10.6, IPv6=(Not enabled)
+Sun Mar 29 17:18:59 2020 seax_client/192.168.1.113:35040 MULTI: Learn: 10.10.10.6 -> seax_client/192.168.1.113:35040
+Sun Mar 29 17:18:59 2020 seax_client/192.168.1.113:35040 MULTI: primary virtual IP for seax_client/192.168.1.113:35040: 10.10.10.6
+Sun Mar 29 17:19:00 2020 seax_client/192.168.1.113:35040 PUSH: Received control message: 'PUSH_REQUEST'
+Sun Mar 29 17:19:00 2020 seax_client/192.168.1.113:35040 SENT CONTROL [seax_client]: 'PUSH_REPLY,redirect-gateway def1 bypass-dhcp,dhcp-option DNS 208.67.222.222,dhcp-option DNS 208.67.220.220,route 10.10.10.1,topology net30,ping 10,ping-restart 120,ifconfig 10.10.10.6 10.10.10.5,peer-id 0,cipher AES-256-GCM' (status=1)
+Sun Mar 29 17:19:00 2020 seax_client/192.168.1.113:35040 Data Channel: using negotiated cipher 'AES-256-GCM'
+Sun Mar 29 17:19:00 2020 seax_client/192.168.1.113:35040 Outgoing Data Channel: Cipher 'AES-256-GCM' initialized with 256 bit key
+Sun Mar 29 17:19:00 2020 seax_client/192.168.1.113:35040 Incoming Data Channel: Cipher 'AES-256-GCM' initialized with 256 bit key
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 TLS: Initial packet from [AF_INET]192.168.1.113:37453, sid=2b5321a8 c34bf755
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 VERIFY OK: depth=1, CN=seax
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 VERIFY OK: depth=0, CN=seax_client
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_VER=2.4.7
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_PLAT=linux
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_PROTO=2
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_NCP=2
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_LZ4=1
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_LZ4v2=1
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_LZO=1
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_COMP_STUB=1
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_COMP_STUBv2=1
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 peer info: IV_TCPNL=1
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 Control Channel: TLSv1.3, cipher TLSv1.3 TLS_AES_256_GCM_SHA384, 2048 bit RSA
+Sun Mar 29 17:19:00 2020 192.168.1.113:37453 [seax_client] Peer Connection Initiated with [AF_INET]192.168.1.113:37453
+Sun Mar 29 17:19:00 2020 MULTI: new connection by client 'seax_client' will cause previous active sessions by this client to be dropped.  Remember to use the --duplicate-cn option if you want multiple clients using the same certificate or username to concurrently connect.
+Sun Mar 29 17:19:00 2020 MULTI_sva: pool returned IPv4=10.10.10.6, IPv6=(Not enabled)
+Sun Mar 29 17:19:00 2020 MULTI: Learn: 10.10.10.6 -> seax_client/192.168.1.113:37453
+Sun Mar 29 17:19:00 2020 MULTI: primary virtual IP for seax_client/192.168.1.113:37453: 10.10.10.6
+Sun Mar 29 17:19:02 2020 seax_client/192.168.1.113:37453 PUSH: Received control message: 'PUSH_REQUEST'
+Sun Mar 29 17:19:02 2020 seax_client/192.168.1.113:37453 SENT CONTROL [seax_client]: 'PUSH_REPLY,redirect-gateway def1 bypass-dhcp,dhcp-option DNS 208.67.222.222,dhcp-option DNS 208.67.220.220,route 10.10.10.1,topology net30,ping 10,ping-restart 120,ifconfig 10.10.10.6 10.10.10.5,peer-id 1,cipher AES-256-GCM' (status=1)
+Sun Mar 29 17:19:02 2020 seax_client/192.168.1.113:37453 Data Channel: using negotiated cipher 'AES-256-GCM'
+Sun Mar 29 17:19:02 2020 seax_client/192.168.1.113:37453 Outgoing Data Channel: Cipher 'AES-256-GCM' initialized with 256 bit key
+Sun Mar 29 17:19:02 2020 seax_client/192.168.1.113:37453 Incoming Data Channel: Cipher 'AES-256-GCM' initialized with 256 bit key

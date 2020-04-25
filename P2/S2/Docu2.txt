@@ -1,0 +1,384 @@
+Creat per: Daniel Benavente i David Martos
+Sessió 2 - Accés al servidor mitjançant SAMBA
+---------------------------------------------
+
+Es dona per suposat que el servidor consta de una ip estàtica, per tal de configurar una ip estàtica, seguirem les passes de la documentació del primer apartat. 
+
+En el nostre cas no utilitzarem cap tallafocs a nivell de sistema operatiu, a ja que les nostres màquines estan en una xarxa nat que es la que s'encarega tant de obrir i tancar ports com del redireccionament dels
+mateixos encas que fos necessari. Degut a això no realitzarem cap canvia a las IPTables.
+
+Com sempre recordem que necessitem fer tots els pasos amb l'usuari root, degut a les comandes d'instalació i configuració que trobem. 
+
+INSTAL·LACIÓ I CONFIGURACIÓ D'UN SERVIDOR SAMBA
+
+Primer de tot instal·larem el servidor amb la comanda : "# apt install samba", durant la instal·lació ens preguntarà si volem configurar el samba per dhcp responem que no, ja que el nostre servidor esta 
+configurat utilitzant una ip estàtica.
+
+Després d'instal·lar el servidor obrirem l'arxiu de configuració amb la comanda "# nano /etc/samba/smb.conf" i modificarem el següent:
+
+	1) A la secció [global] verifiquem: "workgroup = WORKGROUP"
+
+	2) A la secció [homes] verifiquem : "read only = no"
+
+	3) Buscarem la secció [print$] i la subsitituirem per [HOME] (utilitzem la base de print$, ja que normalment s'utilitza per les i mpresores i nosltres no ho farem servir) i canviarem els següents apartats:
+			comment = XXXXXXXXX  ---> On XXXXXXXXX sera una descripció del directori que compartirem.
+			read only = no  ---> No limitarem el mode a només lectura.
+			path = /home/%u ---> Colocarem el path a la carpeta dels nostres directoris home dels nostres usuaris.
+			guest ok = no ----> Col·locarem en no per no permetre que el nostre principal convidat es connecti.
+			writable = yes ----> Donarem permís per a que els clients que es conectin tinguin accés d'escritura.
+			create mask = 0700 --> Donarem permisos totals als arxius només a l'usuari al qual pertany el arxiu.
+			directori mask 0700 -> Donarem permisos totals al directori només a l'usuari al quel pertany el directori.
+
+	4) Utilitzarem la comanda chmod per canviar els permisos de el diretori home del usuari per a que només pugui accedir-hi el mateix usuari: "# chmod -R 700 /home/entel".
+	
+	5) Com no utilitzarem el servei d'impresió col·locarem un punt i coma ";" davant de totes les línies de la secció "[printers]"
+	
+	6) Afegirem els usuaris que volguem que tinguin accés al directori "Samba" al grup sambashare amb la comanda: "# adduser usuari grup", en el nostre cas per l'usuari entel la comanda seria "# adduser entel sambashare"
+		Podem confirmar que d'han afegit els usuaris utilitzant la comanda "# vigr" i cerciorar-nos que en el grup sambausers estan els usuaris afegits (afegirem el arxiu /etc/groups que es el que emmagarzema la informació
+		dels grups d'usuaris del sistema anomenat "group.txt").
+	
+	7) Crearem una nova secció anomenada [SAMBA] que contindrà la configuració de la nostra carpeta Samba:
+			comment = XXXXXXXXX  ---> On XXXXXXXXX sera una descripció del directori que compartirem.
+			read only = no  ---> No limitarem el mode a només lectura.
+			path = /Samba ---> Colocarem el path a la carpeta dels nostres directoris home dels nostres usuaris.
+			guest ok = no ----> Col·locarem en no per no permetre que el nostre principal convidat es connecti.
+			writable = yes ----> Donarem permís per a que els clients que es conectin tinguin accés d'escritura.
+			create mask = 0770 --> Donarem permisos totals als arxius només a l'usuari al qual pertany el arxiu.
+			directori mask 0770 -> Donarem permisos totals al directori només a l'usuari al quel pertany el directori.
+			force group = sambashare -> Obligarem a que els arxius i directoris pertanyin al grup sambashare.
+	
+	8) Crearem el nostre directori "samba" i modificarem el grup al que pertany el directori:
+		a) # mkdir /Samba --> Ens genera un nou directori.
+		b) # chown root:sambashare /Samba --> Ara el directori /Samba pertany al usuari root i al grup sambashare.
+		c) # chmod 770 /Samba --> El directori te permisos totals tant per al usuari root com per als usuaris de sambashare.
+
+Adjuntem el nostre smb.conf on es poden veure aquests canvis realitzats.
+Un cop hem editat el fitxer de configuració, afegirem el nostre usuari entel al servidor samba amb la comanda: "# smbpasswd -a entel", introduirem la contrasenya que volguem donar-li, en el nostre cas,
+hem assignat la mateixa que te l'usuari es a dir "letne".
+Acabada la configuració, només resta reiniciar el servei amb la comanda "# service smbd restart" i ja tindrem el nostre servidor llest per conectar-nos.
+
+CLIENT
+
+Tenim 3 maneres de conectarnos al servidor de samba, utilitzant un client samba, montant el directori amb la comanda mount de manera temporal i utilitzant el arxiu fstab.
+
+Conexió simple utilitzant el client de samba:
+
+	1) Primer de tot hem d'instal·lar el nostre client samba per tal d'accedir al servidor, ho farem amb la comanda : "# apt install smbclient".
+	
+	2) Un cop tenim el software instal·lat, hem de llistar els directoris que tenim disponibles en el servidor de samba, això ho podem fer amb la comanda : "# smbclient -L ip-servidor -U entel", en el nostre cas,
+	  ja que la ip del nostre servidor es "10.0.2.15" i l'usuari es "entel" la comanda quedaria aixi --> "# smbclient -L 10.0.2.15 -N". Un cop tenim	el llistat dels directoris disponibles hem de buscar el directori
+		"HOME" i el directori "samba", que seran els directoris als quals ens conectarem utilitzant el mateix usuari "entel".
+
+	3) Quan tenim els noms del directoris samba, l'usuari amb el qual ens volem connectar i la direcció IP del servidor ens conectarem fen servir la seguent comanda : "smbclient //ip-servidor/directori -U usuari", que 
+		utilitzant les notres dades: "smbclient //10.0.2.15/HOME -U entel" (per el directori home) i "smbclient //10.0.2.15/Samba -U entel" pel directori samba. En cas del directori samba, hem donat per fet que serà un
+		directori compartit entre diversos usuaris i per tal de que no hi hagi problemes hem limitat el directori a només lectura, sera l'usuari root, l'unic amb capacitat de escriure arxius en el directori.
+	
+	4) Després de contectar-nos, podrem fer servir les següents comandes per mourens, pujar i descarregar arxius del servidor:
+		get --> Descarrega un arxiu del servidor.
+		set --> Puja un arxiu al servidor.
+		rm --> Esborra un arxiu del servidor.
+		cd --> Cambia directori del servidor.
+		ls --> Llista directori del servidor.
+		? --> Ens mostra totes les comandes disponibles.
+
+	5) Per acabar utilitzarem la comanda "q" per sortir del servidor.
+
+IMPORTANT!!!
+A partir d'aqui necessitarem aquests dos paquets "cifs-utils nfs-common", que els instal·larem utilitzant la comanda: "# apt install cifs-utils nfs-common".
+També necessitarem crear un grup "sambashare": "# addgroup sambashare". També cal afegir els usuaris que vulguin tenir accés al direcotri samba al grup sambashare, en el nostre cas entel i root(tot i que root no caldria, 
+ho fem a mode d'exemple: "# adduser entel sambashare && adduser root sambashare"
+
+Conexió utilitzant la comanda mount:
+
+	1) Crearem el directori sobre el qual volem montar el servei samba: "# mkdir /HomeSamba && mkdir /Samba" --> El primer directori es on montarem la carpeta home del nostre usuari i la segona on montarem la carpeta "samba".
+
+	2) Usarem la següent comanda per montar un directori samba: "# mount -t cifs //XX.XX.XX.XX/Directori_samba /Directori_local -o rw,username=usuari,password=contrassenya,file_mode=0000,dir_mode=0000,uid=usuari_local,gid=grup_local",
+ 	les opcions de la comanda mount son les següents:
+	 	a) rw --> Mode lectura/escriptura.
+		b) username --> nom d'usuari samba.
+		c) password --> contrassenya del usuari samba.
+		d) file_mode --> Permisos dels arxius del directori montat.
+		e) dir_mode --> Permisos dels directori i subdirectoris del directori montat.
+		f) uid --> Usuari local al qual pertanyerà el directori.
+		g) gid --> Grup d'usuaris local al qual pertanyerà el directori.
+	
+	3) En el cas del directori HOME del usuari entel, la comanda quedaria així: "# mount -t cifs //10.0.2.15/HOME -o username=entel,password=letne,file_mode=0700,dir_mode=0700,uid=entel,gid=entel". Els permisos en aquest cas,
+		seran 0700 degut a que només volem que pugui accedir-hi el usuari entel, també per aquesta raó només entel te el ownership del directori.
+
+	4) En el cas del directori SAMBA la comanda quedaria així: "# mount -t cifs //10.0.2.15/SAMBA -o username=entel,password=letne,file_mode=0770,dir_mode=0770,uid=root,gid=sambashare". En aquest cas te més sentit que
+		els permisos siguin 0770, ja que al ser una carpeta compartida entre diversos usuaris, ens interessa que totls el usuaris del grup sambashare puguim llegir, escriure i executar.
+
+	5) Per desmontar el directori usarem la comanda "umount", la sintaxi es aquesta: "# umount /Directori_local", on el Directori_local es el directori on hemo montat el servei samba previament.
+
+Conexió utilitzant el arxiu fstab:
+
+	1) Per montar el nostre servei samba al iniciar el nostre client, ho farem afegint dues línies al arxiu fstab, que es l'encarregat de montar totes les particions del sistema, una línia per cada directori a monta (home i samba).
+	
+	2) Per tal d'afegir les dues línies farem servir aquestes dues comandes, MOLT IMPORTANT AFEGIR EL REDIRECCIONAMENT DOBLE ">>" JA QUE PODRIEM PERDRE TOT EL ARXIU DE FSTAB:
+			# echo "//10.0.2.15/HOME	cifs	credentials=/home/entel/.samba.cred,file_mode=0700,dir_mode=0700,uid=entel,gid=entel" >> /etc/fstab
+			# echo "//10.0.2.15/SAMBA	cifs	credentials=/home/entel/.samba.cred,file_mode=0770,dir_mode=0770,uid=root,gid=sambashare" >> /etc/fstab
+	
+	3) Amb aquestes comandes afegirem les dues entrades al final del documetn fstab, d'aquesta manera ens asegurem de no modificar cap paràmetre que no s'ha de tocar.
+
+Com verificar el funcionament:
+
+Per tal de verificar el funcionament del servidor, la opció més senzilla i simple es copiar, crear, esborrar arxius i directoris desde el client al servidor samba i cerciorar-nos que els canvis s'han realitzat correctament,
+comprovant-ho de manera local en el servidor.
+
+
+
+2. INSTALACIÓ I CONFIGURACIÓ BACKUPS
+
+RSYNC 
+Com sempre recordem que necessitem fer aquests pasos amb l'usuari root, degut a les comandes d'instalació i configuració que trobem. 
+
+Per a fer backups dels nostres fitxers utilitzant l'eina rsync, primer de tot hem d'instal·lar-la amb la comanda: 
+
+# apt install rsync
+
+També ens assegurarem que tinguem funcionant el servei ssh amb la comanda: 
+
+# systemctl status sshd.service
+
+Ens hauria d'apareixer informació i al camp "Active:" les paraules "active(running)", si no es troba actiu podem reinicar-ho amb la
+comanda (# systemctl start sshd.service) o si hi ha algun problema ho podem reinicar amb (# systemctl restart sshd.service)
+
+Ara que ja ho tenim instal·lat podem començar a fer els backups dels nostres fitxers, rsync es una eina potent que ens permet fer diferents 
+tipus de backups dels fitxer, ara definirem com fer backups a una maquina externa, pero també trobem altres de més complexos com les copies 
+incrementals o les copies incrementals inverses. 
+
+Aquestes últimes les trobarem al següent tipus de backup, el borgbackup. Volem aclarir que no hem definit com fer backups locals amb rsync ja que 
+degut al plantejament de maquines amb l'espai tan reduït no sembla molt útil explicar-ho, a més si ho definirem a les borgbackup ja que ens semblen 
+més funcionals de cara a fer-les de manera local en una màquina amb poc espai.
+
+BACKUP RSYNC EXTERN  
+
+Per a fer un backup dels nostres fitxers ara necessitarem dues maquines (), al nostre cas hem fet un clone de la maquina actual i l'hem ficada a la mateixa xarxa NAT. 
+IMPORTANT: Si utilitzeu un clon recordeu no mantenir la mateixa MAC, degut a que tindria col·lisió a la xarxa. 
+
+En aquesta maquina nova (o en la que vulgueu der el backup) mirarem com hem vist abans, que la maquina a la qui volem pasar les dades te actiu el servei ssh. 
+Ara revisarem el fitxer "/etc/ssh/sshd_config" que estiguin aquests dos parametres: (Si els trobem comentats els descomentarem)
+editar: # nano /etc/ssh/sshd_config
+	- Cercarem "PermitRootLogin" i ho posarem a yes. (PermitRootLogin yes)
+	- Cercarem també "PasswordAuthentication" i ho posarem a yes. (PasswordAuthentication yes)
+	- Finalment "PermitTTY" ho posarem també a yes (pel cas de voler connectar-se per terminal tty).
+En cas de que no els trobem al fitxer de config, els escriurem nosaltres i una vegada tot fet guardarem i sortirem.
+Seguidament farem un restart del serveis ssh amb la comanda --> # systemctl restart sshd.service
+Finalment crearem un directori per guardar els backups (aquest es opcional, però ho crearem per millorar l'organització), al nostre cas ho farem a: 
+"/backup/backup-rsync/" executant:
+# mkdir /backup
+# mkdir /backup/backup-rsync
+
+Comentari: Com a exemple farem el backup del home de l'usuari root, pero aquest procés es el mateix per qualsevol directori (per exemple podriem fer-ho de tot el sistema
+o sobre els fitxers de nostra carpeta pública de samba).
+Ara anirem a la nostra maquina principal (de la que volem fer el backup) i farem la seguent instrucció: 
+
+# rsync -avz –-delete -e ssh /root root@10.0.2.4:/backup/backup-rsync/
+
+Explicació:
+# rsync -avz –-delete -e ssh "directori que volem copiar" root@ip_maquina_backup:"directori on ho volem guardar"
+On -avz son:
+-a: còpia de forma recursiva mantenint permisos, privilegis, data de creació, etc.
+-v: visualitzar detalladament toda l’operació
+-z: comprimeix les dades
+--delete: eliminarà els fitxer que no es trobin ja dintre del directori (comparats amb els de backup)
+-e: connexió en forma segura ssh
+
+Amb això ja hauriem fet una copia completa del nostre /root a la maquina de backups. Es important destacar que cada vegada que fem un backup d'aquesta manera
+el seu objectiu serà deixar-ho exactament igual, per tant si esborrem alguna cosa al nostre /root, quan fem la copia també s'esborrarà del backup (si volem 
+un registre de fixters necessitarem opcions com els backups incrementals), aquesta opció la podem treure eliminant de la instrucció el paràmetre --delete. 
+
+BACKUP AMB BORGBACKUP
+Recordem estar a l'usuari root durant el procés.
+Els backups amb borg son una bona eina per fer copies dels fitxers ja que ens permet facilment crear backups incrementals de les nostres dades, guardant tota 
+la informació dels nostres fitxer al primer backup guardant només els elements nous cada vegada que és fa un altre, per aquesta raó ens podem permetre fer
+backups local tot i tenim una maquina amb poc espai. Per fer servir borgbackup seguirmen aquest procés:
+
+Primer de tot, si no hem utilitzat mai borg l'haurem d'instal·lar amb la comanda: 
+
+# apt install borgbackup
+
+REPOSITORI LOCAL
+Suposarem que mai l'hem utilitzat i per tant, per començar necessitarem crear i inicialitzar un nou respositori: 
+
+1. Per inicialitzar un repositori es recomanable utilitzar una encriptació, tot i així podem decidir: 
+	- Respositori local, amb repokey encriptació de tipus BALKE2b (tipus que treballa més rapid que l'alternativa SHA-256): 
+	# borg init --encryption=repokey-blake2 /path/al/repo
+
+	- Respositori local, sense encriptació: 
+	# borg init --encryption=none /path/al/repo
+
+	Nosaltres escollirem l'opció amb encriptació i executarem: 
+
+	# borg init --encryption=repokey-blake2 /backup/backup-borg
+
+	Primer, ens demanarà que introduim una nova passphrase i que la repetim, nosaltres escriurem "seax"
+	Després ens dirà si volem un display de la passphrase que acabem d'introduir per verficar, el·lecció del usuari.
+
+	----- no hace falta -----
+	Ens surtirà un missatge "IMPORTANT" que haurem de llegir: el que ens diu es que necessitarem tant la key com la passphrase per 
+	accedir al repositori, per tant guardarem la key amb la comanda: 
+	----- fin no hace falta -----
+
+	Si volem agafar la key del repositori haurem, podem guardar-la amb la comanda:
+
+	# borg key export /backup/backup-borg /backup/repokey  (la key es guardarà a el·lecció de l'usuari)
+	Explicació: # borg key export /path/al/repo  /fitxer/on/el/volem/escriure
+
+2. Ara crearem el backup del nostre "/root" al repositori inicialitzat amb:
+
+	# borg create --stat --progress /backup/backup-borg::Dilluns-mati /root
+
+	Explicació: 
+	# borg create /path/al/repo::Nom_backup /path/al/directori/que/volem/fer/backup
+	--> Si volem més informació al crear el fitxer podem incloure (--stat i --progress)
+	Exemple: # borg create --stat --progress /path/al/repo::Nom_backup /path/al/directori/que/volem/fer/backup
+
+	Per fer un exemple de prova, podem incloure algun fitxer al root per després tornar a fer un backup i veure l'actualització al repo, 
+	recorda que és incremental (només guardarà els canvis amb el que ja està al repo, per tant serà molt més ràpid).
+
+	Amb la comanda: # borg list /path/al/repo --> podem llistar els backups que te guardats
+	Amb la comanda: # borg list /path/al/repo::Nom_backup --> podem veure el que hi ha dins d'un backup
+
+3. Finalment, si volem fer un restore del backup que tenim farem el següent:
+
+	- Primer, simularem que hem eliminat el "/root" amb -->  # mv /root /root.lost
+
+	- Ara extreurem el backup del repositori -->  # borg extract /backup/backup-borg::Dilluns_nit
+	(Recordeu escollir l'útlima opció, si volem les dades més actualitzades, en el nostre cas, com ho hem fet amb dies escollirem l'últim
+	dia guardat).
+
+	- Per acabar podem fer un diff per comparar que els dos directoris tenen el mateix --> # diff -r /root /root.lost
+	(Si ho fem amb el directori de root, trobarem alguna diferencia ja que guarda informació de configuració del borg, i els timestamps no 
+	seràn els mateixos degut a que hem entrat per extreure info)
+
+Per eliminar un backup utilitzarem la comanda:
+# brog delete path/al/repo::nom_backup
+
+REPOSITORI REMOT
+Si volem fer els backups de manera remota seguirem un procés semblant, però basant-nos en una connexió remota amb ssh: 
+
+1. Per inicialitzar un repositori de manera remota necessitarem com sempre dues maquines, nosaltres farem servir la mateixa que l'explicació 
+del RSYNC (podeu llegir-la per veure com l'hem configurada), per tant tenim en compte que es podrà accedir per ssh a l'usuari root. 
+També es important tenir instal·lat borg a les dues màquines, des de la maquina la cual volem fer el backup inicialitzarem el repositori:
+
+	# borg init --encryption=repokey-blake2 root@10.0.2.4:/backup/remote-borg
+	Explicació: # borg init  --encryption=tipus_d'encriptació usuari@ip_server:/path/al/repo
+
+	Primer, ens demanarà que introduim una nova passphrase i que la repetim, nosaltres escriurem "seax"
+	Després ens dirà si volem un display de la passphrase que acabem d'introduir per verficar, el·lecció del usuari.
+
+	Si volem agafar la key del repositori haurem, podem guardar-la amb la comanda:
+
+	# borg key export /backup/backup-borg /backup/repokey  (la key es guardarà a el·lecció de l'usuari)
+	Explicació: # borg key export /path/al/repo  /fitxer/on/el/volem/escriure
+
+2. Ara crearem el backup d'una carpeta que es troba al root "/root/data" al repositori inicialitzat amb:
+	# borg create --stat --progress root@10.0.2.4:/backup/remote-borg::backup1 /root/data
+
+	Explicació: 
+	# borg create usuari_remot@ip_server:/path/al/repo::Nom_backup /path/al/directori/que/volem/fer/backup
+	--> Si volem més informació al crear el fitxer podem incloure (--stat i --progress)
+	Exemple: # borg create --stat --progress /path/al/repo::Nom_backup /path/al/directori/que/volem/fer/backup
+
+	Per fer un exemple de prova, podem incloure algun fitxer al /root/data/ per després tornar a fer un backup i veure l'actualització al repo, 
+	recorda que és incremental (només guardarà els canvis amb el que ja està al repo, per tant serà molt més ràpid).
+
+	Amb la comanda: # borg list usuari@ip_maquina_remota:/path/al/repo --> podem llistar els backups que te guardats
+	Amb la comanda: # borg list usuari@ip_maquina_remota:/path/al/repo::Nom_backup --> podem veure el que hi ha dins d'un backup
+
+IMPORTANT: Sempre ens demanarà la oontraseña del usuari en questió (al nostre cas root) i la passphrase que hem posat en la inicialització.
+
+3. Finalment, si volem fer un restore del backup que tenim farem el següent:
+
+	- Primer, simularem que hem eliminat el directori "/root/data" amb -->  # mv /root/data /root/data.lost
+
+	- Ara extreurem el backup del repositori -->  borg extract --strip-components=1 root@10.0.2.4:/path/to/repo::backup1
+
+	Explicació: 
+	--strip-components=1 --> serveix per saltar-nos el path del root ja que sino ens copiara /root/data a la carpeta a la que ens trobem, 
+	si no volem utilitzar-ho haurem de fer un cd a la / o al directori des d'on comenci el directori del que hem fet backup. 
+	Exemple: 
+	- Executem la comanda a /root, al backup te /root/backup, per tant eliminem amb strip /root i així només ens copiara /data.  
+	(Recordeu escollir l'útlima opció, si volem les dades més actualitzades)
+
+	- Per acabar podem fer un diff per comparar que els dos directoris tenen el mateix --> # diff -r /root/data /root/data.lost
+
+Per eliminar un backup utilitzarem la comanda:
+# brog delete usuari_remot@ip_usuari_remot:/path/al/repo::nom_backup
+
+AUTOMATITZACIÓ 
+
+Per automatizar backups del nostres fitxer utulitzarem una eina anomenada cron, aquesta ens permet automatitzar comandes al nostre sistema 
+de manera periodica. Abans de tot i per millorar el sistema de backups automatitzats modificarem l'entrada a la maquina remota on volem fer 
+el backup per poder accedir amb una key en comptes de usuari i contrasenya (evitant així que ens la demani cada vegaga o fer un script més 
+complex), Per tant:
+	- Per seguir aquest procés podeu anar a la Sessió 1, a l'apartat de connexió per certificat digital on esta explicat com s'ha de modificar 
+	el client i el servidor(en aquest cas la maquina remota).
+	- Com volem fer remotes també ens assegurarem que la maquina remota tingui una IP estàtica, també ho pots mirar a la Sessió 1 a l'apartat 
+	de CONFIGURACIÓ SSH. 
+
+	- Asumint que ens podem connectar amb root de manera directa per via key, preparem la comanda que s'automatizarà al nostre sistema.
+		1. Obrim el fixter la taula de configuració de cron (en el nostre cas mentre estem al usuari root, doncs serà la d'aquest usuari) amb 
+		la comanda: # crontab -e (ens sortira amb quin editor ho volem editar, ho deixarem a el·lecció del usuari).
+
+		2. Cron funciona amb una sintaxi concreta basanda en 6 elements: minut de la hora, hora del dia, dia del mes, mes de l'any, dia de la
+		setmana i finalment la comanda. Si per exemple volem executar una comanda cada minut farem posarem la linia: * * * * * instrucció
+
+		Però nosaltres el que farem serà automatitzar-la per cada dia a les 9 de la nit, per tant utilitzarem la comanda següent:
+		
+		0 21 * * * instrucció  --> amb aixó cada dia al minut 0 de la hora 21 (és a dir, a les 21:00) s'executarà la comanda.
+		
+		3. Per la instrucció col·locarem la que previament haviem fet de manera manual amb els backups, tot junt quedaria així:
+		Exemple:
+		0 21 * * * rsync -az /root -e ssh root@10.0.2.4:/backup/backup-rsync/   
+		(la diferencia és que treiem el parametre de verbose ja que no veurem nosaltres el procés)
+
+Amb això ja tindriem tot el procés d'automatizació, com hem parlat en cadascún d'ells, són eines semblant però tenen punts importants. Rsync és
+una eina fàcil d'utilitzar per fer backups tot i que manca en l'aspecte de encriptació i és més complex quan ens volem ficar dintre  de backups 
+complexos com els incrementals, en canvi borg és una molt bona eina que ens permet encriptar les nostres dades i fer repositoris  amb seguretat, 
+a més d'aplicar el sistema incremental que ens permet guardar tot un registre d'actualitzacions i estalviar espai tot plegat. L'el·lecció d'una o
+d'altre dependrà de les necessitats de l'usuari.
+
+
+WEBGRAFIA
+
+Instal·lar i configurar servidor samba
+https://wiki.debian.org/SambaServerSimple
+
+IP TABLES
+https://www.redeszone.net/gnu-linux/iptables-configuracion-del-firewall-en-linux-con-iptables/
+
+Instalar i configurar un client Samba
+https://linux.die.net/man/8/mount.cifs
+https://www.cyberciti.biz/faq/linux-mount-cifs-windows-share/ 
+https://unix.stackexchange.com/questions/87494/can-fstab-options-uid-and-gid-be-the-user-group-name-or-must-they-be-numeric
+https://wiki.debian.org/SAMBAClientSetup
+https://superuser.com/questions/1180988/automount-cifs-shares-errors-at-the-start-of-system
+https://discourse.osmc.tv/t/solved-dependency-failed-for-remote-file-system/17768/2
+
+Configuració Rsync
+- Pràctica assignatura ADSO (sessió 5) 
+
+Configuració borgbackup
+https://borgbackup.readthedocs.io/en/stable/
+https://borgbackup.readthedocs.io/en/stable/usage/list.html
+https://borgbackup.readthedocs.io/en/stable/quickstart.html#a-step-by-step-example
+https://github.com/borgbackup/borg/issues/1102
+https://asciinema.org/a/133291
+https://borgbackup.readthedocs.io/en/stable/usage/init.html#borg-init
+
+Automatizació
+https://linux.die.net/man/5/crontab
+https://www.computerhope.com/unix/ucrontab.htm
+https://serverfault.com/questions/449651/why-is-my-crontab-not-working-and-how-can-i-troubleshoot-it
+
+
+
+
+
+
+
+
+
+

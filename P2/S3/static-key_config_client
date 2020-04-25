@@ -1,0 +1,3 @@
+dev tun0
+ifconfig 10.10.10.2 10.10.10.1
+secret /etc/openvpn/static.key  #Aqui introduirm el path de la key que acabem de crear, en el nostre cas, està en el directori home de root.

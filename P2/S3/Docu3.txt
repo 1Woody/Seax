@@ -1,0 +1,379 @@
+Creat per: Daniel Benavente i David Martos
+Sessió 3 - Implementar un servei de xarxa privada virtual (VPN)
+---------------------------------------------------------------
+
+1. ELECCIÓ VPN
+
+Nivell 2:
+		PPTP
+		- Es dels protocols més antics que trobem, però tot i ser fàcil de configurar, te grans punts negatius que ens ha fet no 
+		escollir-ho. Primer de tot, el fet de que Microsoft recomani utilitzar altres opcions com l2tp o IPsec ja ens diu que no es 
+		troba en la seva millor etapa, a més de diversos riscs a nivell de seguretat. A més, és un protocol fàcil de bloquejar ja que
+		no pot treballar sense el port 1723 i el GRE(General Routing Encapsulation).
+
+		L2TP
+		- Semblant a l'anterior protocol trobem a L2TP, aquest treballa normalment amb IPSec. Es basa en una doble encapsulació de les 
+		dades, que tot i així és una mica més ràpid que l'OpenVPN. Per contra, no és un protocol gens versatil, com PPTP, treballa amb 
+		una quantitat limitada de ports. Degut a aixó, és un protocol molt fàcil de bloquejar i ho hem descartat.
+
+Nivell 3:
+		IPsec
+		- IPsec, tot i ser un estandar a nivell d'VPNs, hem trobat que te una implementació bastant complexa. Altres drawbacks trobats
+		han sigut el fet de que no treballa bé amb els firewall de NAT i la propia recomanació de la wiki de debian per treballar amb
+		alternatives com OpenVPN.
+
+		OpenVPN
+		- El primer punt que veiem es que s'utilitza i es recomanat per la major part d'empreses que donen un servei VPN, entre els seus
+		beneficis trobem que és open source, té una molt bona implementació de seguretat, i és molt versatil a la vegada que configurable. 
+		Per aquestes raons hem decidit utilitzar-ho, tenin en compte sempre de fer una bona implementació a nivell de servei.
+
+
+2. CONFIGURACIÓ PREVIA 
+
+Previ a la instal·lació, configurarem les dues maquines perque es trobin en la mateixa Xarxa Nat i a més que cadascuna tingui una IP estàtica: 
+
+Per al servidor assignarem la --> address 10.0.2.4
+Per al client assignarem la --> address 10.0.2.5
+
+Si volem revisar com es configura podem revisar el primer punt de la Sessió 1, Instalació i configuració SSH.
+
+INSTALACIÓ I CONFIGURACIÓ SERVIDOR VPN
+
+Instalem el software vpn tant al client com al servidor amb la comanda:
+
+# apt install openvpn
+
+Un cop hem instal·lat openvpn en les dues màquines, farem una prova de conexió:
+
+	1) Al servidor executarem al comanda --> # openvpn --remote CLIENT_IP --dev tun1 --ifconfig 10.10.10.1 10.10.10.2 , que en nostre cas quedaria: 
+	
+		# openvpn --remote 10.0.2.5 --dev tun1 --ifconfig 10.10.10.1 10.10.10.2
+
+		Un cop el servidor ha creat la nova interficie de xarxa podrem visualitzar el missatge " TUN/TAP device tun1 opened ", ara revisarem si 
+		ha funcionat obrint una nova tty utilitzant (en cas que estem utilitzant virtualbox) "CtrDret + F2" i podrem observar que s'ha creat una nova
+		interficie de xarxa anomenada tun1 utilitzant la comanda --> # ip a
+
+	2) Al client executarem la comanda --> # openvpn --remote 10.0.2.4 --dev tun1 --ifconfig 10.10.10.2 10.10.10.1". 
+	Quan estem conectats amb el servidor veurem un missatge indicant-ho:
+			"Initialization Sequence Complete"
+	
+	Després de veure el missatge obrirem una nova tty utilitzant (en cas que estem utilitzant virtualbox) "CtrDret + F2" i podrem observar que s'ha 
+	creat una nova interficie de xarxa anomenada tun1 utilitzant la comanda --> # ip a
+
+	3) Finalment podem comprovar la conexió utilitzant la comanda ping entre client servidor.
+
+	Des del client farem --> # ping 10.10.10.2
+	Des del servidor farem --> # ping 10.10.10.1
+	 
+	Si funciona tot correctament hauriem de rebre resposta del dos, ja podem tornar a les tty's on es trobava activat l'VPN i tancar-lo. 
+	Reviseu la vostra ip i en el cas seguir tenint més d'una ip desactivarem la interficie corresponent, al nostre cas enp0s3 amb la comanda:
+	ifdown enp0s3 i la tornarem a activar amb: ifup enp0s3. Ara hauriem de tenir una sola ip (la que haguem configurat manualment).
+
+3. STATIC-KEY VPN
+
+Amb la conexió funcionat correctament, pasarem a crear una key estàtica per poder conectar-nos a traves d'aquesta:
+
+	1) Primer, anirem al directori "/etc/openvpn" i generarem la nostra key en el servidor utilitzant la comanda:
+	
+		# openvpn --genkey --secret static.key
+
+	2) Un cop generada la nostra clau, la copiarem al client al directori "/etc/openvpn" utilitzant scp, que per defecte tindrem hablitat al nostre client, 
+	utilitzant la següent comanda:
+		
+		# scp fixter_que_volem_copiar usuari@ip_user:/path/on/la/volem/copiar
+
+		Degut a que necessitem tenir accés al directori, podem fer-ho de dues maneres. 
+		
+		1) Activar en la configuració ssh l'entrada per usuari de root (Es pot veure a la sessió 1 Instalació i configuració ssh, apartat de connexió per usuari) 
+		Una vegada configurat ho podem copiar al directori a través de l'usuari root (amb contrasenya "toor"): 
+
+		# scp ./static.key root@10.0.2.5:/ect/openvpn
+
+		2) Si no volem activar el nostre usuari root per seguretat, li enviarem a l'usuari entel (contrasenya "letne"), per després agafarla i guardarla al directori 
+		corresponent("/etc/openvpn"):
+
+		# scp ./static.key entel@10.0.2.5:/home/entel
+
+		Una vegada al client, amb l'usuari root agafarem la key i la mourem al seu lloc: 
+		# mv /home/entel/static.key /etc/openvpn/
+
+	Amb això ja tindrem la key al nostre client.
+	
+	3) Al servidor crearem un nou fitxer de configuració al directori "/etc/openvpn" anomenat tun0.conf i inclourem el següent:
+	
+	Creació fitxer --> # nano /etc/openvpn/tun0.conf 
+	Dintre del fixter introduirem:
+	
+		dev tun0
+		ifconfig 10.10.10.1 10.10.10.2
+		secret /etc/openvpn/static.key
+	
+	4) Al client crearem un nou arxiu de configuració al directori "/etc/openvpn/" anomenat tun0.conf en el qual emmagetzegarem la configuració de la nova conexió vpn, 
+	l'arxiu quedaría d'aquesta manera:
+
+		dev tun0
+		ifconfig 10.10.10.2 10.10.10.1
+		secret /etc/openvpn/static.key  # Aqui introduirm el path de la key que acabem de crear, en el nostre cas, està en el directori home de root.
+
+
+	5) Una vegada finalitzats els dos fitxers de configuració, revisarem tenir obert al firewall del nostre servidor el port UDP 1194, en el nostre cas, com de moment
+	la nostra VPN no ha sortirà a l'exterior de la nostra xarxa NAT, no tindrem que configurar res, ja que per el moment no utilitzem cap tallafocs, no cal que 
+	canviem res del a configuració.
+
+IMPORTANT: Abans de començar i degut a que configurarem de nou el nostre servidor OpenVPN, hem d'eliminar les configuracions fetes anteriorment, 
+juntament amb les private keys: 
+CLIENT
+# rm /etc/openvpn/tun0.conf
+# rm /etc/openvpn/static.key
+
+SERVIDOR
+# rm /etc/openvpn/tun0.conf
+# rm /etc/openvpn/static.key
+
+
+4. CONFIGURACIÓ OPENVPN SERVER (SSL/TLS) --> [configuració feta amb l'usuari root]
+
+PREVI 
+
+Abans de començar i degut a que configurarem de nou el nostre servidor OpenVPN, hem d'eliminar les configuracions fetes anteriorment, 
+juntament amb les private keys: 
+CLIENT
+# rm /etc/openvpn/tun0.conf
+# rm /etc/openvpn/static.key
+
+SERVIDOR
+# rm /etc/openvpn/tun0.conf
+# rm /etc/openvpn/static.key
+
+I finalment per aquesta configuració canviarem les maquines a adaptador pont amb dues noves ip configurades que seràn: 
+(Hem escollit aquesta configuració de xarxa degut a que ens podria donar facilitats amb la configuració móvil de la vpn)
+
+Per al servidor assignarem la --> address 192.168.1.43
+Per al client assignarem la --> address 192.168.1.113
+
+En el nostre cas, hem configurat al servidor DHCP de casa, les dues maquines, però a nivell pràctic funcionen igual, per tant si no volem/poder configurar-les per 
+el propi DHCP, podem fer-ho a traves d'ip estàtica com s'ha vist a la Sessió 1. Amb això configurat podem començar: 
+
+
+
+Primer de tot, necessitarem activar l'IP forwarding per fer el forward del paquets de xarxa correctament, per això editarem el fixter "/etc/sysctl.conf" i cercarem 
+la instrucció "net.ipv4.ip_forward=1" (que segurament trobarem comentada). La descomentarem tant al client com al servidor, guardarem els canvis i actualitzarem amb:
+
+# sysctl -p
+
+Ara procedirem a instal·lar openvpn en el cas que no haguem seguit els passos anteriors amb:
+
+# apt install openvpn -y
+
+GENERACIÓ DEL CERTIFICAT I CLAU 
+[ MAQUINA SERVIDOR ] 
+
+Copiarem el directori EasyRSA que es troba en "/usr/share/easy-rsa" al d'opnenvpn "/etc/openvpn/" amb la instrucció:
+
+# cp -r /usr/share/easy-rsa /etc/openvpn/
+
+Ara canviarem el nom del fitxer que es troba a "/etc/openvpn/easy-rsa" de "vars.example" a "vars" amb --> # mv vars.example vars i entrarem a editar el fixter: 
+Al final d'aquest inclourem, amb les dades en funció de l'usuari: 
+
+export KEY_COUNTRY="SPAIN"
+export KEY_PROVINCE="BCN"
+export KEY_CITY="VILADECANS"
+export KEY_ORG="seax_upc"
+export KEY_EMAIL="admin@example.com"
+export KEY_OU="OpenVPN"
+
+Guardem i tanquem el fitxer, ara inicialitzarem la PKI utilitzant la següent comanda:
+
+# ./easyrsa init-pki 
+
+Trobarem una sortida semblant a aquesta: 
+init-pki complete; you may now create a CA or requests.
+Your newly created PKI dir is: /etc/openvpn/easy-rsa/pki
+
+Ara farem el build del CA sense contrasenya amb la comanda:
+
+# easyrsa build-ca nopass 
+Nota: Ens demanara un common name: Nosaltres col·locarem "seax"
+
+Seguirem amb la generació de la server key amb: 
+
+# ./easyrsa gen-req server nopass
+Nota: Ens demanara un common name: Nosaltres col·locarem "seax"
+
+Després signarem el certificat de servidor amb la comanda: 
+
+# ./easyrsa sign-req server server
+Nota: Ens demanara una confirmació del detalls: Direm que si
+
+Ara generarem el BUILD DIFFIE-HELLMAN PARAMETERS (necessaris per al servidor-end de una connexió SSL/TLS) amb:
+ 
+# ./easyrsa gen-dh
+
+Finalment, generarem una signatura HMAC() i copiarem tots els ceritifcats i claus al directori "/etc/openvpn"
+
+Generació HMAC: # openvpn --genkey --secret ta.key
+
+Copiem els fitxers:
+	cp ta.key /etc/openvpn/
+	cp pki/ca.crt /etc/openvpn/
+	cp pki/private/server.key /etc/openvpn/
+	cp pki/issued/server.crt /etc/openvpn/
+	cp pki/dh.pem /etc/openvpn/
+
+GENERACIÓ DEL CERTIFICAT I CLAU 
+
+Ara generarem al igual que hem fet amb els certificats els certificats i les keys del client:
+
+Primer generarem el client certificate i seguidament farem el sign d'aquest: 
+
+create --> # ./easyrsa gen-req client nopass
+Nota: Ens demanara un common name: Nosaltres col·locarem "seax_client"
+
+sign --> # ./easyrsa sign-req client client
+Nota: Ens demanara una confirmació del detalls: Direm que si
+
+Finalment farem com abans i copiarem tot al directori "/etc/openvpn"
+	cp pki/ca.crt /etc/openvpn/client/
+	cp pki/issued/client.crt /etc/openvpn/client/
+	cp pki/private/client.key /etc/openvpn/client/
+
+
+CONFIGURACIÓ DEL OPENVPN SERVER
+
+Una vegada que ja hem generat tot els certificat necessaris tant per al servidor com per al client, ara necessitarem crear el fitxer on configurarem l'openVPN: 
+
+Crearem un fixter "server.conf" dintre del directori "/etc/openvpn" i inclorem la informació següent: 
+
+# nano /etc/openvpn/server.conf´
+
+Copiarem aquest contingut:
+
+port 1194   # port de connexió
+proto udp	# protocl utilitzat
+dev tun		# tunel
+ca ca.crt	# Crtificate Authority
+cert server.crt	# Certificat
+key server.key  # Clau, ha de ser secreta
+dh dh.pem		# Diffie-Hellman
+server 10.10.10.0 255.255.255.0	# rang servidor
+push "redirect-gateway def1 bypass-dhcp" # opcions gateway
+push "dhcp-option DNS 208.67.222.222"	# opcions DNS principal
+push "dhcp-option DNS 208.67.220.220"	# opcions DNS secundaria
+keepalive 10 120	# temps de vida
+tls-auth ta.key 0 # autorització tls, fitxer secret
+cipher AES-256-CBC # xifrat
+user nobody	
+group nogroup 
+persist-key
+persist-tun
+status /var/log/openvpn/openvpn-status.log	#fitxers log
+log         /var/log/openvpn/openvpn.log	#fitxers log
+log-append  /var/log/openvpn/openvpn.log	#fitxers log
+verb 3 # verbose (info)
+explicit-exit-notify 1 # info exit
+
+Guardarem i encendrem el servidor openvpn amb la comand: 
+
+start --> systemctl start openvpn@server
+Revisarem el seu funcionament --> systemctl status openvpn@server
+
+[ MAQUINA CLIENT ] 
+
+Ara configurarem el nostre client perque pugui connectar-se al servidor OpenVPN.
+Anirem directament a crear i editar el fixter "client.conf" dintre del directori "/etc/openvpn" i inclorem la informació següent: 
+Nota: Molt semblant a la que trobavem al servidor.
+
+client
+dev tun
+proto udp
+remote 192.168.1.43 1194  #Aqui colocarem la ip del server
+resolv-retry infinite
+nobind
+user nobody
+group nogroup
+persist-key
+persist-tun
+ca ca.crt
+cert client.crt
+key client.key
+remote-cert-tls server
+tls-auth ta.key 1
+cipher AES-256-CBC
+verb 3
+
+Una vegada copiat guardarem i sortirem, després procedirem a copiar del servidor els certificats i claus que hem declarat al fixter de
+configuració amb les comandes:
+Nota: Com l'agafarem de root recordeu tenir activat l'entrada a root per usuari o per certificat (es pot revisar a la sessio 1)
+
+scp root@192.168.0.31:/etc/openvpn/client/ca.crt /etc/openvpn/
+scp root@192.168.0.31:/etc/openvpn/client/client.crt /etc/openvpn/
+scp root@192.168.0.31:/etc/openvpn/client/client.key /etc/openvpn/
+scp root@192.168.0.31:/etc/openvpn/ta.key /etc/openvpn/
+
+Amb tots el fitxers copiats correctament activarem el servei openVPN per al client:
+
+# systemctl start openvpn@client
+
+I hauriem de veure amb la instrucció --> (# ip a) la interface tun0 semblant a aquesta:
+
+3: tun0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN group default qlen 100
+    link/none 
+    inet 10.10.10.6 peer 10.10.10.5/32 scope global tun0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::4179:bcbf:5465:6d8a/64 scope link stable-privacy 
+       valid_lft forever preferred_lft forever
+
+Si anem al servidor, podem comprovar l'arxiu log per veure si funciona correctament amb la comanda:
+
+# tail -f /var/log/openvpn/openvpn.log
+
+Un exemple del que ens hauria de sortir ho podem veure al fitxer openvpn_server.log (adjuntat al projecte). 
+
+En el servidor hem de crear una NAT que s'encarregui de redirigir el tràfic entrant a internet, això ho farem realitzant la següen comanda d'IPTables:
+	
+	"# iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o enp0s8 -j MASQUERADE"
+
+Flags de la comanda:
+
+	-t --> Gener una nova taula en el nostre cas tipus nat.
+	-A --> Afegeix una nova regla a la taula.
+	-s --> Dona la ip de la xarxa.
+	-o --> Selecciona la interfaç de sortida.
+	-j --> Selecciona el targen de la taula en el nostre cas MASQUERADE (només vàlid en nat).
+
+CONFIGURACIÓ ANDROID
+No hem pogut documentar de manera detallada el procés, però hem executat les proves i adjuntat els arxius de configuració.
+Per a fer les proves amb un usuari móvil, hem exportat el fixter de configuració, aquest ho podem veure amb el nom de "perfil _android". 
+El fitxer l'importarem a l'app OPENVPN.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+WEBGRAFIA
+
+OpenVPN
+https://wiki.debian.org/OpenVPN
+https://openvpn.net/community-resources/
+https://openvpn.net/images/pdf/OpenVPN_Access_Server_Sysadmin_Guide_Rev.pdf
+https://openvpn.net/community-resources/how-to/#redirect
+https://serverfault.com/questions/851035/connected-to-openvpn-but-no-internet-connection/851092

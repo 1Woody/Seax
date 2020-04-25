@@ -1,0 +1,48 @@
+root@seax:~# ll -lah
+total 36K
+drwx------  6 root root 4.0K Mar 21 21:22 .
+drwxr-xr-x 19 root root 4.0K Mar 19 12:28 ..
+-rw-------  1 root root 3.1K Mar 19 22:27 .bash_history
+-rw-r--r--  1 root root  566 Feb 19 23:57 .bashrc
+drwx------  3 root root 4.0K Feb 19 19:01 gnupg
+drwx------  2 root root 4.0K Feb 20 00:43 john
+drwxr-xr-x  3 root root 4.0K Feb 19 19:09 local
+-rw-r--r--  1 root root  290 Feb 19 18:53 .profile
+drwx------  2 root root 4.0K Mar 19 12:29 ssh
+-rw-r--r--  1 root root    0 Mar 21 21:22 log.txt
+root@seax:~# sftp entel@10.0.2.15
+entel@10.0.2.15's password: 
+Connected to entel@10.0.2.15
+sftp> pwd
+Remote working directory: /
+sftp> cd ..
+sftp> ls
+entel root shared
+sftp> cd entel
+sftp> ls
+test.txt  
+sftp> get test.txt 
+Fetching /entel/test.txt to test.txt
+
+/entel/test.txt                                                    0%    0     0.0KB/s   --:-- ETA
+/entel/test.txt                                                  100%  104   179.0KB/s   00:00    
+sftp> cd ..
+sftp> cd shared
+sftp> ls
+test2.txt
+sftp> exit
+root@seax: ls
+log.txt  test.txt
+root@seax:~# ls -lah
+total 40K
+drwx------  6 root root 4.0K Mar 21 21:23 .
+drwxr-xr-x 19 root root 4.0K Mar 19 12:28 ..
+-rw-------  1 root root 3.1K Mar 19 22:27 .bash_history
+-rw-r--r--  1 root root  566 Feb 19 23:57 .bashrc
+drwx------  3 root root 4.0K Feb 19 19:01 gnupg
+drwx------  2 root root 4.0K Feb 20 00:43 john
+drwxr-xr-x  3 root root 4.0K Feb 19 19:09 local
+-rw-r--r--  1 root root  290 Feb 19 18:53 .profile
+drwx------  2 root root 4.0K Mar 19 12:29 ssh
+-rw-r--r--  1 root root    0 Mar 21 21:22 log.txt
+-rw-r--r--  1 root root  104 Mar 21 21:23 test.txt

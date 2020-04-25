@@ -1,0 +1,264 @@
+Creat per: Daniel Benavente i David Martos
+Sessió 1 - Accés al servidor mitjançant SSH i SFTP
+--------------------------------------------------
+
+1. INSTAL·LACIÓ I CONFIGURACIÓ SSH
+
+En aquesta configuració hem basat les maquines en una xarxa NAT, donat que tenim els beneficis d'una xarxa privada i la vegada no perdiem la opció de connectar-nos a internet per la 
+instal·lació posterior d'algun paquet o la connexió remota desde les nostres maquines personals. Un altre raó és el fet que no quedem exposats a la xarxa com pasaria amb un adaptador pont, però 
+tampoc quedem tan restringits (sense internet) com el cas de la xarxa interna.
+
+Primer de tot necessitem posar l'adaptador de xarxa de virtualbox en mode NAT, ja que necessitem connexió a internet per tal d'instal·lar els paquetes necessaris i actualitzar 
+el sistema. Per fer això entrarem a les propietats de la maquina virtual, en l'apartat de xarxa, i sel·leccionarem en el tipus d'adaptador de xarxa --> NAT. Un cop hem fet això,
+revisarem que les adrecess MAC siguin diferents en les nostre màquines virtuals, en cas que coincideixin clicarem al botó de MAC aleatoria situat al cosatat de la direcció MAC 
+del adaptador. Després ja podem encendre la nostra màquina virtual. 
+
+Amb la màquina encesa, necessitarem instalar tant el client com el servidor ssh a cada maquina(nosaltres per les proves ho farem en dos maquines, per tant una com a client i un 
+altre server). Durant aquest procés recordem que és necessari l'usuari root. 
+Abans d'instal·lar cap paquet actualitzarem el sistema amb la comanda: "# apt update && apt upgrade -y".
+
+Per la maquina client, executarem la comanda (#apt install -y openssh-client) per instal·lar el nostre client ssh.
+
+Per la maquina servidor, executarem la comanda (#apt install -y openssh-server) per tal d'instalar el servidor ssh i sftp. 
+
+Un cop hem acabat la actualització i instal·lació dels paquets apaguem les dues màquines virtuals i canviem de adaptador de xarxa a tipus --> Xarxa interna, per tal de poder
+ comunicarnos entre màquines. Un cop hem configurat la xarxa interna encenem les dues màquines i configurem una IP estàtica a les dues màquines, per tal de no tenir problemes de 
+IP duplicades. Per configurar una IP estàtica anirem al arxiu "/etc/network/interfaces" i el modificarem seguint aquest esquema (el esquema es un exemple funcional, però l'usuari
+ha d'adaptar les direccions a la seva xarxa):
+										auto enp0s3
+										iface enp0s3 inet static
+											broadcast 10.0.2.255------> Direcció de broadcast de la xarxa
+											network 10.0.2.0----------> Direcció IP de la xarxa
+											netmask 255.255.255.0-----> Mascara de xarxa
+											address 10.0.2.4----------> Adreça IP de la màquina
+											gateway 10.0.2.1----------> Direcció IP del Router 
+***Adjuntem els dos arxius de configuració interfaces tant del client com del servidor com a exemple.
+Per la maquina client no haurem de modicar res del seu arxiu de configuració, per tant, una vegada estigui configurant el servidor podrem començar a fer les proves corresponents: 
+
+CONNEXIÓ PER USUARI:
+Executarem la comanda: #ssh usuari@ip_servidor on usuari= al nom de l'usuari al qual ens volem conectar, i la ip_servidor = la ip que te el nostre servidor (es una bona idea que aquesta sigui fixa). 
+Hem de tenir en compte que no podrem fer aquesta connexió amb l'usuari root, ja que esta per defecte bloquejat el mode login a la configuració ssh del servidor. Si volem fer-ho haurem de anar al
+fitxer "/etc/ssh/sshd_config" de la maquina servidor, cercar per la instrucció (segurament la trobarem comentada) "PermitRootLogin" i modificar-la per "PermitRootLogin yes". Ara ja podrem fer el login 
+tant per als nostres usuaris normals com per l'usuari root.
+
+Per configurar el servidor ssh haurem de modificar el arxiu "/etc/ssh/sshd_config", que es el que conté els parametres de configuració. Alguns parametres importants son:
+
+	- Port XXXX ---> on XXXX es el número de port pel qual correrà el nostre serveis de ssh.
+	- PermitRootLogin yes/no/prohibit-password ---> Escriurem yes o no segosn si volem autoritzar a que els usuaris que es conectin al servidor siguien capaços de logejar-se amb root, el cas prohibit-password,
+		serveix per prohibir l'acces a root mitjançant contrassenya, només per autenticació basada en key.
+	- PubkeyAuthentication yes/no ---> Escriurem yes o no segons si volem autoritzar als usuaris que es conectin mitjançan una clau pública.
+	- PermitEmptyPasswords yes/no ---> Escriurem yes o no segons si volem permetre als usuaris sense contrasenya que es conectin.
+	- TCPKeepAlive yes/no ---> S'encarrega de que el sistema envii senyals a l'altra banda per tal de saber que el servei segueix actiu.
+	- Match Group XXXXX ---> On XXXXX es un grup d'usuaris al qual afectarà la configuració que s'escrigui deprés d'aquesta comanda.
+	- ChrootDirectory XXXX ---> On XXXX es el directori arrel per a les connexions entrants.
+	- PermitTTY ---> Permet obrir terminals TTY un cop conectat.
+
+En aquest cas no s'haurà de tocar res, excepte el cas de login root (opcional) explicat anteriorment.
+
+
+CONNEXIÓ PER CERTIFICAT:
+
+SERVER:
+Donat que tot aquest procés ho volem fer per l'usuari root és important verificar un pas previ abans de començar:
+- Anirem a la configuració ssh de la maquina servidor "nano /etc/ssh/sshd_config" i cercarem la instrucció "PermitRootLogin", si la trobem activa la modfiicarem per un yes ("PermitRootLogin yes"), sino la trobem podem 
+escriure-la manualment deixant-la de la mateixa manera (PermitRootLogin yes).
+
+CLIENT:
+Per connectar-se de manera que el nostre usuari no necessiti contrasenya el que haurem de fer serà donar-li la nostre clau pública al servidor.
+Per la maquina client, generarem primer la nostra private i public key amb la comanda: 
+
+#ssh-keygen --> i seguirem els següents passos: 
+
+- Primer ens demanara al fitxer on volem guardar la clau, per defecte es guardarà al /home/usuari/.ssh/id_rsa
+- En el cas de que ja haguem generat una, ens sortirà l'opció de sobreescriure-la, això es elecció del usuari (s'ha de tenir en compte que si
+escollim aquesta opció no podrem autenticar-nos amb l'anterior key).
+- Després ens donarà l'opció de introduir una passphrase que ens servirà per encriptar la private key al nostre disc (així no la tindrem exposada a la xarxa ni a altres usuaris que intentin cerca-la
+a la nostre maquina), si no ho volem fer, seguim sense incloure res prenent l'intro. 
+
+Ara ja tindrem la nostra clau pública(.pub) i la nostra clau privada. El que hem de fer per tant, és enviar la nostra clau pública al servidor per poder accedir per certificat digital. 
+
+Per enviar-la tenim 3 opcions: 
+
+1) Utilitzant la tool [ssh-copy-id] que normalment porta el paquet OpenSSH que hem instal·lat previament (en cas que no ens funcioni pasem a la següent opció). Per aquesta commanda només haurem d'executar: 
+
+# ssh-copy-id usuari@ip_servidor on usuari= al nom de l'usuari al qual ens volem conectar, i la ip_servidor = la ip que te el nostre servidor. 
+
+Ens apareixerà una opció per verificar la connexió i direm que si, sempre ens pasarà quan volem connectar-nos a un nou host. La commanda el que fa es buscar la nostra clau pública i li enviara al host remot, 
+una vegada la trobi en demanarà que accedim amb la contrasenya del usuari remot i finalment es guardarà al home de l'usuari remot a: ~/.ssh/authorized_keys
+Ara ja podrem accedir al servidor amb "usuari@ip_servidor" i entrarem directament a la sessió. 
+Important: En el cas que haguem inclós una passphrase ens demanarà previament que la introduim.
+
+2) Si no tenim disponible l'instrucció copy, podrem també aprofitar-nos de la funció de piping de ssh, obrint el fitxer al usuari remot i escrivint la nostra clau pública. Farem això amb la següent comanda: 
+
+# cat path_de_la_nostra_clau_publica | ssh usuari@ip_servidor <creació de la carpeta i escriptura al fitxer>
+exemple--> # cat ~/.ssh/id_rsa.pub | ssh usuari@ip_servidor "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
+3) Per últim, també li podrem pasar de manera manual al nostre servidor la clau pública per altre medi que tenim disponible, ja sigui a través de la xarxa (per exemple amb scp [secure copy al server remot])
+o amb un dispositiu físic (exemple: usb). En aquest cas el que hauriem de fer, com a les opcions anteriors serà copiar la public key que es troba escrita dintre del fitxer id_rsa.pub (recordar mai compartir la clau privada)
+al fitxer "authorized_keys" de l'usuari corresponent (del servidor). Recordem que es troba al home del usuari al path: "~/.ssh/authorized_keys".
+Important: Si no esta creat el path i el fitxer esmentats l'haurem de crear.
+
+Una vegada el nostre servidor hagi guardat correctament la nostra clau, podrem conectar-nos com ho feiem previament pero sense la necessitat de escriure la contrasenya.
+
+SERVER:
+Finalment anirem a la configuració ssh de la maquina servidor "/etc/ssh/sshd_config" i cercarem la instrucció "PermitRootLogin" (que habiem modificat previament) i modificarem per ("PermitRootLogin prohibit-password"),
+Això ens permetrà accedir a l'usuari root només amb public keys (o altres accesos no interactius) i evitar possibles connexions no desitjades al nostre usuari root. També tenim l'opció de posar "without-password" en 
+comptes de "prohibit-password", les dues fan la mateixa funció per tant no tindriem cap problema amb cap de les dues. Del servidor no s'ha de modificar res més. 
+
+
+2 INSTAL·LACIÓ I CONFIGURACIÓ SFTP
+
+CLIENT
+
+Primer de tot instal·larem el client sftp que es el mateix paquet que el servidor ssh, per tant hem de correr la comanda "#apt install openssh-client". Un cop el client instal·lat ja ens podem conectar al servidor utilitzant
+la comanda "$ sftp nom_usuari@ip_servidor" tal i com podem veure al arxiu log_conexio_sftp_client.txt. Un cop conectats podem fer servir les comandes estandar per comunicar-nos amb el servidor. Aquestes son les mes comuns:
+
+	-	?			Llista totes les comandes disponibles
+	-	cd			Canvi de directori
+	-	chmod		Canvia els permissos d'un arxiu del servidor remot
+	-	chown		Canvia els propietari d'un arxiu del servidor remot
+	-	exit		Tanca la conexió amb el servidor
+	-	get			Descarrega un arxiu del servidor al client
+	-	ls			Llista els continguts del directori actiu del servidor
+	-	mkdir		Crea un directori al servidor
+	-	put			Puja un arxiu del client al servidor
+	-	pwd			Mostra el path del directori del servidor
+	-	rename	Canvia el nom d'un arxiu al servidor
+	-	rm			Esborra un arxiu del servidor
+
+En cas que el nostre objectiu fos montar de manera automatica el directori del servidor sft automaticament utilitzant el fstab, primer de tot hem de afegir la nostra key publica al servidor seguint els passos anteriorment mencionats
+en el punt 1.
+
+SERVIDOR
+Per a la maquina servidor seguirem aquest procés: 
+
+Primer de tot instal·larem el servidor sftp que es el mateix paquet que el servidor ssh, per tant hem de correr la comanda "#apt install openssh-server".
+
+Per tal d'utilitzar el servidor sftp i encapsular a cada usuari en la seva carpeta primer de tot entrartem al arxiu "/etc/ssh/sshd_config" amb permisos de superusuari. Un cop el tenim obert,
+buscarem la línea on posa "Subsystem       sftp    /usr/libexec/openssh/sftp-server" i la substituirem per "Subsystem       sftp    internal-sftp", cosa que ens permetrà configurar el nostre
+servidor desde el arxiu sshd_config, que es el métode més actualitzat. Un cop hem canviat aquesta línia, afegirem les següents línies al final del nostre arxiu, on XXXXXXX, serà el nom del
+grup d'usuaris que tindran accés al sistema sftp i YYYYYY sera la ruta del directori on estaran emmagatzemats els directoris home dels usuaris sftp:
+	
+	Match Group XXXXXXX
+        ChrootDirectory YYYYYY/
+        ForceCommand internal-sftp
+
+Un cop hem modificat el arxiu sshd_config, o bé crearem nous usuaris i els configurarem o be com es el nostre cas configurarem els usuaris ja creats. Per tal de fer-ho seguirem els següents passos:
+
+	CLIENT + SERVIDOR
+
+	1) # groupadd sftp_users -----> Aquesta comanda crea un nou grup d'usuaris buit anomenat sftp_users en el qual afegirem tots els usuaris que volem que tinguien acces al servei sftp.
+
+	3) # usermod -g sftp_users -d /entel entel ----> Amb aquesta comanda afegirem al usuari entel al grup "sftp_users" i configrarem el seu directori home com a "/entel", ja que al conectarnos, com estarem
+			encapsulats, la nostra ruta al directori home serà /entel . En cas que l'usuari no existeixi, substituirem la comanda usermod per usaradd i així ens crearà un usuari ja configurat. Si hem creat un usuari nou,
+			també executarem la comanda "# passwd nou_usuari" per afegir una contrasenya	al usuari nou.
+	
+	NOMËS SERVIDOR
+	
+	3) # mkdir /sftp && mkdir /sftp/entel -----> Amb aquesta comanda crearem el nostre directori on encapsularem els nostres usuaris, en  el nostre cas serà un directori,
+			creat directament a l'arrel del sistema "/sftp", el directori "/sftp/entel" li donem aquest nom, ja que el usuari que nosaltres afegirem al nostre sistema sftp serà l'usuari entel.
+
+	4) # mkdir /sftp/shared && chown root:sftp_users /sftp/shared ----> Amb aquesta comanda crearem un directori compartit per a tots els usuaris sftp, per això afegim aquest directori al grup de sft_users.
+	
+	5) # chown entel:entel /sftp/entel ---> Canviem el propietari i el grup propietari a "entel" i "entel" respectivament a la carpeta home del usuari, per a que només l'usuari tingui accés. També es recomanable
+			copiar el contingut de l'antic directori home per tal de que no es perdin dades: "# cp /home/entel /sftp/entel", en aquest cas, caldrà també canviar el ownership de tots els arxius nous, cosa que farem 
+			amb la següent comanda : "# chown entel:entel -R /sftp/entel ".
+	
+	6) Mitjançant la comanda "# ls -ld XXXX" on XXXX es el directori que comprovarem, hem de cerciorar-nos que tinguien els permisos "-rwxrwx---" (Usuari: lectura, escrptura i execució | Grup: lectura, escrptura i execució |
+			Públic: cap) els directoris que acabem de crear el punt 3 i 4, en cas que dels directoris no compleixin amb aquests permisos utilitzarem aquesta comanda al directori /sftp, per tal de 
+			modificar els permisos i no tindre probles de privadesa: "# chmod 770 -R /sftp/*". Un cop realitzada la comanda podem comprobar que tot esta correcte utilitzant la primera comanda presentada en aquest punt.
+	
+	7) Finalment reiniciarem el servei de sshd ---> "# service sshd restart" . Si hem realitzat correctament totes les passes no ens ha de donar cap error i ja tindrem llest el servidor sftp, d'altra manera si ens
+			dona error haurem d'executar la comanda "# journalist -xe" on apareixerà un log amb els errors que han ocurregut mentr s'iniciava la màquina.
+
+Acabat de configurar el nostre servidor sftp, ara només ens queda contecar-nos y fer-hi proves. La comanda que utilitzarem per conectar-nos es "$ sftp nom_d'usuari@ip_del_servidor" un cop conectats, podrem
+descarregar arxius, pujar arxius o be navegar per els directoris que estiguin al directori home del usuari. Al arxiu log_conexio_sftp_client.txt es mostra un log de conexió per part del client on descarreguem
+un arxiu test.txt i comprovem que no podem accedir a altres directoris. 
+
+Al arxiu log_tcpdump_sftp.txt tenim una captura de tcpdump del procés descrit al altre arxiu, a mes a mes de l'arxiu .pcap de la captura. La comanda utilitzada per capturar els paquets es "# tcpdump -i enp0s3 
+port 22 -s 65535 -w sftp.pcap", el flag -w serveix per generar un arxiu de captura, el flag -s indica la mída dels paquets de captura, hem posat una mida molt gran per tal de que no capturi paquets a mitjes, el flag -i 
+indica la interface de xarxa que farem servir a la captura i el flag "port" indica el port o rang de ports que volem capturar.
+
+IMPORTANT --> Per tal de visualitzar el arxiu .pcap necessitarem tenir el tcpdump instal·lat, el qual s'instal·la amb la comanda "# apt install tcpdump", i per obrir l'arxiu farem servir la comanda "# tcpdump -r ruta_del_arxiu"
+on "ruta_del_archiu" serà el path fins l'arxiu .pcap que volem obrir.
+
+
+IMPORTANT --> Un cop el usuari queda configurat perdrà l'accés via ssh al servidor, degut a la configuració que hem escollit per el servidor, no podrem fer servir la comanda scp per decarregar arxius del servidor
+
+A partir d'aquest punt, necessitarem instal·lar el paquet "sshfs" en el client, per tant farem servir la comanda "# apt install sshfs". També necessitarrem poder accedir al sistema utilitzant keys, per tant seguirem
+aquest proces (molt semblant al del apartat 1) per conseguir-ho:
+
+	1) En el client hem de generar una key per passar-li al servidor : "# ssh-keygen", no entrarem cap passphrase i si ens pregunta si volem sobreescriure la key existen direm que si.
+
+	2) Anirem al directori on estan les claus que acabem de generar: "# cd ~/.ssh"
+
+	3) Ens conectarem per sftp al servidor i passarem l'arxiu id_rsa.pub: "# sftp entel@10.0.2.4" un cop hem introduit la contrassenya (letne), pujarm el fitxer al servidor "sftp> put id_rsa.pub" i ens desconectarem.
+
+	4) Un cop tenim la clau publica al servidor, crearem un nou directori .ssh i copiarem el contingut de la clau en el directori: "# cd /sftp/entel && mkdir .ssh && cat id_rsa.pub >> .ssh/authorized_keys && rm id_rsa.pub"
+
+	5) Per acabar anirem al arxiu de configuració "/etc/ssh/sshd_config" i editarem les següents opcions:
+		
+		a) PubkeyAuthentication yes --> Ens permetrà fer login sense password.
+
+		b) AuthorizedKeysFile /sftp/%u/.ssh/authorized_keys
+
+	6) Finalment reiniciem el servidor i ja ho tenim tot configurat per continuar.
+
+Repetirem el proces per l'usuari root(client). Després de seguir els passos per poder fer login amb l'usuari entel utilitzant la key, ja podem montar una carpeta tant de manera temporal (sshfs), com de manera automàtica (fstab).
+
+Per tal de montar un directori sftp a la nostra màquina client, ho farem mitjançant la comanda "sshfs", en el nostre cas seguirem aquestst passos:
+
+	1) Crearem un nou directori buit, on montarem el directori sftp: "# mkdir test_sftp"
+
+	2) Montarem en el nou directori el directori home de entel en aquest cas: "# sshfs entel@10.0.2.4:/entel ./test_sftp".
+
+	3) Per comprobar que tot ha funcionat correctament simplement farem un "cd" al directori test i podrem observar com estan els continguts de la nostra carpeta home d'entel.
+
+	4) Finalment, un cop hem acabat de treballar amb el directori farem un "# umount nom_del_directori" per desmontar el nostre directori: "# umount test_sftp"
+
+Finalment per montar el nostre directori al iniciar l'ordinador, modificarem el fitxer fstab per tal de montar els directoris remots. Obrirem fstab ("# nano /etc/fstab") i afegirem:
+
+	"sshfs#entel@10.0.2.4:/entel		/mnt/entel	fuse		defaults,_netdev,uid=entel,guid=entel,umask=0077		0		0"
+	"sshfs#entel@10.0.2.4:/shared		/mnt/sftp-shared	fuse		defaults,_netdev,uid=root,guid=sftp_users,umask=0007		0		0"
+
+L'únic que podem variar es el punt de montatge dels nostres directoris, que en el nostre cas a mode d'exemple hem escollit "/mnt/XXX", la resta de paràmetres no han de variar, mai, ja que tots tenen justificació:
+	
+	- _netdev --> Permet montar el sistema un cop tenim la xarxa aixecada, cosa vital per poder realitzar el montatge.
+	- uid --> Es el propietari de la carpeta, en el nostre cas com la carpeta es d'entel el propietari serà entel, en el directori shared posarem l'usuari root, per tal que no pugui entrar cap persona no esperada.
+	- gid --> Es el grup propietari del directori, en el cans d'entel es lógic que sigui ell mateix i en el cas de shared, seran totes les persones que pertanyin al grup sftp_users.
+	- umask --> Indica els permisos del directori, en el cas d'entel només donarem permisos al usuari i en el cas de shared donarem permisos totals al grup d'usuaris i també al usuari root.
+
+
+SSH TUNNELING
+
+Un tunel ssh consisteix en emmascarar paquets dintre d'una conexió ssh. Això equivaldria a fer un port forwadding, de tal manera que al conectarnos a un servidor, aquest mateix redirigeix el
+tràfic d'un port en concret fins a un altre servidor, per el port que l'indiquem.
+
+Tenim dos tipus de tunneling, un "Local Port Forwarding", que es el mateix servidor el que s'encarrega de redirigir les seves conexions entrants cap a una altra màquina, i també tenime el 
+"Remote Port Forwarding" que en aquest cas es la màquina de tercers qui redirigeix el tràfic cap a ell mateix.
+
+Per tal d'activar la capacitat de port forwarding, hem de modificar 3 línies al /etc/ssh/sshd_config:
+
+	AllowAgentForwarding yes
+	AllowTcpForwarding yes
+	PermitTunnel yes
+
+A continuació afegirem un parell de exeples:
+
+	Exemple de local port forwarding : "# ssh -L 80:10.0.2.4:80 root@10.0.2.4 " -> Amb aquesta comanda redirigim el tràfic del port 80 entrant a la nostra màquina cap a un servidor amb ip "10.0.2.4".
+
+	Exemple de remote port forwarding : "# ssh -R 10.0.2.4:80:localhost:80 root@10.0.2.4 " -> Amb aquesta comanda redirigirem el tràfic del port 80 entrant al la màquina 10.0.2.4 cap al localhost.
+
+WEBGRAFIA
+
+ssh
+https://wiki.debian.org/SSH
+https://linux.die.net/man/1/ssh
+https://www.ssh.com/ssh/public-key-authentication
+
+
+sftp
+https://www.linuxtechi.com/configure-sftp-chroot-debian10/
+https://www.comparitech.com/net-admin/sftp-commands-cheat-sheet/
+https://serverfault.com/questions/660160/openssh-difference-between-internal-sftp-and-sftp-server
+https://linux.die.net/man/1/sshfs
