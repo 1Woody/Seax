@@ -1,2 +1,0 @@
-# Seax
-Prácticas EPSEVG
