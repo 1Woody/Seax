@@ -1,0 +1,19 @@
+TCP DUMP 
+FLAGS
+-i elegir interficie que capturar
+-c capturamos un numero concreto de paquetes
+-A paquetes en formato ASCII
+-w elegir un fichero de tipo ".pcap" que guarda los resultados  (tcpdump -w eth0.pcap -i eth0)
+-r para analizar el fichero generado .pcap (tcpdump -r eth0.pcap)
+-n analizar IPaddr, mantiene las ip en los resultados y no las traduce a nombres
+-->Añadimos en protcolo al final(creo que no hace falta que sea el final) para analizar solo los paquetes con 
+ese protcolo. 
+port XX para monitorizar un puerto especifico.
+src IPaddr para monitorizar paquetes de una ip de origen
+dst IPaddr para monitorizar paquetes de una ip de destino
+-v verbose output
+-vv more verbose output
+
+-x : When parsing and printing, in addition to printing the headers of each packet, print the data of each packet.
+-X : hen parsing and printing, in addition to printing the headers of each packet, print the data of each packet (minus its link level header) in hex and ASCII. This is very handy for analysing new protocols.
+-s 1500: Snarf snaplen bytes of data from each packet rather than the default of 68. This is useful to see lots of information.
