@@ -17,3 +17,13 @@ dst IPaddr para monitorizar paquetes de una ip de destino
 -x : When parsing and printing, in addition to printing the headers of each packet, print the data of each packet.
 -X : hen parsing and printing, in addition to printing the headers of each packet, print the data of each packet (minus its link level header) in hex and ASCII. This is very handy for analysing new protocols.
 -s 1500: Snarf snaplen bytes of data from each packet rather than the default of 68. This is useful to see lots of information.
+
+
+para tcp --> tcpdump -i enp0s3 enp0s3 'tcp[13]=2 && port 22'
+
+tcpdump -nn -l -q -i enp0s3 'tcp[13=2] && port 22' 2>/dev/null > /root/test.log 
+
+test connections --> nc   
+test tcp connections --> nc -z -v ip port
+
+guardar pid del tcpdump

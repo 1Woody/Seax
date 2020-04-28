@@ -15,7 +15,7 @@ protocolMinus=${PR,,}
 primeraHora="primeraHora"
 ultimaHora="ultimaHora"
 myIP=$(hostname -I)
-
+$(^L)
 #detecció de la correctesa dels arguments d'entrada --> ./honeypot.sh eth0 tcp 80
 if [ $# == 3 ]
 then
