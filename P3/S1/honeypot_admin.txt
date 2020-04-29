@@ -19,11 +19,26 @@ dst IPaddr para monitorizar paquetes de una ip de destino
 -s 1500: Snarf snaplen bytes of data from each packet rather than the default of 68. This is useful to see lots of information.
 
 
-para tcp --> tcpdump -i enp0s3 enp0s3 'tcp[13]=2 && port 22'
+PARA TCP
+ --> tcpdump -i enp0s3 'tcp[13]=2 && port 22'
 
-tcpdump -nn -l -q -i enp0s3 'tcp[13=2] && port 22' 2>/dev/null > /root/test.log 
+tcpdump -nn -l -q -i enp0s3 'tcp[13]=2 && port 22' 2>/dev/null > /root/test.log 
 
 test connections --> nc   
 test tcp connections --> nc -z -v ip port
 
 guardar pid del tcpdump
+
+PARA UDP
+usual upd ports: 161 162
+
+--> tcpdump -nn -i enp0s3 udp port XX
+
+PARA ICMP 
+-->  tcpdump -l -nni enp0s3 'not src 192.168.0.26 && icmp'
+
+
+TAILS 
+TIEMPO --> awk '/./{time=$1} END{print time}' test.log
+IP --> awk '/./{ip=$3} END{print ip}' test.log | cut -d '.' -f1,2,3,4
+PUERTO --> awk '/./{port=$3} END{print port}' test.log | cut -d '.' -f5
