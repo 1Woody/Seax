@@ -1,44 +1,129 @@
-TCP DUMP 
-FLAGS
--i elegir interficie que capturar
--c capturamos un numero concreto de paquetes
--A paquetes en formato ASCII
--w elegir un fichero de tipo ".pcap" que guarda los resultados  (tcpdump -w eth0.pcap -i eth0)
--r para analizar el fichero generado .pcap (tcpdump -r eth0.pcap)
--n analizar IPaddr, mantiene las ip en los resultados y no las traduce a nombres
--->Añadimos en protcolo al final(creo que no hace falta que sea el final) para analizar solo los paquetes con 
-ese protcolo. 
-port XX para monitorizar un puerto especifico.
-src IPaddr para monitorizar paquetes de una ip de origen
-dst IPaddr para monitorizar paquetes de una ip de destino
--v verbose output
--vv more verbose output
-
--x : When parsing and printing, in addition to printing the headers of each packet, print the data of each packet.
--X : hen parsing and printing, in addition to printing the headers of each packet, print the data of each packet (minus its link level header) in hex and ASCII. This is very handy for analysing new protocols.
--s 1500: Snarf snaplen bytes of data from each packet rather than the default of 68. This is useful to see lots of information.
+#!/bin/bash
+# Elegir bien los PERMISOS!!!
+# ports --> https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 
 
-PARA TCP
- --> tcpdump -i enp0s3 'tcp[13]=2 && port 22'
+usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 3 arguments (revisar manual de usuari)."
+usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
+usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
+usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP."
+usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
+usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
+usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
+llistaInterficies=$(ls /sys/class/net/)
+i=0
+PR="$2"
+protocolMajus=${PR^^}
+protocolMinus=${PR,,}
+primeraHora="primeraHora"
+ultimaHora="ultimaHora"
+myIP=$(hostname -I)
+arrayResum=("      10.1.1.105             2" "      10.1.1.108             2" "      10.1.1.105             2" "      10.1.1.105             2")
+arrayEvol=(" 17:33:30.806049      10.1.1.108 51006" " 17:33:41.596338      10.1.1.105 40690" " 17:33:43.926395      10.1.1.105 40692" " 17:33:50.541803      10.1.1.108 51008")
+quit=0
+usuari=$(whoami)
+SO=$(cat /etc/*release | grep 'PRETTY_NAME' | cut -d '"' -f2)
+host=$(hostname)
+scriptVersion="1.0"
+dataInicial="2020-04-25"
 
-tcpdump -nn -l -q -i enp0s3 'tcp[13]=2 && port 22' 2>/dev/null > /root/test.log 
+#detecció de la correctesa dels arguments d'entrada --> ./honeypot.sh eth0 tcp 80
 
-test connections --> nc   
-test tcp connections --> nc -z -v ip port
+if [ $# == 2 ]
+then 
+    if [ "$protocolMajus" != "ICMP" ]
+    then
+        if [ "$protocolMajus" == "TCP" ] || [ "$protocolMajus" == "UDP" ]
+        then
+            echo "$usageTCPUDP"; exit 1
+        else
+            echo "$usageICMP"; exit 1
+        fi
+    fi
+elif [ $# == 3 ]
+then
+    # Comprovació del port
+    if [[ ! $3 =~ ^[0-9]+$ ]] 
+    then 
+        echo "$usagePortEnter"; 
+        exit 1
+    elif [ "$3" -gt "65535" ] || [ "$3" -lt "0" ]
+    then
+        echo "$usagePortRang"; exit 1    
+    # Comprovació del protocol
+    elif [ "$protocolMajus" != "TCP" ] && [ "$protocolMajus" != "UDP" ]
+    then
+        echo "$usageProtocolInc"; exit 1
+    fi
+else
+    echo "$usageInvalidArg"; exit 1
+fi
+for interface in $llistaInterficies; do
+    if [ "$interface" == "$1" ]
+    then
+        ((i+=1))
+    fi
+done
+if [ "$i" != 1 ]
+then 
+    echo "$usageInterficieInc"; exit 1
+fi
 
-guardar pid del tcpdump
-
-PARA UDP
-usual upd ports: 161 162
-
---> tcpdump -nn -i enp0s3 udp port XX
-
-PARA ICMP 
--->  tcpdump -l -nni enp0s3 'not src 192.168.0.26 && icmp'
-
-
-TAILS 
-TIEMPO --> awk '/./{time=$1} END{print time}' test.log
-IP --> awk '/./{ip=$3} END{print ip}' test.log | cut -d '.' -f1,2,3,4
-PUERTO --> awk '/./{port=$3} END{print port}' test.log | cut -d '.' -f5
+dataCompilacioInici=$(date --rfc-3339=date)
+horaCompilacioInici=$(date | cut -d ' ' -f4)
+tput sc; 
+while [ $quit != 1 ]
+do
+    echo -n "" > log_honeypot
+    tput ed;
+    read -r -t 0.01 -N 1 input
+    if [[ $input = "q" ]]
+    then
+        dataCompilacioFi=$(date --rfc-3339=date)
+        horaCompilacioFi=$(date | cut -d ' ' -f4)
+        quit=1
+        exec 1<>log_honeypot
+        echo -n ""
+        echo -e "----------------------------------------------------------------------------------------------------------"
+        echo -e "Monitorització realitzada per l'usuari $usuari de l'equip $host."
+        echo -e "Sistema operatiu $SO."
+        echo -e "Versió del script $scriptVersion compilada el $dataInicial."
+        echo -e "Monitorització iniciada en data $dataCompilacioInici a les $horaCompilacioInici i finalitzada en data $dataCompilacioFi a les $horaCompilacioFi."
+        echo -e "----------------------------------------------------------------------------------------------------------"
+    fi
+    echo -e ""
+    echo -e ""
+    echo -e "-----------------------------------------------------------------------------"
+    echo -e "Accesos a l'adreça $myIP port $protocolMinus $3 [$primeraHora , $ultimaHora] "
+    echo -e "-----------------------------------------------------------------------------"
+    echo -e ""
+    echo -e "------------------------------"
+    echo -e "Resum dels accessos"
+    echo -e "------------------------------"
+    echo -e "    Adreces IP     Nº accessos"
+    echo -e " ---------------   -----------"
+    for each in "${arrayResum[@]}"
+    do 
+        echo "$each"
+    done
+    echo -e " ---------------   -----------"
+    echo -e ""
+    echo -e "--------------------------------------"
+    echo -e "Evolució dels accessos"
+    echo -e "--------------------------------------"
+    echo -e "      Temps         Adreça IP     Port"
+    echo -e " --------------- --------------- -----"
+    for each in "${arrayEvol[@]}"
+    do
+        echo "$each"
+    done
+    echo -e " --------------- --------------- -----"
+    if [ $quit != 1 ] 
+    then
+        echo -e "Prem [q] per sortir." 
+        echo -e ""
+        sleep 1;
+        tput rc;
+    fi
+done
+exit 0
