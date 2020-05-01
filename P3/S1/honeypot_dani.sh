@@ -1,27 +1,34 @@
 #!/bin/bash
 #!utf-8
 IP=$(hostname -I | cut -d ' ' -f1)
-filter_icmp="not src "$IP" && icmp"
+filter_icmp="'not src "$IP" && icmp'"
 filter_tcp="tcp[13]=2 && port "$3""
-array+=("10:33-10.0.0.1-22-1")
+#array+=("10:33-10.0.0.1-22-1")
+array+=("")
 add=0
 
 echo "" > test.log
 if [ $# == 3 ]
 then
+    echo -e "ÚLTIM ACCÈS REGISTRAT" > test.log 
     if [ $2 == "TCP" ]
     then
-        echo -e "ÚLTIM ACCÈS REGISTRAT" > test.log 
         tcpdump -l -q -nni "$1" "$filter_tcp" 2>/dev/null >> /root/test.log &
         pidtcpdump=$!
     
     elif [ $2 == "UDP" ]
     then 
-        tcpdump -l -q -nni "$1" udp port "$3" 2>/dev/null > /root/test.log &
+        tcpdump -l -q -nni "$1" udp port "$3" 2>/dev/null >> /root/test.log &
         pidtcpdump=$!
+    elif [ $2 == "ICMP" ]
+    then
+        echo INSIDE
+        tcpdump -l -q -nni enp0s3 '(not src 192.168.0.26) and (icmp)' 2>/dev/null >> /root/test.log &
+        #$(tcpdump -l -q -nni "$1" "$filter_icmp" 2>/dev/null >> /root/test.log &)
+        # tcpdump -l -q -nni enp0s3 'not src "$IP" && icmp'
+        #$pidtcpdump
     else
-        tcpdump -l -q -nni "$1" "$filter_icmp" 2>/dev/null > /root/test.log &
-        pidtcpdump=$!
+        echo NO PROTOCOL
     fi
     quit=0
     echo -ne " I'm reading your file ...\n"
@@ -40,10 +47,10 @@ then
         if [ "$hora" != "" ]
         then
             acceso1="$hora-$ip_a-$puerto"
-            if [ "$array" == "" ]
+            if [ "${array[0]}" == "" ]
             then
                 acceso1="$acceso1-1"
-                ((array+=$acceso1))
+                array[0]="$acceso1"
             else
                 for i in "${!array[@]}"
                 do
