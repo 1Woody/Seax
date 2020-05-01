@@ -5,7 +5,7 @@
 # ports --> https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 
 # Variables de usage per els avisos de error
-usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 3 arguments (revisar manual de usuari)."
+usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
 usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
 usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
 usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP."
@@ -50,6 +50,8 @@ if [ $(whoami) != "root" ]; then #has de ser root (whoami et diu si ho executes 
 	echo "Has de ser root per executar aquest script"
 	exit 1
 fi
+
+#man que este instalado
 
 if [ $(man tcpdump 2>&1 | wc -l) -eq 1 ]; then #Si busquem el manual de tcpdump i no trobem res significa que no tenim instalat aquesta comanda
 	echo "Has de tenir instalat el paquet de tcpdump, instala amb: apt install tcpdump"
@@ -113,9 +115,8 @@ then
     tcpdump -l -q -nni "$interfaceActual" udp port "$3" 2>/dev/null >> /root/atacs.log &
     pidtcpdump=$!
 else
-    tcpdump -l -q -nni enp0s3 '(not src 192.168.0.26) and (icmp)' 2>/dev/null >> /root/atacs.log &
-    # hay un error en tcpdump
-    pidtcpdump=$! # no va el pid kill
+    tcpdump -l -q -nni enp0s3 dst $myIP and icmp 2>/dev/null >> /root/atacs.log &
+    pidtcpdump=$!
 fi
 
 # Bucle infinit del programa 
@@ -224,7 +225,7 @@ do
     if [ $quit != 1 ] 
     then
         echo -e "Prem [q] per sortir." 
-        echo -e ""
+        echo -e " "
         sleep 1;
         tput rc;
     fi
