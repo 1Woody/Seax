@@ -34,7 +34,22 @@ que està programat en bash.
 casos com els accents.
 
 ####### 1. VARIABLES #######
+A continuació, trobem la inicialització de les variables del program, 
 
+Primer de tot trobarem els usage (missatges d'error distribuits per les diferents comprovacions dintre del codi). Seran els següents:
+    - usageInvalidArg --> Tracta el nombre d'arguments que escriu l'usuari en la execució de l'script.  
+    - usagePortEnter --> Tracta que l'argument del port sigui un nombre enter.
+    - usagePortRang --> Tracta que el número de port estigui en el rang permés (0 - 65535)
+    - usageProtocolInc --> 
+    - usageInterficieInc --> 
+    - usageICMP --> 
+    - usageTCPUDP --> 
+    - usageSuperUser --> 
+    - usagePaquetcpdump --> 
+    - usagePaquetip --> 
+    - usageExecucio --> 
+    - usageIP --> 
+    
 
 
 
