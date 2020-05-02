@@ -18,6 +18,7 @@ usagePaquetcpdump="Has de tenir instalat el paquet de tcpdump, instala-ho amb: a
 usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt install iproute2"
 
 # Variables per les comprovacions dels parámetres inicials
+llistaInterficies=$(ls /sys/class/net/)
 i=0
 quit=0
 PR="$2"
@@ -45,8 +46,8 @@ comptLinia=2
 arrayAtacs+=("") # array amb comptador de repetició
 arrayFullAtacs+=("") # array amb tots els atacs (sense tenir en compte repeticions)
 repetit=0
-primeraHora="0 atacs rebuts"
-ultimaHora="0 atacs rebuts"
+primeraHora=" 0 atacs rebuts"
+ultimaHora=" 0 atacs rebuts"
 
 ####### 2. COMPROVACIONS PREVIES #######
 
@@ -111,7 +112,7 @@ else
     echo "$usageInvalidArg"; exit 1
 fi
 # Comprovació interfície
-for interface in $(ls /sys/class/net/); do
+for interface in $llistaInterficies; do
     if [ "$interface" == "$interfaceActual" ]
     then
         ((i+=1))
