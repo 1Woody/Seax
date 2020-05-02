@@ -12,7 +12,7 @@ CODI
 2. COMPROVACIONS PREVIES
 3. CREACIÓ DE FITXERS NECESSARIS
 4. MONITORITZACIÓ DE PAQUETS
-5. TRACATAMENT D'ATACS
+5. TRACTAMENT D'ATACS
 6. MAQUETACIÓ DE DADES
 
 INFORMACIÓ SCRIPT
@@ -33,6 +33,7 @@ que està programat en bash.
 #!utf-8 --> Amb aquesta instrucció introduirem el format utf-8 que ens evitarà errors de format en diferents
 casos com els accents.
 
+####### 1. VARIABLES #######
 
 
 

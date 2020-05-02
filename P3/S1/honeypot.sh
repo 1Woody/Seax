@@ -3,7 +3,7 @@
 # Elegir bien los PERMISOS!!!
 # COMPROBAR LO QUE NECESITA EL USUARIO (PAQUETES, ROOT ...)
 
-####### 1.VARIABLES #######
+####### 1. VARIABLES #######
 
 # Variables usage per les notificacions d'error
 usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
@@ -26,7 +26,6 @@ PR="$2"
 protocolMajus=${PR^^}
 protocolMinus=${PR,,}
 interfaceActual="$1"
-system=$(cat /etc/*release 2>/dev/null | awk 'NR==7{print}' | cut -d'=' -f2)
 
 # Variables de característiques necessaries per l'script
 usuari=$(whoami)
@@ -38,7 +37,7 @@ myIP=""
 dataCompilacioInici=$(date --rfc-3339=date)
 horaCompilacioInici=$(date | cut -d ' ' -f5)
 
-# Variables filtres tcpdump
+# Variables filtre tcpdump
 filter_tcp="tcp[13]=2 && port $3"
 
 # Variables utilitzades en el core del programa
@@ -51,14 +50,6 @@ primeraHora="0 atacs rebuts"
 ultimaHora="0 atacs rebuts"
 
 ####### 2. COMPROVACIONS PREVIES #######
-
-# ---- comprovar SO y decir que no funcionara al 100%% propuesta
-
-
-#if [ "$system" != "debian" ]
-#then
-	# echo -e "Amb un sistema que no sigui debian no podem verificar que funcioni correctament"
-#fi
 
 # Comprovació del superusuari
 if [ "$(whoami)" != "root" ]
@@ -121,6 +112,7 @@ if [ "$i" != 1 ]
 then 
     echo "$usageInterficieInc"; exit 1
 else
+    # comprovació si té una ip assiganda l'intefíce
     myIP=$(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1)
     if [ -z "$myIP" ]
     then 
@@ -132,6 +124,7 @@ fi
 
 touch log_honeypot
 touch atacs.log
+
 #inicialització capçalera del fitxer d'atacs
 true > log_honeypot
 echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log
@@ -151,6 +144,7 @@ else
     tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 fi
+# comprovació d'errors en l'execució de la comanda tcpdump
 if [[ ! -z $(cat log_honeypot) ]]
 then 
     echo "$usageExecucio"; exit 1
@@ -165,6 +159,7 @@ do
     # Bucle de lectura del fitxer d'atacs
     while [ "$comptLinia" -le "$numAccesosSimultanis" ]
     do
+        # Recollida de dades dels atacs
         hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log)
         ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4)
         port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5)
@@ -215,6 +210,7 @@ do
     echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log 
 
     ####### 6. MAQUETACIÓ DE DADES #######
+
     true > log_honeypot
     tput ed;
     read -r -t 0.01 -N 1 input
