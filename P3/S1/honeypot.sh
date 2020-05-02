@@ -39,13 +39,13 @@ horaCompilacioInici=$(date | cut -d ' ' -f5)
 
 # Variables filtre tcpdump
 filter_tcp="tcp[13]=2 && port $3"
-tcpdumpgood="tcpdump:verbose output supressed, use -v or -vv for full protocol decode listening on $1"
 
 # Variables utilitzades en el core del programa
-numAccesosSimultanis=11 #10 accesos, agafem 11 per evitar agafar la capçalera
+primerCop=1
+numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
 comptLinia=2
-arrayAtacs+=("") # array amb comptador de repetició
-arrayFullAtacs+=("") # array amb tots els atacs (sense tenir en compte repeticions)
+arrayAtacs+=("") # Array amb comptador de repetició
+arrayFullAtacs+=("") # Array amb tots els atacs (sense tenir en compte repeticions)
 repetit=0
 primeraHora="0 atacs rebuts"
 ultimaHora="0 atacs rebuts"
@@ -113,7 +113,7 @@ if [ "$i" != 1 ]
 then 
     echo "$usageInterficieInc"; exit 1
 else
-    # comprovació si té una ip assiganda l'intefíce
+    # Comprovació de si l'usuari té una IP assiganda a l'interfície
     myIP=$(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1)
     if [ -z "$myIP" ]
     then 
@@ -145,12 +145,14 @@ else
     tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 fi
-# comprovació d'errors en l'execució de la comanda tcpdump
-if [[ ! -z $(cat log_honeypot) ]]
-then 
+sleep 0.1
+# Comprovació d'errors en l'execució de la comanda tcpdump
+tcpdumpgood=$(grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot)
+true > log_honeypot
+if [ $tcpdumpgood -ne 2 ]
+then
     echo "$usageExecucio"; exit 1
 fi
-true > log_honeypot
 
 ####### 5. TRACTAMENT D'ATACS #######
 
@@ -169,13 +171,13 @@ do
             atacActual="$hora-$ipNouAtac-$port"
             if [ "${arrayAtacs[0]}" == "" ] && [ "${arrayFullAtacs[0]}" == "" ]
             then
-                # Guardem l'hora del primer acces
+                # Guardat de l'hora del primer accés
                 primeraHora=$hora
                 arrayFullAtacs[0]="$atacActual"
                 atacActual="$atacActual-1"
                 arrayAtacs[0]="$atacActual"
             else
-                # Guardem l'hora de l'últim accés
+                # Guardat de l'hora de l'últim accés
                 ultimaHora=$hora
                 arrayFullAtacs+=("$atacActual")
 
@@ -202,11 +204,11 @@ do
             fi
             ((comptLinia+=1))
         else
-            # Acabem la lectura ja que no hi ha res al fitxer 
+            # Finalització de la lectura, ja que no hi ha res al fitxer 
             comptLinia=$((numAccesosSimultanis + 2))
         fi
     done
-    # Inicialització de lectura de linia (2 per tenir en compte la capçalera) i neteja del fitxer
+    # Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
     comptLinia=2
     echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log 
 
@@ -217,6 +219,9 @@ do
     read -r -t 0.01 -N 1 input
     if [[ $input = "q" ]]
     then
+        # Tractament del cas de que l'usuari polsi la 'q' (tancar el programa)
+        kill "$pidtcpdump"
+        true > log_honeypot
         dataCompilacioFi=$(date --rfc-3339=date)
         horaCompilacioFi=$(date | cut -d ' ' -f5)
         quit=1
@@ -243,6 +248,7 @@ do
     } >> log_honeypot
     for each in "${!arrayAtacs[@]}"
     do 
+        # Tractament del format d'escriptura del resum dels accessos
         espaiBlancIP=" ";
         ipAcces=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f2 )
         numAccessos=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f4 )
@@ -250,6 +256,7 @@ do
         trobat=0;
         while (( x <= 15 )) && (( !trobat ))
         do
+            # Tractament de l'espai assignat a les adreces IP
             if [ "${#ipAcces}" == "$x" ] 
             then
                 num=15-$x;
@@ -268,6 +275,7 @@ do
         trobat=0;
         while (( x <= 11 )) && (( !trobat))
         do
+            # Tractament de l'espai assignat al número d'accessos
             if [ "${#numAccessos}" == "$x" ]
             then
                 num=11-$x;
@@ -286,16 +294,17 @@ do
         } >> log_honeypot
     done
     {
-        echo -e " ---------------   -----------"
-        echo -e ""
+        echo -e " ---------------   -----------        "
+        echo -e "                                      "
         echo -e "--------------------------------------"
-        echo -e "Evolució dels accessos"
+        echo -e "Evolució dels accessos                "
         echo -e "--------------------------------------"
         echo -e "      Temps         Adreça IP     Port"
         echo -e " --------------- --------------- -----"
     } >> log_honeypot
     for each in "${!arrayFullAtacs[@]}"
     do
+        # Tractament del format d'escriptura de la evolució dels accessos
         espaiBlancIP=" ";
         horaAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f1 )
         ipAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f2 )
@@ -304,6 +313,7 @@ do
         trobat=0;
         while (( x <= 15 )) && (( !trobat ))
         do
+            # Tractament de l'espai assignat a les adreces IP
             if [ "${#ipAcces}" == "$x" ] 
             then
                 num=15-$x;
@@ -322,6 +332,7 @@ do
         trobat=0;
         while (( x <= 5 )) && (( !trobat))
         do
+            # Tractament de l'espai assignat als ports
             if [ "${#portAcces}" == "$x" ]
             then
                 num=5-$x;
@@ -343,13 +354,18 @@ do
     } >> log_honeypot
     if [ $quit != 1 ] 
     then
+        # Accions a realitzar en cas de que l'usuari no vulgui tancar el programa.
         echo -e "Prem [q] per sortir." >> log_honeypot
         echo -e " " >> log_honeypot
-        sleep 1;
+        if [ $primerCop == 1 ]
+        then
+            primerCop=0
+        else
+            sleep 1;
+        fi
         tput rc;
         cat log_honeypot
     fi
 done
 rm atacs.log
-kill "$pidtcpdump"
 exit 0
