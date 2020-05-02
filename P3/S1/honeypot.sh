@@ -37,7 +37,7 @@ dataCompilacioInici=$(date --rfc-3339=date)
 horaCompilacioInici=$(date | cut -d ' ' -f5)
 
 # Variables filtres tcpdump
-filter_tcp="tcp[13]=2 && port "$3""
+filter_tcp="tcp[13]=2 && port $3"
 
 # Variables utilitzades en el core del programa
 numAccesosSimultanis=11 #10 accesos, agafem 11 per evitar agafar la capçalera
@@ -53,20 +53,20 @@ ultimaHora=" 0 atacs rebuts"
 # ---- comprovar SO y decir que no funcionara al 100%% propuesta
 
 # Comprovació del superusuari
-if [ $(whoami) != "root" ]
+if [ "$(whoami)" != "root" ]
 then
 	echo "$usageSuperUser"; exit 1
 fi
 
 # Comprovació del paquet tcpdump
-if [ $(dpkg -l | grep tcpdump | wc -l) -eq 0 ]
+if [ "$(dpkg -l | grep -c tcpdump)" -eq 0 ]
 then 
 	echo "$usagePaquetcpdump"; exit 1
 fi
 
 # 2>&1 REVISAR SALIDA ---------------------------------------------
 # Comprovació del paquet iproute2
-if [ $(dpkg -l | grep iproute2 | wc -l) -eq 0 ]
+if [ "$(dpkg -l | grep -c iproute2)" -eq 0 ]
 then 
 	echo "$usagePaquetip"; exit 1
 fi
@@ -137,7 +137,7 @@ then
     tcpdump -l -q -nni "$interfaceActual" udp port "$3" 2>/dev/null >> /root/atacs.log &
     pidtcpdump=$!
 else
-    tcpdump -l -q -nni enp0s3 dst $myIP and icmp 2>/dev/null >> /root/atacs.log &
+    tcpdump -l -q -nni enp0s3 dst "$myIP" and icmp 2>/dev/null >> /root/atacs.log &
     pidtcpdump=$!
 fi
 
@@ -165,7 +165,7 @@ do
             else
                 # Guardem l'hora de l'últim accés
                 ultimaHora=$hora
-                arrayFullAtacs+=($atacActual)
+                arrayFullAtacs+=("$atacActual")
 
                 # Bucle de verificació d'atacs repetits
                 for pos in "${!arrayAtacs[@]}"
@@ -184,14 +184,14 @@ do
                 if [ "$repetit" != 1 ]
                 then
                     atacActual="$atacActual-1"
-                    arrayAtacs+=($atacActual)
+                    arrayAtacs+=("$atacActual")
                 fi
                 repetit=0
             fi
             ((comptLinia+=1))
         else
             # Acabem la lectura ja que no hi ha res al fitxer 
-            comptLinia=$(($numAccesosSimultanis + 2))
+            comptLinia=$((numAccesosSimultanis + 2))
         fi
     done
     # Inicialització de lectura de linia (2 per tenir en compte la capçalera) i neteja del fitxer
@@ -215,17 +215,19 @@ do
         echo -e "Monitorització iniciada en data $dataCompilacioInici a les $horaCompilacioInici i finalitzada en data $dataCompilacioFi a les $horaCompilacioFi."
         echo -e "----------------------------------------------------------------------------------------------------------"
     fi
-    echo -e "" >> log_honeypot
-    echo -e "" >> log_honeypot
-    echo -e "-----------------------------------------------------------------------------" >> log_honeypot
-    echo -e "Accesos a l'adreça $myIP port $protocolMinus $3 [$primeraHora , $ultimaHora] " >> log_honeypot
-    echo -e "-----------------------------------------------------------------------------" >> log_honeypot
-    echo -e "" >> log_honeypot
-    echo -e "------------------------------" >> log_honeypot
-    echo -e "Resum dels accessos" >> log_honeypot
-    echo -e "------------------------------" >> log_honeypot
-    echo -e "    Adreces IP     Nº accessos" >> log_honeypot
-    echo -e " ---------------   -----------" >> log_honeypot
+    {
+        echo -e ""
+        echo -e ""
+        echo -e "-----------------------------------------------------------------------------"
+        echo -e "Accesos a l'adreça $myIP port $protocolMinus $3 [$primeraHora , $ultimaHora] "
+        echo -e "-----------------------------------------------------------------------------"
+        echo -e ""
+        echo -e "------------------------------"
+        echo -e "Resum dels accessos"
+        echo -e "------------------------------"
+        echo -e "    Adreces IP     Nº accessos"
+        echo -e " ---------------   -----------"
+    } >> log_honeypot
     for each in "${!arrayAtacs[@]}"
     do 
         espaiBlancIP=" ";
@@ -233,12 +235,12 @@ do
         numAccessos=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f4 )
         x=7;
         trobat=0;
-        while (( $x <= 15 )) && (( !$trobat ))
+        while (( x <= 15 )) && (( !trobat ))
         do
             if [ "${#ipAcces}" == "$x" ] 
             then
                 num=15-$x;
-                for ((y=0; y<$num; y++))
+                for ((y=0; y<num; y++))
                 do
                     espaiBlancIP=" $espaiBlancIP"; 
                 done
@@ -251,12 +253,12 @@ do
         espaiBlancAccessos="   ";
         x=0;
         trobat=0;
-        while (( $x <= 11 )) && (( !$trobat))
+        while (( x <= 11 )) && (( !trobat))
         do
             if [ "${#numAccessos}" == "$x" ]
             then
                 num=11-$x;
-                for ((y=0; y<$num; y++))
+                for ((y=0; y<num; y++))
                 do
                     espaiBlancAccessos=" $espaiBlancAccessos";
                 done
@@ -266,15 +268,19 @@ do
             fi
         done
         stringResum="$stringResum$espaiBlancAccessos$numAccessos"
-        echo "$stringResum" >> log_honeypot
+        {
+            echo "$stringResum"
+        }
     done
-    echo -e " ---------------   -----------" >> log_honeypot
-    echo -e "" >> log_honeypot
-    echo -e "--------------------------------------" >> log_honeypot
-    echo -e "Evolució dels accessos" >> log_honeypot
-    echo -e "--------------------------------------" >> log_honeypot
-    echo -e "      Temps         Adreça IP     Port" >> log_honeypot
-    echo -e " --------------- --------------- -----" >> log_honeypot
+    {
+        echo -e " ---------------   -----------"
+        echo -e ""
+        echo -e "--------------------------------------"
+        echo -e "Evolució dels accessos"
+        echo -e "--------------------------------------"
+        echo -e "      Temps         Adreça IP     Port"
+        echo -e " --------------- --------------- -----"
+    } >> log_honeypot
     for each in "${!arrayFullAtacs[@]}"
     do
         espaiBlancIP=" ";
@@ -283,12 +289,12 @@ do
         portAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f3 )
         x=7;
         trobat=0;
-        while (( $x <= 15 )) && (( !$trobat ))
+        while (( x <= 15 )) && (( !trobat ))
         do
             if [ "${#ipAcces}" == "$x" ] 
             then
                 num=15-$x;
-                for ((y=0; y<$num; y++))
+                for ((y=0; y<num; y++))
                 do
                     espaiBlancIP=" $espaiBlancIP"; 
                 done
@@ -301,12 +307,12 @@ do
         espaiBlancPort=" ";
         x=0;
         trobat=0;
-        while (( $x <= 5 )) && (( !$trobat))
+        while (( x <= 5 )) && (( !trobat))
         do
             if [ "${#portAcces}" == "$x" ]
             then
                 num=5-$x;
-                for ((y=0; y<$num; y++))
+                for ((y=0; y<num; y++))
                 do
                     espaiBlancPort=" $espaiBlancPort";
                 done
@@ -318,8 +324,10 @@ do
         stringResum="$stringResum$espaiBlancPort$portAcces"
         echo "$stringResum" >> log_honeypot
     done
-    echo -e " --------------- --------------- -----" >> log_honeypot
-    echo -e "                    " >> log_honeypot
+    {
+        echo -e " --------------- --------------- -----"
+        echo -e "                    "
+    } >> log_honeypot
     if [ $quit != 1 ] 
     then
         echo -e "Prem [q] per sortir." >> log_honeypot
