@@ -14,7 +14,8 @@ usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
 usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
 usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
 usageSuperUser="Has de ser root per executar aquest script"
-usagePaquet="Has de tenir instalat el paquet de tcpdump, instala amb: apt install tcpdump"
+usagePaquetcpdump="Has de tenir instalat el paquet de tcpdump, instala-ho amb: apt install tcpdump"
+usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt install iproute2"
 
 # Variables per les comprovacions dels parámetres inicials
 llistaInterficies=$(ls /sys/class/net/)
@@ -31,7 +32,7 @@ SO=$(cat /etc/*release | grep 'PRETTY_NAME' | cut -d '"' -f2)
 host=$(hostname)
 scriptVersion="1.0"
 dataInicial="2020-04-25"
-myIP=$(hostname -I | cut -d ' ' -f1)
+myIP=""
 dataCompilacioInici=$(date --rfc-3339=date)
 horaCompilacioInici=$(date | cut -d ' ' -f5)
 
@@ -49,6 +50,8 @@ ultimaHora=" 0 atacs rebuts"
 
 ####### COMPROVACIONS PREVIES #######
 
+# ---- comprovar SO y decir que no funcionara al 100%% propuesta
+
 # Comprovació del superusuari
 if [ $(whoami) != "root" ]
 then
@@ -58,8 +61,16 @@ fi
 # Comprovació del paquet tcpdump
 if [ $(dpkg -l | grep tcpdump | wc -l) -eq 0 ]
 then 
-	echo "$usagePaquet"; exit 1
+	echo "$usagePaquetcpdump"; exit 1
 fi
+
+# 2>&1 REVISAR SALIDA ---------------------------------------------
+# Comprovació del paquet iproute2
+if [ $(dpkg -l | grep iproute2 | wc -l) -eq 0 ]
+then 
+	echo "$usagePaquetip"; exit 1
+fi
+
 
 # Detecció de la correctesa dels arguments d'entrada
 if [ $# == 2 ]
@@ -103,6 +114,8 @@ done
 if [ "$i" != 1 ]
 then 
     echo "$usageInterficieInc"; exit 1
+else
+    myIP=$(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1)
 fi
 
 ####### CREACIÓ DE FITXERS NECESSARIS #######
