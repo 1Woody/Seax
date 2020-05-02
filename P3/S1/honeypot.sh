@@ -39,6 +39,7 @@ horaCompilacioInici=$(date | cut -d ' ' -f5)
 
 # Variables filtre tcpdump
 filter_tcp="tcp[13]=2 && port $3"
+tcpdumpgood="tcpdump:verbose output supressed, use -v or -vv for full protocol decode listening on $1"
 
 # Variables utilitzades en el core del programa
 numAccesosSimultanis=11 #10 accesos, agafem 11 per evitar agafar la capçalera
