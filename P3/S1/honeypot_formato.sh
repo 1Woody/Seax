@@ -2,22 +2,18 @@
 #!utf-8
 # Elegir bien los PERMISOS!!!
 # COMPROBAR LO QUE NECESITA EL USUARIO (PAQUETES, ROOT ...)
+# ports --> https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 
-####### 1.VARIABLES #######
-
-# Variables usage per les notificacions d'error
+# Variables de usage per els avisos de error
 usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
 usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
 usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
-usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP."
+usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP o ICMP."
 usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
 usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
 usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
-usageSuperUser="Has de ser root per executar aquest script"
-usagePaquetcpdump="Has de tenir instalat el paquet de tcpdump, instala-ho amb: apt install tcpdump"
-usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt install iproute2"
 
-# Variables per les comprovacions dels parámetres inicials
+# Varibales per les comprovacions
 llistaInterficies=$(ls /sys/class/net/)
 i=0
 quit=0
@@ -26,56 +22,45 @@ protocolMajus=${PR^^}
 protocolMinus=${PR,,}
 interfaceActual="$1"
 
-# Variables de característiques necessaries per l'script
+# Variables de característiques 
 usuari=$(whoami)
 SO=$(cat /etc/*release | grep 'PRETTY_NAME' | cut -d '"' -f2)
 host=$(hostname)
 scriptVersion="1.0"
 dataInicial="2020-04-25"
-myIP=""
-dataCompilacioInici=$(date --rfc-3339=date)
-horaCompilacioInici=$(date | cut -d ' ' -f5)
 
 # Variables filtres tcpdump
+myIP=$(hostname -I | cut -d ' ' -f1)
+filter_icmp="'not src "$myIP" && icmp'"
 filter_tcp="tcp[13]=2 && port "$3""
 
-# Variables utilitzades en el core del programa
+#Variables de loop
 numAccesosSimultanis=11 #10 accesos, agafem 11 per evitar agafar la capçalera
 comptLinia=2
 arrayAtacs+=("") # array amb comptador de repetició
 arrayFullAtacs+=("") # array amb tots els atacs (sense tenir en compte repeticions)
 repetit=0
-primeraHora=" 0 atacs rebuts"
-ultimaHora=" 0 atacs rebuts"
+primeraHora="0 atacs rebuts"
+ultimaHora="0 atacs rebuts"
+arrayProva1=("18:30:12.5432-192.168.0.27-22-1" "12:31:12.5531-192.168.0.282-50000-223" "08:59:00.5432-192.168.0.33-123-1" "18:30:12.5432-192.168.0.27-6543-1" "18:30:12.5432-192.168.0.27-88-4")
+arrayProva2=("18:30:12.543232-10.1.1.1-22" "12:31:12.553132-10.1.1.11-50000" "14.23.57.324532-10.1.11.11-50000" "08:59:00.543232-10.11.11.11-123" "18:30:12.543232-10.11.11.111-6543" "18:30:12.543232-10.11.111.111-6543" "18:30:12.543232-10.111.111.111-6543" "18:30:12.543232-111.111.111.111-6543")
+####### PROGRAMA #######
 
-####### 2. COMPROVACIONS PREVIES #######
-
-# ---- comprovar SO y decir que no funcionara al 100%% propuesta
-
-# Comprovació del superusuari
-if [ $(whoami) != "root" ]
-then
-	echo "$usageSuperUser"; exit 1
+#detecció dels progrmas necessaris
+if [ $(whoami) != "root" ]; then #has de ser root (whoami et diu si ho executes com root)
+	echo "Has de ser root per executar aquest script"
+	exit 1
 fi
 
-# Comprovació del paquet tcpdump
-if [ $(dpkg -l | grep tcpdump | wc -l) -eq 0 ]
-then 
-	echo "$usagePaquetcpdump"; exit 1
-fi
-
-# 2>&1 REVISAR SALIDA ---------------------------------------------
-# Comprovació del paquet iproute2
-if [ $(dpkg -l | grep iproute2 | wc -l) -eq 0 ]
-then 
-	echo "$usagePaquetip"; exit 1
+if [ $(dpkg -l | grep tcpdump | wc -l) -eq 0 ]; then #Si busquem el paquet i no trobem res significa que no ho tenim instalat
+	echo "Has de tenir instalat el paquet de tcpdump, instala amb: apt install tcpdump"
+	exit 1
 fi
 
 
-# Detecció de la correctesa dels arguments d'entrada
+#detecció de la correctesa dels arguments d'entrada
 if [ $# == 2 ]
 then 
-    #cas ICMP sense port
     if [ "$protocolMajus" != "ICMP" ]
     then
         if [ "$protocolMajus" == "TCP" ] || [ "$protocolMajus" == "UDP" ]
@@ -95,7 +80,6 @@ then
     elif [ "$3" -gt "65535" ] || [ "$3" -lt "0" ]
     then
         echo "$usagePortRang"; exit 1    
-
     # Comprovació del protocol
     elif [ "$protocolMajus" != "TCP" ] && [ "$protocolMajus" != "UDP" ]
     then
@@ -104,7 +88,6 @@ then
 else
     echo "$usageInvalidArg"; exit 1
 fi
-# Comprovació interfície
 for interface in $llistaInterficies; do
     if [ "$interface" == "$interfaceActual" ]
     then
@@ -114,20 +97,14 @@ done
 if [ "$i" != 1 ]
 then 
     echo "$usageInterficieInc"; exit 1
-else
-    myIP=$(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1)
 fi
 
-####### 3. CREACIÓ DE FITXERS NECESSARIS #######
-
+# Creació de fitxers necessaris
 touch log_honeypot
 touch atacs.log
-#inicialització capçalera del fitxer d'atacs
+
+# Activació del procés de tcpdump en funció del paràmetres establerts
 echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log
-
-
-####### 4. MONITORITZACIÓ DE PAQUETS #######
-
 if [ "$protocolMajus" == "TCP" ]
 then
     tcpdump -l -q -nni "$interfaceActual" "$filter_tcp" 2>/dev/null >> /root/atacs.log &
@@ -141,33 +118,29 @@ else
     pidtcpdump=$!
 fi
 
-####### 5. TRACTAMENT D'ATACS #######
-
+# Bucle infinit del programa 
+dataCompilacioInici=$(date --rfc-3339=date)
+horaCompilacioInici=$(date | cut -d ' ' -f5)
 tput sc; 
 while [ $quit != 1 ]
 do
-    # Bucle de lectura del fitxer d'atacs
     while [ "$comptLinia" -le "$numAccesosSimultanis" ]
     do
         hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log)
         ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4)
         port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5)
         if [ "$hora" != "" ] && [ "$ipNouAtac" != "" ]
-        then
+        then 
             atacActual="$hora-$ipNouAtac-$port"
             if [ "${arrayAtacs[0]}" == "" ] && [ "${arrayFullAtacs[0]}" == "" ]
             then
-                # Guardem l'hora del primer acces
-                primeraHora=$hora
+                primeraHora=$hora #guardem l'hora del primer acces
                 arrayFullAtacs[0]="$atacActual"
                 atacActual="$atacActual-1"
                 arrayAtacs[0]="$atacActual"
             else
-                # Guardem l'hora de l'últim accés
-                ultimaHora=$hora
+                ultimaHora=$hora #guardem l'hora de l'últim accés
                 arrayFullAtacs+=($atacActual)
-
-                # Bucle de verificació d'atacs repetits
                 for pos in "${!arrayAtacs[@]}"
                 do  
                     ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2)
@@ -190,11 +163,9 @@ do
             fi
             ((comptLinia+=1))
         else
-            # Acabem la lectura ja que no hi ha res al fitxer 
-            comptLinia=$(($numAccesosSimultanis + 2))
+            comptLinia=12  # acabem la lectura ja que no hi ha res al fitxer
         fi
     done
-    # Inicialització de lectura de linia (2 per tenir en compte la capçalera) i neteja del fitxer
     comptLinia=2
     echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log 
 
@@ -207,7 +178,9 @@ do
         dataCompilacioFi=$(date --rfc-3339=date)
         horaCompilacioFi=$(date | cut -d ' ' -f5)
         quit=1
-        exec 1<>log_honeypot
+        true > log_honeypot
+        exec 1<>log_honeypot 
+        echo -n ""
         echo -e "----------------------------------------------------------------------------------------------------------"
         echo -e "Monitorització realitzada per l'usuari $usuari de l'equip $host."
         echo -e "Sistema operatiu $SO."
@@ -319,7 +292,7 @@ do
         echo "$stringResum" >> log_honeypot
     done
     echo -e " --------------- --------------- -----" >> log_honeypot
-    echo -e "                    " >> log_honeypot
+    echo -e " " >> log_honeypot
     if [ $quit != 1 ] 
     then
         echo -e "Prem [q] per sortir." >> log_honeypot

@@ -1,3 +1,62 @@
+GUIA DE PROGRAMACIÓ
+
+APUNTES ANTES DE ACABAR
+-> PROBAR EN VARIOS SISTEMAS
+-> AÑADIR COMPROBACIÓN DEL SISTEMA OPERATIVO ?
+
+ÍNDEX
+
+CODI
+0. INICIALITZACIÓ SCRIPT
+1. VARIABLES
+2. COMPROVACIONS PREVIES
+3. CREACIÓ DE FITXERS NECESSARIS
+4. MONITORITZACIÓ DE PAQUETS
+5. TRACATAMENT D'ATACS
+6. MAQUETACIÓ DE DADES
+
+INFORMACIÓ SCRIPT
+7. NECESSITATS DEL SCRIPT
+8. PROVES DE VALIDACIÓ
+9. ESCENARIS DE FALLIDA
+10. PUNTS DE MILLORA
+11. CONCLUSIONS GENERALS
+
+
+####### 0. INICIALITZACIÓ SCRIPT #######
+Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, alla trobarem dues 
+linies importants: 
+
+#!/bin/bash --> Amb aquesta intrucció forçarem al sistema a utilitzar la sheel de bash, imprescindible ja
+que està programat en bash.
+
+#!utf-8 --> Amb aquesta instrucció introduirem el format utf-8 que ens evitarà errors de format en diferents
+casos com els accents.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 TCP DUMP 
 FLAGS
 -i elegir interficie que capturar
