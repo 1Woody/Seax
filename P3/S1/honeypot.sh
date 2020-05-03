@@ -38,7 +38,7 @@ dataCompilacioInici=$(date --rfc-3339=date)
 horaCompilacioInici=$(date | cut -d ' ' -f5)
 
 # Variables filtre tcpdump
-filter_tcp="tcp[13]=2 && port $3"
+filter_tcp="tcp[13]=2 and port $3"
 
 # Variables utilitzades en el core del programa
 primerCop=1
@@ -135,11 +135,11 @@ echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log
 
 if [ "$protocolMajus" == "TCP" ]
 then
-    tcpdump -l -q -nni "$interfaceActual" "$filter_tcp" 2>log_honeypot >> atacs.log &
+    tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 elif [ "$protocolMajus" == "UDP" ]
 then 
-    tcpdump -l -q -nni "$interfaceActual" udp port "$3" 2>log_honeypot >> atacs.log &
+    tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and port "$3" and udp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 else
     tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp 2>log_honeypot >> atacs.log &

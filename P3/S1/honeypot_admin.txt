@@ -24,8 +24,8 @@ INFORMACIÓ SCRIPT
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
-Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, alla trobarem dues 
-linies importants: 
+Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, alla trobarem dues
+linies importants:
 
 #!/bin/bash --> Amb aquesta intrucció forçarem al sistema a utilitzar la sheel de bash, imprescindible ja
 que està programat en bash.
@@ -34,99 +34,226 @@ que està programat en bash.
 casos com els accents.
 
 ####### 1. VARIABLES #######
-A continuació, trobem la inicialització de les variables del program, 
+A continuació, trobem la inicialització de les variables del programa.
 
 Primer de tot trobarem els usage (missatges d'error distribuits per les diferents comprovacions dintre del codi). Seran els següents:
-    - usageInvalidArg --> Tracta el nombre d'arguments que escriu l'usuari en la execució de l'script.  
+    - usageInvalidArg --> Tracta el nombre d'arguments que escriu l'usuari en la execució de l'script.
     - usagePortEnter --> Tracta que l'argument del port sigui un nombre enter.
     - usagePortRang --> Tracta que el número de port estigui en el rang permés (0 - 65535)
     - usageProtocolInc --> Tracta que el protocol sigui TCP o UDP (en cas d'haver tres arguments)
     - usageInterficieInc --> Comprova si la interfície especificada per l'usuari és vàlida (es troba al sistema)
-    - usageICMP --> Tracta que el protocol sigui ICMP (en cas d'haver dos arguments) 
+    - usageICMP --> Tracta que el protocol sigui ICMP (en cas d'haver dos arguments)
     - usageTCPUDP --> Informa a l'usuari de que és necessari un port en cas d'utilitzar els protocols TCP o UDP.
     - usageSuperUser --> Especifica a l'usuari que ha de ser root per poder executar l'script.
-    - usagePaquetcpdump --> 
-    - usagePaquetip --> 
-    - usageExecucio --> 
-    - usageIP --> 
-    
+    - usagePaquetcpdump --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a tcpdump.
+    - usagePaquetip --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a iproute.
+    - usageExecucio --> Informa a l'usuari de que el seu sistema operatiu té algun tipus d'incompatibilitat amb tcpdump.
+    - usageIP --> Informa a l'usuari de que no té cap IP assignada de tipus IPv4.
+
 Després trobem les variables utilitzades a les comprovacions dels paràmetres inicials
-    - i=0 -->
-    - quit -->
-    - PR -->
-    - protocolMajus -->
-    - protocolMinus -->
-    - interfaceActual -->
+    - i --> Funciona com a booleà a l'hora de comprovar la correctesa de la interfície especificada per l'usuari.
+    - quit --> Funciona com a booleà a l'hora de comprovar que l'usuari hagi polsat la 'q' o no.
+    - PR --> Conté el protocol especificat per l'usuari a l'input d'execució (2n argument)
+    - protocolMajus --> Conté el protocol anterior (variable 'PR') convertit tot a majúscules.
+    - protocolMinus --> Conté el protocol (variable 'PR') convertit a minúscules.
+    - interfaceActual --> Conté la interfície especificada per l'usuari a l'input d'execució (1r argument)
 
 Per continuar trobem les variables de característiques de l'usuari necessàries per l'script
-    - usuari -->
-    - SO -->
-    - host -->
-    - scriptVersion -->
-    - dataInicial -->
-    - myIP -->
-    - dataCompilacioInici -->
-    - horaCompilacioInici -->
+    - usuari --> Conté el nom d'usuari des d'on s'executa l'script ('root')
+    - SO --> Conté el sistema operatiu de l'usuari que executa l'script.
+    - host --> Conté el nom de la màquina de l'usuari que executa l'script.
+    - scriptVersion --> Conté la versió de l'script.
+    - dataInicial --> Conté la data de la última compilació del programa.
+    - myIP --> Conté la direcció IPv4 de l'usuari que executa l'script.
+    - dataCompilacioInici --> Conté la data (any, mes i dia) en que s'inicia l'execució de l'script.
+    - horaCompilacioInici --> Conté la hora en que s'inicia l'execució de l'script.
 
 # Variables filtre tcpdump
-    - filter_tcp -->
+    - filter_tcp --> Conté els filtres necessaris per detectar les capçaleres dels accesos pel protocol tcp, s'explicarà en l'apartat 4.
 
 # Variables utilitzades en el core del programa
-    - primerCop -->
-    - numAccesosSimultanis -->
-    - comptLinia -->
-    - arrayAtacs -->
-    - arrayFullAtacs -->
-    - repetit -->
-    - primeraHora -->
-    - ultimaHora -->
+    - primerCop --> Funciona com a booleà per tal d'evitar el primer sleep del programa.
+    - numAccesosSimultanis --> Estableix el número d'accessos màxims que es permeten simultàniament (X accessos + 1 de capçalera)
+    - comptLinia --> Funciona com a comptador de les línies dels diferents atacs (sempre és menor a $numAccesosSimultanis)
+    - arrayAtacs --> Array que durant el programa contindrà el número d'atacs que ha realitzat cada IP atacant.
+    - arrayFullAtacs --> Array que durant el programa contindrà per separat cada un dels atacs rebuts pel programa.
+    - repetit --> S'utilitza per saber si la IP d'un nou atac ja ha atacat amb anterioritat o no.
+    - primeraHora --> S'utilitza per guardar la hora del primer atac rebut (si és que n'hi ha hagut).
+    - ultimaHora --> S'utilitza per guardat la hora de l'últim atac rebut.
+
+####### 2. COMPROVACIONS PREVIES #######
+En aquest punt es faran les diferents comprovacions de l'usuari, per tal de que es pugui executar l'script sense problemes. Tant en relació a paquets instal·lats (tcpdump, iproute2) com a comprovació del tipus d'usuari (superuser).
+També es tractaran els diferents problemes que poden sorgir amb la entrada dels arguments pertinents. Tant en el número d'aquests com en la seva correctesa (interfície, protocol i port) 
+
+# Comprovació del superusuari --> En aquest apartat es comprova que l'usuari que executa l'script sigui "root".
+                                  Si "$(whoami)" != "root" --> L'usuari no és root.
+                                  En aquest cas, s'envia el missatge $usageSuperUser per informar l'usuari. Després d'això es tanca l'execució del programa.
+                                  * Comanda: whoami --> Bàsicament exposa per pantalla el nom d'usuari de l'actual usuari.
+
+# Comprovació del paquet tcpdump --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de tcpdump.
+                                     Si "$(dpkg -l | grep -c tcpdump)" == 0 --> Paquet tcpdump no instal·lat.
+                                     En aquest cas, s'envia el missatge $usagePaquettcpdump per informar l'usuari. Després d'això es tanca l'execució del programa.
+                                     * Comanda: dpkg -l --> Llista tots els paquets instal·lats al sistema. Gràcies al 'grep -c tcpdump' busquem a la llista anterior el paquet amb el nom tcpdump 
+                                     i amb el flag -c comptem el nombre d'encerts que ha tingut la instrucció grep.
+
+# Comprovació del paquet iproute2 --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de iproute2 (del cual la instrucció ip forma part i serà utilitzada posteriorment).
+                                      Si "$(dpkg -l | grep -c iproute2)" == 0 --> Paquet iproute2 no instal·lat.
+                                      En aquest cas, s'envia el missatge $usagePaquetip per informar l'usuari. Després d'això es tanca l'execució del programa.
+                                      * Comanda: dpkg -l | grep -c iproute2 --> Mateix funcionament que l'anterior apartat pero amb el paquet iproute2.
+
+# Detecció de la correctesa dels arguments d'entrada --> En aquest apartat comprovarem la correctesa tant del número d'arguments com del contingut d'aquests.
+
+    Variable '$#' --> Conté el nombre d'arguments que ha introduit l'usuari per pantalla.
+
+    # 2 arguments --> Si "$#" == 2 --> Hi ha 2 arguments.
+                      En cas de tenir dos arguments, realitzarem les següents comprovacions:
+
+                      El protocol haurà de ser ICMP.
+                      Si "$protocolMajus" != "ICMP" --> El protocol no és ICMP.
+                      En aquest cas, realitzarem les següents accions:
+                      Es fa el tractament de si el protocol és TCP o UDP.
+                      Si "$protocolMajus" == "TCP" o "$protocolMajus" == "UDP", el protocol serà TCP o UDP.
+                      En aquest cas s'informa a l'usuari amb el missatge $usageTCPUDP de que si selecciona TCP o UDP ha d'especificar un port. Després d'això es tanca l'execució del programa.
+                      En cas contrari, de que no sigui cap dels anteriors protocols esmentats, s'envia el missatge $usageICMP, per tal d'avisar a l'usuari de que ha d'utilitzar el protocol ICMP en cas de posar només dos arguments.
+                      Després d'això es tanca l'execució del programa.
+
+    # 3 arguments --> Si "$#" == 3 --> Hi ha 3 arguments.
+                      En cas de tenir tres arguments, realitzarem les següents comprovacions:
+
+                      Primer, es comprova que el 3r argument (port) sigui un nombre enter.
+                      Si "$3 =~ ^[0-9]+$" --> El port és un nombre enter.
+                      En cas contrari, s'envia el missatge $usagePortEnter per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+
+                      Després, es comprova que el número de port es trobi entre el rang permés (0-65535).
+                      Si "$3" > "65535" o "$3" < "0"" --> El nombre no es troba en el rang.
+                      En aquest cas, s'envia el missatge $usagePortRang per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+
+                      Per últim, es comprova que el protocol sigui TCP o UDP.
+                      Si "$protocolMajus" != "TCP" i "$protocolMajus" != "UDP" --> El protocol no és ni TCP ni UDP.
+                      En aquest cas, s'envia el missatge $usageProtocolInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+
+    # Nº d'arguments invàlid --> En el cas de que el nombre d'arguments no sigui ni 2 ni 3, s'envia el missatge $usageInvalidArg per tal d'informar l'usuari de l'error.
+                                 Després d'això es tanca l'execució del programa.
+
+# Comprovació interfície --> En aquest cas es comprova que la interfície escollida per l'usuari es trobi en la llista d'interfícies actives del sistema. En cas d'estar-hi, cal revisar si té una IP assignada en la interfície.
+                             * Comanda: $(ls /sys/class/net/); --> Aquesta comanda llista totes les interfícies actives del sistema. Cada interfície de xarxa del sistema conté un directori situat a /sys/class/net, amb els diferents fitxers que conformen l'estructura de la interfície (els fitxers adreça, broadcast o device en són exemples).
+                             Llavors, cada interfície ($interface) situada a /sys/class/net/, la compararem amb la interfície de l'usuari.
+                             Si  "$interface" == "$interfaceActual" --> Interfície trobada al sistema.
+                             En el cas de que la interfície es trobi s'incrementa en 1 el booleà $i.
+                             Després es comprova si el booleà $i no és 1. En aquest cas significarà que no s'ha trobat la interfície i s'envia el missatge $usageInterficieInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+                             En el cas de que la interfície sí hagi estat trobada ($i == 1), es buscarà que la interfície tingui una IP assignada.
+                             * Comanda: $(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1); --> Aquesta comanda recull la IPv4 de la interfície especificada ($1), en cas de que tingui més d'una agafarem la primera IP disponible.
+                                        - ip -4 addr show dev "$1" --> Exposa la interfície de xarxa especificada amb algunes característiques i la seva adreça IP associada.
+                                        - grep inet --> Es filtra i s'agafa la línia on es troba l'string 'inet'
+                                        - awk '{print $2}' --> Es filtra i s'agafa el segon string ($2) de la línia.
+                                        - cut -d '/' -f1 | head -n 1 --> Es divideix l'string per '/' i s'agafa la primera fila.
+                             Si aquesta comanda anterior no retorna cap valor, voldrà dir que no hi ha cap IPv4 assignada.
+                             En aquest cas, s'envia el missatge $usageIP per tal d'informar l'usuari de que no té cap IPv4 assignada. Després d'això es tanca l'execució del programa.
+                             En el cas de que sí es trobi IPv4, seguirem amb el programa.
+
+####### 3. CREACIÓ DE FITXERS NECESSARIS #######
+En aquest apartat tractarem la creació dels fitxers necessaris per la realització del nostre script (tant el fitxer de l'output com el fitxer de la monitorització d'atacs). 
+
+    # Creació dels fitxers
+
+        touch log_honeypot --> Creació de l'arxiu on s'escriurà l'output final de la monitorització.
+        touch atacs.log --> Creació de l'arxiu on es van actualitzant els diferents atacs monitoritzats pel programa.
+
+    # Inicialització capçalera dels fitxer d'atacs
+
+        true > log_honeypot --> Es buida l'arxiu log_honeypot per assegurar que està buit.
+        echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log --> Escriptura de la capçalera a l'arxiu atacs.log.
+        S'ha aplicat una capçalera al fitxer per evitar errors en l'escriptura en temps real de la comanda tcpdump
+        
+####### 4. MONITORITZACIÓ DE PAQUETS #######
+En aquest apartat tractarem l'execució del programa tcpdump per capturar paquets, dintre tindrem tres opcions en funció del protocol que l'usuari hagi seleccionat al iniciar l'script.
+
+    Part comú de la instrucció tcpdump:
+    *Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" --> Inicialitza el programa amb els paràmetres decidits pels flags següents:
+    -l --> Permet que la sortida del tcpdump sigui llegible(o enviable) en temps real, permeten així guardar la sortida al fitxer atacs.log
+    -q --> Redueix la informació que es mostra de cada captura (less verbose) 
+    -nni --> conjunt de dos flags: 
+            -nn --> Evita la conversió d'adreces, ports habituals, etc a noms. (Permetent així la sortida d'una ip en comptes del seu nom de domini)
+            -i --> Marca la intefície a la qual escoltarà l'instrucció tcpdump, després d'aquest flag és on col·locarem la variable amb l'interfície seleccionada per l'usuari.
+    dst --> Limita la captura de paquets a aquells que tenen com a direcció destí la IP de la intefície selecciona per l'usuari. 
+
+    Cas TCP: Amb el protocol TCP seleccionat, es filtren els paquets específicament per evitar els casos que no són accessos, més concretament s'accedeix a les capçaleres
+    dels paquets tcp i només s'agafen els de tipus SYN (en qualsevol connexió tcp trobem l'anomenat handshake, on una maquina1 envia a una maquina2 un paquet tcp de tipus SYN i la maquina2
+    respon amb un de tipus ACK). Aquesta informació s'aconsegueix al byte número 14 de la capçalera tcp, i si és un flag de tipus SYN tindrà un valor de 00000010, que en decimal equival a 2. Per tant, 
+    ens queda el següent filtre per tcp:
+     
+    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" --> Captura paquets de la interfície seleccionada, de tipus SYN i que pasen pel port seleccionat.
+    filter_tcp="tcp[13]=2 and port $3"
+    - filter_tcp: tcp[13]=2  --> flag iniciat des de 0 per tant 0-13=14è byte
+    - port $3 --> Especificat als arguments d'entrada.
+
+    Cas UDP: Amb el protocol UDP seleccionat, es capturen tots el paquets que tenen com a destí la IP de la interfície seleccionada, donat que el protocol UDP a diferència del handshake del TCP, funciona 
+    amb una petició(REQUEST) directa de la maquina1 i una resposta de la maquina2 retornant l'informació demanada (no hi ha verificació d'informació). Per tant el filtre es el següent: 
+    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and port "$3" and udp --> Captura paquets de la interfície seleccionada, de tipus UDP, on el seu destí és la direcció IP de la maquina on 
+    s'executa l'script i que pasen pel port decidit per l'usuari.
+    
+    Cas ICMP: 
+
+    Sortida d'errors: Amb el protocol UDP seleccionat, al igual que al cas UPD, es capturen tots els paquets que tenen com a destí la direcció IP seleccionada, es podria limitar a agafar paquets de tipus
+    request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan executa un ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat.
+
+    Sortida normal:
+
+
+####### 6. MAQUETACIÓ DE DADES #######
+
+        true > log_honeypot --> Es buida l'arxiu log_honeypot.
+        tput ed --> Es fa una neteja des de la posició actual del cursor fins al final de la pantalla (en aquest moment el cursor es troba a la zona superior de la pantalla).
+        read -r -t 0.01 -N 1 input --> Aquesta comanda s'utilitza per saber si l'usuari ha escrit la 'q' per acabar amb l'execució. La comanda read llegeix una línia de l'input. Opcions:
+            
+            -r: Evita problemes de sintaxi amb barres verticals '/'.
+            -t 0.01: Timeout. Si l'input no és llegit en aquest temps es realitza el time-out i no es retorna res.
+            -N 1: Nombre de caràcters que ha de llegir la instrucció (en aquest cas un).
+            input: Variable en la que es guarda la lectura.  
+
+        Si la variable $input (retornada en l'anterior read) == "q" :
+
+        kill "$pidtcpdump" --> S'elimina el procés de tcpdump, fent un kill del seu PID, creat anteriorment al principi de l'apartat de monitorització de paquets. 
+        true > log_honeypot --> Es buida l'arxiu log_honeypot.
+        dataCompilacioFi=$(date --rfc-3339=date) --> Conté la data (any, mes i dia) del moment en el que es tanca el programa. 
+        horaCompilacioFi=$(date | cut -d ' ' -f5) --> Conté la hora exacta en la que es tanca el programa. 
+        quit=1 --> Posem el booleà $quit a 1, que marcarà que es la última iteració del programa, ja que no es tornarà a entrar al bucle general. 
+        exec 1<>log_honeypot --> Comanda utilitzada per a que el resultat de totes les següents comandes 'echo' vagi directament a parar a l'arxiu especificat (log-honeypot).
+        
+    # Impressió de línies
+
+        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en una línia diferent. Totes aquestes línies printades seran redirigides directament al fitxer log_honeypot, gràcies a estar entre { } i finalment enviades (>> log_honeypot)
+        Totes són línies bàsiques d'output, excepte la quarta. Que contindrà l'adreça IP de l'usuari ($myIP), el protocol utilitzat en minúscules ($protocolMinus), el port ($3), l'hora del primer atac ($primeraHora) i la hora de l'últim (en cas d'haver-hi)($ultimaHora).
+
+    # Tractament del format d'escriptura del resum dels accessos
+        
+        En aquest moment l'output de la zona superior de la pantalla està redirigit al fitxer log_honepot, i ara apareix la primera zona d'actualització, on s'aniran refrescant les IP's que han fet algun accés i quantes vegadas ho ha fet cadascuna.
+        Per cada conjunt d'atacs de cada IP (trobats a l'array $arrayAtacs) es realitzaran les següents accions:
+        
+            espaiBlancIP=" "; --> S'inicialitza amb un espai en blanc la variable espaiBlancIP, que és l'encarregada de col·locar els espais en blanc adients per tal de que les IPs sempre quedin alineades amb el format de l'output.
+            ipAcces=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f2 ) --> Inicialització de la variable $ipAcces, que conté la segona fila, separades amb guions, de la actual línia (on es troba la IP de l'atacant).
+            numAccessos=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f4 ) --> Inicialització de la variable $numAccessos, que conté la quarta fila, separades amb guions, de la actual línia (on es troba la IP de l'atacant).
+            x=7 --> Inicialització de la variable $x, que es compararà amb el número de caràcters que ocupa la variable $ipAcces, per tal d'alinear en format a totes les diferents IP's.
+            trobat=0 --> Inicialització de la variable $trobat, que funcionarà com a booleà. 
+
+            # Tractament de l'espai assignat a les adreces IP
+
+            Sempre que $x sigui <= a 15 i $trobat == 0
+
+                Si "${#ipAcces}" == "$x" --> (En el cas de que el número de caràcters de la IP de $ipAcces sigui el mateix que el de la variable $x)
+
+                    num=15-$x; --> Inicialització de la variable $num. Conté els espais exactes que aniran abans de la IP a l'output per tal de que estiguin totes alineades. 
+                    A continuació, li afegirem a la variable $espaiBlancIP $num espais en blanc. 
+                    trobat=1; Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais en blanc fixats.
+                    
+            stringResum="$espaiBlancIP$ipAcces" --> Inicialització de l'string $stringResum, que conté els espais en blanc adients i la IP per tal d'estar alineada amb les altres IP's.
+            
+            Ara, repetirem el mateix procés però per col·locar els espais en blanc i el número d'accessos alineats. 
+
+            
 
 
 
-# Variables usage per les notificacions d'error
-usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
-usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
-usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
-usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP ."
-usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
-usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
-usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
-usageSuperUser="Has de ser root per executar aquest script"
-usagePaquetcpdump="Has de tenir instalat el paquet de tcpdump, instala-ho amb: apt install tcpdump"
-usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt install iproute2"
-usageExecucio="No s'ha pogut inicialitzar la captura de paquets. Sembla que el sistema operatiu té algún tipus d'incompatibilitat amb tcpdump."
-usageIP="Sembla que no tens cap IP(v4) assignada en aquesta interfície."
-
-# Variables per les comprovacions dels paràmetres inicials
-i=0
-quit=0
-PR="$2"
-protocolMajus=${PR^^}
-protocolMinus=${PR,,}
-interfaceActual="$1"
-
-# Variables de característiques necessaries per l'script
-usuari=$(whoami)
-SO=$(cat /etc/*release 2>/dev/null | grep 'PRETTY_NAME' | cut -d '"' -f2)
-host=$(hostname)
-scriptVersion="1.0"
-dataInicial="2020-04-25"
-myIP=""
-dataCompilacioInici=$(date --rfc-3339=date)
-horaCompilacioInici=$(date | cut -d ' ' -f5)
-
-# Variables filtre tcpdump
-filter_tcp="tcp[13]=2 && port $3"
-
-# Variables utilitzades en el core del programa
-primerCop=1
-numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
-comptLinia=2
-arrayAtacs+=("") # Array amb comptador de repetició
-arrayFullAtacs+=("") # Array amb tots els atacs (sense tenir en compte repeticions)
-repetit=0
-primeraHora="0 atacs rebuts"
-ultimaHora="0 atacs rebuts"
 
 
 
@@ -142,19 +269,16 @@ ultimaHora="0 atacs rebuts"
 
 
 
-
-
-
-TCP DUMP 
+TCP DUMP
 FLAGS
--i elegir interficie que capturar
+-i elegir interfície que capturar
 -c capturamos un numero concreto de paquetes
 -A paquetes en formato ASCII
 -w elegir un fichero de tipo ".pcap" que guarda los resultados  (tcpdump -w eth0.pcap -i eth0)
 -r para analizar el fichero generado .pcap (tcpdump -r eth0.pcap)
 -n analizar IPaddr, mantiene las ip en los resultados y no las traduce a nombres
--->Añadimos en protcolo al final(creo que no hace falta que sea el final) para analizar solo los paquetes con 
-ese protcolo. 
+-->Añadimos en protcolo al final(creo que no hace falta que sea el final) para analizar solo los paquetes con
+ese protcolo.
 port XX para monitorizar un puerto especifico.
 src IPaddr para monitorizar paquetes de una ip de origen
 dst IPaddr para monitorizar paquetes de una ip de destino
@@ -169,9 +293,9 @@ dst IPaddr para monitorizar paquetes de una ip de destino
 PARA TCP
  --> tcpdump -i enp0s3 'tcp[13]=2 && port 22'
 
-tcpdump -nn -l -q -i enp0s3 'tcp[13]=2 && port 22' 2>/dev/null > /root/test.log 
+tcpdump -nn -l -q -i enp0s3 'tcp[13]=2 && port 22' 2>/dev/null > /root/test.log
 
-test connections --> nc   
+test connections --> nc
 test tcp connections --> nc -z -v ip port
 
 guardar pid del tcpdump
@@ -181,12 +305,11 @@ usual upd ports: 161 162
 
 --> tcpdump -nn -i enp0s3 udp port XX
 
-PARA ICMP 
+PARA ICMP
 -->  tcpdump -l -nni enp0s3 'not src 192.168.0.26 && icmp'
 
 
-TAILS 
+TAILS
 TIEMPO --> awk '/./{time=$1} END{print time}' test.log
 IP --> awk '/./{ip=$3} END{print ip}' test.log | cut -d '.' -f1,2,3,4
 PUERTO --> awk '/./{port=$3} END{print port}' test.log | cut -d '.' -f5
-
