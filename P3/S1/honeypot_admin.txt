@@ -44,7 +44,7 @@ Primer de tot trobarem els usage (missatges d'error distribuits per les diferent
     - usageInterficieInc --> Comprova si la interfície especificada per l'usuari és vàlida (es troba al sistema)
     - usageICMP --> Tracta que el protocol sigui ICMP (en cas d'haver dos arguments) 
     - usageTCPUDP --> Informa a l'usuari de que és necessari un port en cas d'utilitzar els protocols TCP o UDP.
-    - usageSuperUser --> Especifica a l'usuari que ha de ser root.
+    - usageSuperUser --> Especifica a l'usuari que ha de ser root per poder executar l'script.
     - usagePaquetcpdump --> 
     - usagePaquetip --> 
     - usageExecucio --> 
@@ -83,7 +83,50 @@ Per continuar trobem les variables de característiques de l'usuari necessàries
 
 
 
+# Variables usage per les notificacions d'error
+usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
+usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
+usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
+usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP ."
+usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
+usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
+usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
+usageSuperUser="Has de ser root per executar aquest script"
+usagePaquetcpdump="Has de tenir instalat el paquet de tcpdump, instala-ho amb: apt install tcpdump"
+usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt install iproute2"
+usageExecucio="No s'ha pogut inicialitzar la captura de paquets. Sembla que el sistema operatiu té algún tipus d'incompatibilitat amb tcpdump."
+usageIP="Sembla que no tens cap IP(v4) assignada en aquesta interfície."
 
+# Variables per les comprovacions dels paràmetres inicials
+i=0
+quit=0
+PR="$2"
+protocolMajus=${PR^^}
+protocolMinus=${PR,,}
+interfaceActual="$1"
+
+# Variables de característiques necessaries per l'script
+usuari=$(whoami)
+SO=$(cat /etc/*release 2>/dev/null | grep 'PRETTY_NAME' | cut -d '"' -f2)
+host=$(hostname)
+scriptVersion="1.0"
+dataInicial="2020-04-25"
+myIP=""
+dataCompilacioInici=$(date --rfc-3339=date)
+horaCompilacioInici=$(date | cut -d ' ' -f5)
+
+# Variables filtre tcpdump
+filter_tcp="tcp[13]=2 && port $3"
+
+# Variables utilitzades en el core del programa
+primerCop=1
+numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
+comptLinia=2
+arrayAtacs+=("") # Array amb comptador de repetició
+arrayFullAtacs+=("") # Array amb tots els atacs (sense tenir en compte repeticions)
+repetit=0
+primeraHora="0 atacs rebuts"
+ultimaHora="0 atacs rebuts"
 
 
 
