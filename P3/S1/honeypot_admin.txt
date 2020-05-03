@@ -40,17 +40,46 @@ Primer de tot trobarem els usage (missatges d'error distribuits per les diferent
     - usageInvalidArg --> Tracta el nombre d'arguments que escriu l'usuari en la execució de l'script.  
     - usagePortEnter --> Tracta que l'argument del port sigui un nombre enter.
     - usagePortRang --> Tracta que el número de port estigui en el rang permés (0 - 65535)
-    - usageProtocolInc --> 
-    - usageInterficieInc --> 
-    - usageICMP --> 
-    - usageTCPUDP --> 
-    - usageSuperUser --> 
+    - usageProtocolInc --> Tracta que el protocol sigui TCP o UDP (en cas d'haver tres arguments)
+    - usageInterficieInc --> Comprova si la interfície especificada per l'usuari és vàlida (es troba al sistema)
+    - usageICMP --> Tracta que el protocol sigui ICMP (en cas d'haver dos arguments) 
+    - usageTCPUDP --> Informa a l'usuari de que és necessari un port en cas d'utilitzar els protocols TCP o UDP.
+    - usageSuperUser --> Especifica a l'usuari que ha de ser root.
     - usagePaquetcpdump --> 
     - usagePaquetip --> 
     - usageExecucio --> 
     - usageIP --> 
     
+Després trobem les variables utilitzades a les comprovacions dels paràmetres inicials
+    - i=0 -->
+    - quit -->
+    - PR -->
+    - protocolMajus -->
+    - protocolMinus -->
+    - interfaceActual -->
 
+Per continuar trobem les variables de característiques de l'usuari necessàries per l'script
+    - usuari -->
+    - SO -->
+    - host -->
+    - scriptVersion -->
+    - dataInicial -->
+    - myIP -->
+    - dataCompilacioInici -->
+    - horaCompilacioInici -->
+
+# Variables filtre tcpdump
+    - filter_tcp -->
+
+# Variables utilitzades en el core del programa
+    - primerCop -->
+    - numAccesosSimultanis -->
+    - comptLinia -->
+    - arrayAtacs -->
+    - arrayFullAtacs -->
+    - repetit -->
+    - primeraHora -->
+    - ultimaHora -->
 
 
 

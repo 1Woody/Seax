@@ -9,7 +9,7 @@
 usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
 usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
 usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
-usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP."
+usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP ."
 usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
 usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
 usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
@@ -19,7 +19,7 @@ usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt i
 usageExecucio="No s'ha pogut inicialitzar la captura de paquets. Sembla que el sistema operatiu té algún tipus d'incompatibilitat amb tcpdump."
 usageIP="Sembla que no tens cap IP(v4) assignada en aquesta interfície."
 
-# Variables per les comprovacions dels parámetres inicials
+# Variables per les comprovacions dels paràmetres inicials
 i=0
 quit=0
 PR="$2"
@@ -145,7 +145,7 @@ else
     tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 fi
-sleep 0.1
+sleep 0.3
 # Comprovació d'errors en l'execució de la comanda tcpdump
 tcpdumpgood=$(grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot)
 true > log_honeypot
