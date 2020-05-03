@@ -145,8 +145,8 @@ else
     tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 fi
-sleep 0.3
 # Comprovació d'errors en l'execució de la comanda tcpdump
+sleep 0.3
 tcpdumpgood=$(grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot)
 true > log_honeypot
 if [ $tcpdumpgood -ne 2 ]

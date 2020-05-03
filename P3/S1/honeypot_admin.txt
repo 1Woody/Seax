@@ -168,6 +168,9 @@ En aquest apartat tractarem la creació dels fitxers necessaris per la realitzac
 ####### 4. MONITORITZACIÓ DE PAQUETS #######
 En aquest apartat tractarem l'execució del programa tcpdump per capturar paquets, dintre tindrem tres opcions en funció del protocol que l'usuari hagi seleccionat al iniciar l'script.
 
+    Totes les comandes tcpdump es mantenen al background amb la funció "&" al final d'aquestes, aixó permet crear un procés per mantenir llegint mentre seguiexen les funcionalitats de
+    l'script. Després de cada comanda s'executa la funció "$!" i es guarda en la varibale pidtcpdump, el que fa és guardar el pid (identificador de procés) de l'últim procés executat, 
+    permetent parar el procés quan sigui necessari (comanda kill, veure a l'apartat 6).
     Part comú de la instrucció tcpdump:
     *Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" --> Inicialitza el programa amb els paràmetres decidits pels flags següents:
     -l --> Permet que la sortida del tcpdump sigui llegible(o enviable) en temps real, permeten així guardar la sortida al fitxer atacs.log
@@ -177,27 +180,37 @@ En aquest apartat tractarem l'execució del programa tcpdump per capturar paquet
             -i --> Marca la intefície a la qual escoltarà l'instrucció tcpdump, després d'aquest flag és on col·locarem la variable amb l'interfície seleccionada per l'usuari.
     dst --> Limita la captura de paquets a aquells que tenen com a direcció destí la IP de la intefície selecciona per l'usuari. 
 
-    Cas TCP: Amb el protocol TCP seleccionat, es filtren els paquets específicament per evitar els casos que no són accessos, més concretament s'accedeix a les capçaleres
+   
+    Cas TCP --> Amb el protocol TCP seleccionat, es filtren els paquets específicament per evitar els casos que no són accessos, més concretament s'accedeix a les capçaleres
     dels paquets tcp i només s'agafen els de tipus SYN (en qualsevol connexió tcp trobem l'anomenat handshake, on una maquina1 envia a una maquina2 un paquet tcp de tipus SYN i la maquina2
     respon amb un de tipus ACK). Aquesta informació s'aconsegueix al byte número 14 de la capçalera tcp, i si és un flag de tipus SYN tindrà un valor de 00000010, que en decimal equival a 2. Per tant, 
     ens queda el següent filtre per tcp:
-     
     * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" --> Captura paquets de la interfície seleccionada, de tipus SYN i que pasen pel port seleccionat.
     filter_tcp="tcp[13]=2 and port $3"
     - filter_tcp: tcp[13]=2  --> flag iniciat des de 0 per tant 0-13=14è byte
     - port $3 --> Especificat als arguments d'entrada.
 
-    Cas UDP: Amb el protocol UDP seleccionat, es capturen tots el paquets que tenen com a destí la IP de la interfície seleccionada, donat que el protocol UDP a diferència del handshake del TCP, funciona 
+    
+    Cas UDP --> Amb el protocol UDP seleccionat, es capturen tots el paquets que tenen com a destí la IP de la interfície seleccionada, donat que el protocol UDP a diferència del handshake del TCP, funciona 
     amb una petició(REQUEST) directa de la maquina1 i una resposta de la maquina2 retornant l'informació demanada (no hi ha verificació d'informació). Per tant el filtre es el següent: 
     * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and port "$3" and udp --> Captura paquets de la interfície seleccionada, de tipus UDP, on el seu destí és la direcció IP de la maquina on 
     s'executa l'script i que pasen pel port decidit per l'usuari.
     
-    Cas ICMP: 
+   
+    Cas ICMP --> Amb el protocol ICMP seleccionat, al igual que al cas UDP, es capturen tots els paquets que tenen com a destí la direcció IP seleccionada, es podria limitar a agafar paquets de tipus
+    request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan executa un ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat. En aquest cas, degut
+    a que el protocol ICMP es part de la capa 3, no hi apliquem cap port a la monitorització. 
+    Per tant el filtre es el següent: 
+    *Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp --> Captura paquets de la intefície seleccionada, de tipus ICMP, on el seu destí és la direcció IP de la maquina on s'executa l'script. 
 
-    Sortida d'errors: Amb el protocol UDP seleccionat, al igual que al cas UPD, es capturen tots els paquets que tenen com a destí la direcció IP seleccionada, es podria limitar a agafar paquets de tipus
-    request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan executa un ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat.
 
-    Sortida normal:
+    Sortida d'errors --> Cada comanda tcpdump te redirigida la seva sortida d'errors al fixter log_honeypot, amb l'objectiu de fer comprovacions previes de funcionament, explicades a sota.
+    * Comanda: 2>log_honeypot
+
+    Sortida normal --> La sortida normal, és a dir, tota la informació que es va capturant dels paquets s'escriu al fitxer atacs.log, on s'aniran llegint i analitzant de manera simultanea. 
+    * Comanda: >> atacs.log &
+
+    # Comprovació d'errors en l'execució de la comanda tcpdump --> 
 
 
 ####### 6. MAQUETACIÓ DE DADES #######
