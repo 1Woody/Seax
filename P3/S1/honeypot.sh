@@ -42,11 +42,14 @@ horaCompilacioInici=$(date | cut -d ' ' -f5)
 filter_tcp="tcp[13]=2 and port $3"
 
 # Variables utilitzades en el core del programa
+revisat=0
+tractament=1
 primerCop=1
 numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
 comptLinia=2
 arrayAtacs+=("") # Array amb comptador de repetició
 arrayFullAtacs+=("") # Array amb tots els atacs (sense tenir en compte repeticions)
+arrayICMPAtacs+=("") # Array amb les ips repetides dels atacs en una lectura (cas ICMP)
 repetit=0
 primeraHora="0 atacs rebuts"
 ultimaHora="0 atacs rebuts"
@@ -181,30 +184,57 @@ do
                 arrayAtacs[0]="$atacActual"
             # Cas bucle
             else
-                # Guardat de l'hora de l'últim accés
-                ultimaHora=$hora
-                arrayFullAtacs+=("$atacActual")
-
-                # Bucle de verificació d'atacs repetits
-                for pos in "${!arrayAtacs[@]}"
-                do  
-                    ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2)
-                    if [ "$ipNouAtac" == "$ipAtac" ]
+                if [ "$protocolMajus" == "ICMP" ]
+                then 
+                    if [ "${arrayICMPAtacs[0]}" == "" ]
                     then
-                        auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3)
-                        comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}')
-                        nouAtac="$auxValors-$comptAtacs"
-                        arrayAtacs[$pos]="$nouAtac"
-                        repetit=1
-                        break
+                        arrayICMPAtacs[0]="$ipNouAtac"
+                    else 
+                        for pos in "${!arrayICMPAtacs[@]}"
+                        do
+                            if [ "${arrayAtacs[$pos]}" == "$ipNouAtac" ]
+                            then
+                                revisat=1
+                                break
+                            fi
+                        done
+                        if [ $revisat == 0 ]
+                        then
+                            arrayICMPAtacs+=("$ipNouAtac")
+                        else 
+                            tractament=0;
+                        fi
+                        revisat=0
                     fi
-                done
-                if [ "$repetit" != 1 ]
-                then
-                    atacActual="$atacActual-1"
-                    arrayAtacs+=("$atacActual")
                 fi
-                repetit=0
+                # Guardat de l'hora de l'últim accés
+                if [ $tractament ]
+                then
+                    ultimaHora=$hora
+                    arrayFullAtacs+=("$atacActual")
+
+                    # Bucle de verificació d'atacs repetits
+                    for pos in "${!arrayAtacs[@]}"
+                    do  
+                        ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2)
+                        if [ "$ipNouAtac" == "$ipAtac" ]
+                        then
+                            auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3)
+                            comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}')
+                            nouAtac="$auxValors-$comptAtacs"
+                            arrayAtacs[$pos]="$nouAtac"
+                            repetit=1
+                            break
+                        fi
+                    done
+                    if [ "$repetit" != 1 ]
+                    then
+                        atacActual="$atacActual-1"
+                        arrayAtacs+=("$atacActual")
+                    fi
+                    repetit=0
+                fi
+                tractament=1 
             fi
             ((comptLinia+=1))
         else
@@ -212,6 +242,8 @@ do
             comptLinia=$((numAccesosSimultanis + 2))
         fi
     done
+    unset arrayICMPAtacs # buidem l'array d'IP per la seguent lectura del fitxer
+    
     # Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
     comptLinia=2
     echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log 
