@@ -182,6 +182,10 @@ do
                 arrayFullAtacs[0]="$atacActual"
                 atacActual="$atacActual-1"
                 arrayAtacs[0]="$atacActual"
+                if [ "$protocolMajus" == "ICMP" ]
+                then
+                    arrayICMPAtacs[0]="$ipNouAtac"
+                fi
             # Cas bucle
             else
                 # Cas ICMP recollir repetits en un timestamp de 1s
@@ -193,7 +197,7 @@ do
                     else 
                         for pos in "${!arrayICMPAtacs[@]}"
                         do
-                            if [ "${arrayAtacs[$pos]}" == "$ipNouAtac" ]
+                            if [ "${arrayICMPAtacs[$pos]}" == "$ipNouAtac" ]
                             then
                                 revisat=1
                                 break
@@ -202,14 +206,14 @@ do
                         if [ $revisat == 0 ]
                         then
                             arrayICMPAtacs+=("$ipNouAtac")
-                        else 
+                        else
                             tractament=0;
                         fi
                         revisat=0
                     fi
                 fi
                 # Guardat de l'hora de l'últim accés
-                if [ $tractament ]
+                if [ $tractament == 1 ]
                 then
                     ultimaHora=$hora
                     arrayFullAtacs+=("$atacActual")

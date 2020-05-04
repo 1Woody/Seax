@@ -2,6 +2,7 @@
 ÍNDEX
 1. QUÈ ÉS UN HONEYPOT?
 2. COM FUNCIONA EL NOSTRE HONEYPOT.SH
+3. PREREQUISITS
 3. MÉTODE D'ÚS
 4. PREGUNTES FREQÜENTS
 
@@ -44,25 +45,19 @@
     - Primer de tot necessitarem una màquina o servidor amb un Sistema Operatiu basat el Linux, s'ha dissenyat al SO Debian 10(Buster) però pot funcionar a un
     altre sempre que es compleixin tots els requisits. 
     
-    - Després necessitarem una interfície activa al nostre ordinador que tingui com a mínim una IP assignada(en cas de tenir més d'una s'escollirà l'assignada 
+    - Després necessitarem una interfície activa al nostre ordinador que tingui com a mínim una IP v4 assignada(en cas de tenir més d'una s'escollirà l'assignada 
     primer). 
     
     - També haurem de tenir accés a permisos de SuperUser per a executar el script, ja sigui des de l'usuasi root, o amb un usuari sudoer. Per acabar la part 
-    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 100) per donar-li permisos d'execució.
+    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 100) per donar-li permisos d'execució al propietari del script. 
 
-    - Respecte els paquets 
-    propietari del script. 
+    - Els paquets necessaris són el progama tcpdump que el podem instalar amb la comanda (# sudo apt install tcpdump) o en el cas del root ( # apt install tcpdump)
+    que ens servirà per monitoritzar l'informació que pasa per la nostra interfície. També necessitarem instalar (en cas de que no ho tinguem ja) el paquet 
+    iproute2, utilitzat per agafar diversos paràmetres de la nostra interfície. Cal recalcar que l'script t'avisarà en cas de que els programes no es trobin 
+    instalats però sempre ho podem verificar previament nostaltres.
+   
 
-    - Permisos 
-
-    - Paquets --> tcpdump / iproute2
-
-    - accés a un superusuari
-
-    - 
-
-
-4 - Exemples d'execució
+3. Métode d'ús
 
     - Com un usuari ha d'utilitzar l'script? Quins paràmetres d'entrada té?
 
@@ -80,3 +75,4 @@
         - 
 
 5 - Preguntes freqüents
+

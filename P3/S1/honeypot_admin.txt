@@ -64,7 +64,7 @@ A continuació, trobem la inicialització de les variables del programa.
 1.3 - Per continuar trobem les variables de característiques de l'usuari necessàries per l'script:
 
     - usuari --> Conté el nom d'usuari des d'on s'executa l'script ('root')
-    - SO --> Conté el sistema operatiu de l'usuari que executa l'script.
+    - SO --> Conté el sistema operatiu de l'usuari que executa l'script (s'extreu amb un cat de la informació del fitxer /etc/release)
     - host --> Conté el nom de la màquina de l'usuari que executa l'script.
     - scriptVersion --> Conté la versió de l'script.
     - dataInicial --> Conté la data de la última compilació del programa.
@@ -77,11 +77,14 @@ A continuació, trobem la inicialització de les variables del programa.
 
 1.5 -  Variables utilitzades en el core del programa:
 
+    - revisat --> Funciona com a booleà 
+    - tractament --> Funciona com a booleà 
     - primerCop --> Funciona com a booleà per tal d'evitar el primer sleep del programa.
     - numAccesosSimultanis --> Estableix el número d'accessos màxims que es permeten simultàniament (X accessos + 1 de capçalera)
     - comptLinia --> Funciona com a comptador de les línies dels diferents atacs (sempre és menor a $numAccesosSimultanis)
     - arrayAtacs --> Array que durant el programa contindrà el número d'atacs que ha realitzat cada IP atacant.
-    - arrayFullAtacs --> Array que durant el programa contindrà per separat cada un dels atacs rebuts pel programa.
+    - arrayFullAtacs --> Array auxiliar que durant el programa contindrà per separat cada un dels atacs rebuts pel programa.
+    - arrayICMPAtacs --> Array auxiliar que durant el programa contindrà per separat cada un dels atacs ICMP rebuts pel programa.
     - repetit --> S'utilitza per saber si la IP d'un nou atac ja ha atacat amb anterioritat o no.
     - primeraHora --> S'utilitza per guardar la hora del primer atac rebut (si és que n'hi ha hagut).
     - ultimaHora --> S'utilitza per guardat la hora de l'últim atac rebut.
@@ -350,9 +353,11 @@ cal acumular al comptador d'accessos aquest nou atac.
                 
                 5.1.2.2 - Cas bucle
                 
-                Sino (significarà que l'els arrays ja tenen informació d'altres atacs guardada i, per tant, ja no es tracta del primer atac):
+                Sino (significarà que l'els arrays ja tenen informació d'altres atacs guardada i, per tant, ja no es tracta el primer atac):
                     ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
                     arrayFullAtacs+="$atacActual" --> Afegim l'$atacActual a l'arrayFullAtacs.
+                    
+                    --------
                     
                     5.1.2.2.1 - Bucle de verificació d'atacs repetits
                     Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que 
