@@ -1,0 +1,12 @@
+root@seax:/home/entel/seax# ./ids.sh
+
+Programa de cerca automàtica d'equips a la xarxa actual
+ Versió 0.112 compilada el 17/03/2020.
+ Iniciant-se el 2020-03-25 a les 16:27:11 ...          [ok]
+ El fitxer log_ids sera sobrescrit...                  [ok]
+ Detecció d'equips en curs...                          [ok]
+ Processant les dades...                               [ok]
+ Resultats de l'anàlisi en el fitxer log_ids           [ok]
+ Finalitzat el 2020-03-25 a les 16:27:23               [ok]
+
+root@seax:/home/entel/seax# 

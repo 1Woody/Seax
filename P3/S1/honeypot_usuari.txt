@@ -48,7 +48,9 @@
     primer). 
     
     - També haurem de tenir accés a permisos de SuperUser per a executar el script, ja sigui des de l'usuasi root, o amb un usuari sudoer. Per acabar la part 
-    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 700) per donar-li permisos de lecutura escrpitura i execució al 
+    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 100) per donar-li permisos d'execució.
+
+    - Respecte els paquets 
     propietari del script. 
 
     - Permisos 

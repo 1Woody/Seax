@@ -9,7 +9,7 @@
 usageInvalidArg="El nombre de arguments és incorrecte. Han de ser 2 o 3 arguments (revisar manual de usuari)."
 usagePortEnter="Recorda, l'argument del port ha de contenir un nombre enter."
 usagePortRang="Compte! El port s'ha de trobar entre el 0 i el 65535 (ports disponibles)."
-usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP."
+usageProtocolInc="El protocol escollit no està permés. Recorda que ha de ser TCP, UDP ."
 usageInterficieInc="La interfície no és vàlida o no es troba al sistema."
 usageICMP="En cas d'escriure dos arguments, recorda que el protocol ha de ser l'ICMP."
 usageTCPUDP="Recorda que en cas de seleccionar el protocol TCP o UDP has d'especificar un port."
@@ -19,13 +19,14 @@ usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt i
 usageExecucio="No s'ha pogut inicialitzar la captura de paquets. Sembla que el sistema operatiu té algún tipus d'incompatibilitat amb tcpdump."
 usageIP="Sembla que no tens cap IP(v4) assignada en aquesta interfície."
 
-# Variables per les comprovacions dels parámetres inicials
+# Variables per les comprovacions dels paràmetres inicials
 i=0
 quit=0
 PR="$2"
 protocolMajus=${PR^^}
 protocolMinus=${PR,,}
 interfaceActual="$1"
+interfacesLlista=$(ls /sys/class/net/)
 
 # Variables de característiques necessaries per l'script
 usuari=$(whoami)
@@ -38,15 +39,15 @@ dataCompilacioInici=$(date --rfc-3339=date)
 horaCompilacioInici=$(date | cut -d ' ' -f5)
 
 # Variables filtre tcpdump
-filter_tcp="tcp[13]=2 && port $3"
-tcpdumpgood="tcpdump:verbose output supressed, use -v or -vv for full protocol decode listening on $1"
+filter_tcp="tcp[13]=2 and port $3"
 
 # Variables utilitzades en el core del programa
 primerCop=1
-numAccesosSimultanis=11 # Establiment dels accessos màxims (10 accessos + 1 de capçalera)
+numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
 comptLinia=2
 arrayAtacs+=("") # Array amb comptador de repetició
 arrayFullAtacs+=("") # Array amb tots els atacs (sense tenir en compte repeticions)
+arrayICMPAtacs+=("") # Array amb les ips repetides dels atacs en una lectura (cas ICMP)
 repetit=0
 primeraHora="0 atacs rebuts"
 ultimaHora="0 atacs rebuts"
@@ -104,7 +105,7 @@ else
     echo "$usageInvalidArg"; exit 1
 fi
 # Comprovació interfície
-for interface in $(ls /sys/class/net/); do
+for interface in $interfacesLlista; do
     if [ "$interface" == "$interfaceActual" ]
     then
         ((i+=1))
@@ -136,28 +137,27 @@ echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log
 
 if [ "$protocolMajus" == "TCP" ]
 then
-    tcpdump -l -q -nni "$interfaceActual" "$filter_tcp" 2>log_honeypot >> atacs.log &
+    tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 elif [ "$protocolMajus" == "UDP" ]
 then 
-    tcpdump -l -q -nni "$interfaceActual" udp port "$3" 2>log_honeypot >> atacs.log &
+    tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and port "$3" and udp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 else
     tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp 2>log_honeypot >> atacs.log &
     pidtcpdump=$!
 fi
-sleep 0.1
 # Comprovació d'errors en l'execució de la comanda tcpdump
+sleep 0.3
 tcpdumpgood=$(grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot)
 true > log_honeypot
-if [ $tcpdumpgood -ne 2 ]
+if [ "$tcpdumpgood" -ne 2 ]
 then
     echo "$usageExecucio"; exit 1
 fi
 
 ####### 5. TRACTAMENT D'ATACS #######
 
-tput sc; 
 while [ $quit != 1 ]
 do
     # Bucle de lectura del fitxer d'atacs
@@ -167,41 +167,72 @@ do
         hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log)
         ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4)
         port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5)
+        # Inici tractament de dades
         if [ "$hora" != "" ] && [ "$ipNouAtac" != "" ]
         then
             atacActual="$hora-$ipNouAtac-$port"
+            # Cas inicial
             if [ "${arrayAtacs[0]}" == "" ] && [ "${arrayFullAtacs[0]}" == "" ]
             then
                 # Guardat de l'hora del primer accés
                 primeraHora=$hora
+                ultimaHora=$hora
                 arrayFullAtacs[0]="$atacActual"
                 atacActual="$atacActual-1"
                 arrayAtacs[0]="$atacActual"
+            # Cas bucle
             else
-                # Guardat de l'hora de l'últim accés
-                ultimaHora=$hora
-                arrayFullAtacs+=("$atacActual")
-
-                # Bucle de verificació d'atacs repetits
-                for pos in "${!arrayAtacs[@]}"
-                do  
-                    ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2)
-                    if [ "$ipNouAtac" == "$ipAtac" ]
+                if [ "$protocolMajus" == "ICMP" ]
+                then 
+                    if [ "${arrayICMPAtacs[0]}" == "" ]
                     then
-                        auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3)
-                        comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}')
-                        nouAtac="$auxValors-$comptAtacs"
-                        arrayAtacs[$pos]="$nouAtac"
-                        repetit=1
-                        break
+                        arrayICMPAtacs[0]="$ipNouAtac"
+                    else 
+                        for pos in "${!arrayICMPAtacs[@]}"
+                        do
+                            if [ "${arrayAtacs[$pos]}" == "$ipNouAtac" ]
+                            then
+                                revisat="true"
+                                break
+                            fi
+                        done
+                        if [ "$revisat" == "false" ]
+                        then
+                            arrayICMPAtacs+=("$ipNouAtac")
+                        else 
+                            tractament="false"
+                        fi
+                        revisat="false"
                     fi
-                done
-                if [ "$repetit" != 1 ]
-                then
-                    atacActual="$atacActual-1"
-                    arrayAtacs+=("$atacActual")
                 fi
-                repetit=0
+                # Guardat de l'hora de l'últim accés
+                if [ "$tractament" == "true" ]
+                then
+                    ultimaHora=$hora
+                    arrayFullAtacs+=("$atacActual")
+
+                    # Bucle de verificació d'atacs repetits
+                    for pos in "${!arrayAtacs[@]}"
+                    do  
+                        ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2)
+                        if [ "$ipNouAtac" == "$ipAtac" ]
+                        then
+                            auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3)
+                            comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}')
+                            nouAtac="$auxValors-$comptAtacs"
+                            arrayAtacs[$pos]="$nouAtac"
+                            repetit=1
+                            break
+                        fi
+                    done
+                    if [ "$repetit" != 1 ]
+                    then
+                        atacActual="$atacActual-1"
+                        arrayAtacs+=("$atacActual")
+                    fi
+                    repetit=0
+                fi
+                tractament="true" 
             fi
             ((comptLinia+=1))
         else
@@ -209,6 +240,7 @@ do
             comptLinia=$((numAccesosSimultanis + 2))
         fi
     done
+    arrayICMPAtacs=""
     # Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
     comptLinia=2
     echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log 
@@ -216,7 +248,6 @@ do
     ####### 6. MAQUETACIÓ DE DADES #######
 
     true > log_honeypot
-    tput ed;
     read -r -t 0.01 -N 1 input
     if [[ $input = "q" ]]
     then
@@ -363,8 +394,8 @@ do
             primerCop=0
         else
             sleep 1;
+            clear
         fi
-        tput rc;
         cat log_honeypot
     fi
 done

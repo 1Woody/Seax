@@ -1,0 +1,25 @@
+ 
+ ---------------------------------------------------------------------------------------------------
+ Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip seax.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 0.112 compilada el 17/03/2020.
+ Anàlisi iniciada en data 2020-03-25 a les 16:27:11 i finalitzada en data 2020-03-25 a les 16:27:23.
+ ---------------------------------------------------------------------------------------------------
+ 
+ 
+ ---------------------------------------------------------------------------------------------------------
+ S'han detectat 9 equips a les subxarxes 10.0.3.0/24 [enp0s8], , 10.1.1.0/24 [enp0s3]
+ ---------------------------------------------------------------------------------------------------------
+ Adreça IP   Adreça MAC         Fabricant MAC                  Equip conegut     Nom DNS
+ ----------  -----------------  -----------------------------  ----------------  -------------------------
+ 10.0.3.2    52:54:00:12:35:02  QEMU virtual NIC               -                 .
+ 10.0.3.3    52:54:00:12:35:03  QEMU virtual NIC               -                 .
+ 10.0.3.4    52:54:00:12:35:04  QEMU virtual NIC               -                 .
+ 10.0.3.15   08:00:27:00:02:01  Oracle VirtualBox virtual NIC  El teu equip [@]  seax-01.
+ 10.1.1.1    E4:8D:8C:49:45:FC  Routerboard.com                ROUTER            router.
+ 10.1.1.10   D0:17:C2:88:FF:8F  Asustek Computer               -                 personal.
+ 10.1.1.20   08:00:27:00:01:02  Oracle VirtualBox virtual NIC  SEAX-DEB-02       seax-02.
+ 10.1.1.25   08:00:27:00:01:03  Oracle VirtualBox virtual NIC  SEAX-DEB-03       seax-03.
+ 10.1.1.108  08:00:27:00:01:01  Oracle VirtualBox virtual NIC  El teu equip [@]  seax-01.
+ ----------  -----------------  -----------------------------  ----------------  -------------------------
+                                                                                  
