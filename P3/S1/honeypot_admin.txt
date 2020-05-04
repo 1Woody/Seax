@@ -16,11 +16,10 @@ CODI
 6. MAQUETACIÓ DE DADES
 
 INFORMACIÓ SCRIPT
-7. NECESSITATS DEL SCRIPT
-8. PROVES DE VALIDACIÓ
-9. ESCENARIS DE FALLIDA
-10. PUNTS DE MILLORA
-11. CONCLUSIONS GENERALS
+7. PROVES DE VALIDACIÓ
+8. ESCENARIS DE FALLIDA
+9. PUNTS DE MILLORA
+10. CONCLUSIONS GENERALS
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
@@ -256,30 +255,66 @@ En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'
             5.2.1 - Recollida de dades dels atacs --> Anirem recorrent cada línia, agafant els paràmetres que necessitem i guardant-los als arrays corresponents.
         
             hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log) --> Comanda que guarda l'hora de l'atac corresponent.
-                - awk -v line=$comptLinia --> funció que ens permet cercar a la liniea el paràmetre que vulguem, flag -v servereix per guardar en una variable el parametre que vulguem i així poder-ho utilitzar dintre de la comanda.
+                - awk -v line=$comptLinia --> funció que utilitzarem per recollir el paràmetre necessari, flag -v servereix per guardar en una variable el parametre que vulguem i així poder-ho utilitzar dintre de la comanda.
                 En aquest cas guardem el comptador per agafar el paràmetre hora de la línia que ens trobem.
-                - '/./{if(NR==line) print $1}' --> Agafa el primer element de la línia x(valor de la variable line), en cas de no trobar la línia, retorna buit.
+                - '/./{if(NR==line) print $1}' --> Agafa el primer element de la línia x(valor de la variable line), en cas de no trobar la línia retorna buit.
                 - atacs.log --> fitxer al qual estem executant la comanda awk.
-            ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4) --> Comanda que guarda l'ip de l'atac corresponent.
-            port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5) --> Comanda que guarda el port de l'atac corresponent.
+           
+            ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4) --> Comanda que guarda l'ip de l'atac corresponent, fa el mateix que l'anterior però amb el 3r paràmetre de la línia.
+                -  cut -d '.' -f1,2,3,4 --> agafa de la ip recollida per la comanda awk (la qual porta també el port, ex: 192.168.0.26.22) i talla en funció de punt('.') agafant només els 4 primers paràmetres (-f1,2,3,4)
             
+            port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5) --> Comanda que guarda el port de l'atac corresponent, fa el mateix que l'anterior però en comptes de quedar-se amb els 
+            quatre primers paràmetre (la IP) es queda amb l'últim (el port).
+            
+            5.2.2 - Inici tractament de dades
+
             Si $hora i $ipNouAtac no estan buides:
                 atacActual="$hora-$ipNouAtac-$port" --> Inicialització de la variable $atacActual, que conté la hora, la IP i el port de l'atac a tractar.
+               
+                5.2.2.1. - Cas Inicial 
+                
                 Si $arrayAtacs i $arrayFullAtacs estan buits significarà que és el primer atac que tractem del fitxer. Per tant, caldrà realitzar algunes accions específiques:
                     primeraHora=$hora --> Assignació de la variable $primeraHora amb el valor de $hora (hora exacte del primer atac rebut del fitxer)
+                    ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
                     arrayFullAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayFullAtacs.
                     atacActual="$atacActual-1" --> Se li afegeix un 1 al final que significarà el número d'accessos que ha realitzat aquella IP en concret (com és el primer atac serà 1). 
                     arrayAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayAtacs.
-                Sino (significarà que l'els arrays ja tenen informació d'altres atacs guardada i, per tant, ja no es tracta del primer atac):
-                    primeraHora=$hora --> Assignació de la variable $primeraHora amb el valor de $hora (hora exacte del primer atac rebut del fitxer)
-
-
-            Si $hora i $ipNouAtac estan buides
-                comptLinia=$((numAccesosSimultanis + 2)) --> S'incrementa el valor de $comptLinia per tal de no tornar a entrar al bucle i finalitzar la lectura, ja que ja no hi ha res al fitxer. 
                 
-            
-    
+                5.2.2.2 - Cas bucle
+                
+                Sino (significarà que l'els arrays ja tenen informació d'altres atacs guardada i, per tant, ja no es tracta del primer atac):
+                    ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
+                    arrayFullAtacs+="$atacActual" --> Afegim l'$atacActual a l'arrayFullAtacs.
+                    
+                    5.2.2.2.1 - Bucle de verificació d'atacs repetits
+                    Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que $ipNouAtac. En aquest cas haurem d'incrementar en 1 el número d'accessos. En cas contrari, afegirem l'atac al final de l'array amb el número d'accessos de valor 1.Assignació
+                    
+                    for pos in "${!arrayAtacs[@]}" --> Per cada posició de l'#arrayAtacs (acumulacions d'atacs de cada IP)
+                        ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2) --> S'agafa la IP la que volem comparar en aquest moment.
+                        
+                        Si "$ipNouAtac" == "$ipAtac" --> Si les dues IP coincideixen
+                            auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3) --> S'assigna a la variable $auxValors la informació de la hora, la IP i el port extretes de l'$arrayAtacs. 
+                            comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}') --> S'incrementa en 1 la quarta fila d'aquests atacs d'IpAtac, que equival al número d'accessos. 
+                            nouAtac="$auxValors-$comptAtacs" --> A la variable $nouAtac se li concatenen les dues variables anteriors. D'aquesta manera tindrem una nova línia d'atacs de la IP $IpAtac, actualitzada amb un número d'accés més.
+                            arrayAtacs[$pos]="$nouAtac" --> S'actualitza aquesta línia anterior a la mateixa posició on es trobava anteriorment. 
+                            repetit=1 --> Es posa el booleà a 1 per tal de saber que amb el nou atac hem actualitzat un dels conjunts d'atacs de les IP ja existents a l'array $arrayAtacs.
+                            break --> Intrucció per sortir directament del bucle.
+
+                    Si "$repetit" != 1  --> Si no s'ha trobat aquest element a l'arrayAtacs, ho guardem com a nou element. 
+                    atacActual="$atacActual-1" --> Col·loquem un guió 1 ("-1") per assignar el seu número d'accesos a 1
+                    arrayAtacs+=("$atacActual") -> Es guarda a l'arrayAtacs com a nou element amb comptador d'accessos a 1.
+                
+                    repetit=0 --> La variable repetit es torna a posar a 0 per tal de poder tornar a realitzar el bucle. 
+                
+                ((comptLinia+=1)) --> S'incrementa el comptador d'atacs en 1. 
+
+            En canvi, si $hora i $ipNouAtac estan buides:
+                comptLinia=$((numAccesosSimultanis + 2)) --> S'incrementa el valor de $comptLinia per tal de no tornar a entrar al bucle i finalitzar la lectura, ja que ja no hi ha res al fitxer.     
         
+    5.3 - Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
+
+        comptLinia=2 --> Es torna a posar la variable $comptLinia a 2 per tal de tenir en compte la capçalera del fitxer atacs.log
+        echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log --> Neteja del fitxer atacs.log. Aquesta decisió està basada en la robustesa i escalabilitat de l'script, ja que si no es netejés l'arxiu constantment, el conjunt d'informació seria massa gran (per exemple si es manté actiu durant més d'un dia) i produiria una reducció a la velocitat(degut a les llargues lectures del fitxer). 
 
 ####### 6. MAQUETACIÓ DE DADES #######
 En aquest apartat tractarem més el format i la impressió final de les dades. Veurem com l'output es redirigeix a l'arxiu log_honeypot i finalment s'acaba printant per pantalla, a la vista de l'usuari.
@@ -396,14 +431,14 @@ En aquest apartat tractarem més el format i la impressió final de les dades. V
             tput rc; --> Restauració de la posició del cursor.
             cat log_honeypot; --> Impressió per pantalla del fitxer log_honeypot (comanda cat - mostra per pantalla el contingut de l'arxiu especificat)
 
-
 7 - Fi del programa
 
     rm atacs.log; --> Eliminació del fitxer auxiliar que tractava els atacs i del que extreiem la informació.
     exit 0 --> Fi del programa.
 
 
-PROVES DE VALIDACIÓ 
+####### 7. PROVES DE VALIDACIÓ #######
+
 - Proves amb diverses maquines simultaneas
 - Proves amb diferents sistemes Operatius (Ubuntu, Mint, Windows, WSL, Debian 9 ...)
 - Test connexions tcp /upd /icmp 
@@ -412,14 +447,15 @@ PROVES DE VALIDACIÓ
 test connections --> nc
 test tcp connections --> nc -z -v ip port
 
-
-POSSIBLES ESCENARIS DE FALLIDA
+####### 8. ESCENARIS DE FALLIDA #######
 - Massa connexions simultaneas 
 - Massa paquets a la vegada 
 - Scroll lmao
 
-PUNTS DE MILLORA
+####### 9. PUNTS DE MILLORA #######
 - Maquetació 
 - Solució al problema simultani (variable)
 - Proves a més SO
+
+####### 10. CONCLUSIONS GENERALS #######
 

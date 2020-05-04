@@ -166,6 +166,7 @@ do
         hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log)
         ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4)
         port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5)
+        # Inici tractament de dades
         if [ "$hora" != "" ] && [ "$ipNouAtac" != "" ]
         then
             atacActual="$hora-$ipNouAtac-$port"
