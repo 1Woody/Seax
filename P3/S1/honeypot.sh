@@ -169,13 +169,16 @@ do
         if [ "$hora" != "" ] && [ "$ipNouAtac" != "" ]
         then
             atacActual="$hora-$ipNouAtac-$port"
+            # Cas inicial
             if [ "${arrayAtacs[0]}" == "" ] && [ "${arrayFullAtacs[0]}" == "" ]
             then
                 # Guardat de l'hora del primer accés
                 primeraHora=$hora
+                ultimaHora=$hora
                 arrayFullAtacs[0]="$atacActual"
                 atacActual="$atacActual-1"
                 arrayAtacs[0]="$atacActual"
+            # Cas bucle
             else
                 # Guardat de l'hora de l'últim accés
                 ultimaHora=$hora
