@@ -184,6 +184,7 @@ do
                 arrayAtacs[0]="$atacActual"
             # Cas bucle
             else
+                # Cas ICMP recollir repetits en un timestamp de 1s
                 if [ "$protocolMajus" == "ICMP" ]
                 then 
                     if [ "${arrayICMPAtacs[0]}" == "" ]
