@@ -157,7 +157,6 @@ fi
 
 ####### 5. TRACTAMENT D'ATACS #######
 
-tput sc; 
 while [ $quit != 1 ]
 do
     # Bucle de lectura del fitxer d'atacs
@@ -220,7 +219,6 @@ do
     ####### 6. MAQUETACIÓ DE DADES #######
 
     true > log_honeypot
-    tput ed;
     read -r -t 0.01 -N 1 input
     if [[ $input = "q" ]]
     then
@@ -367,8 +365,8 @@ do
             primerCop=0
         else
             sleep 1;
+            clear
         fi
-        tput rc;
         cat log_honeypot
     fi
 done

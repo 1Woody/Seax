@@ -3,6 +3,7 @@ GUIA DE PROGRAMACIÓ
 APUNTES ANTES DE ACABAR
 -> PROBAR EN VARIOS SISTEMAS
 -> AÑADIR COMPROBACIÓN DEL SISTEMA OPERATIVO ?
+-> INFO PRACTICA 2 greapplet
 
 ÍNDEX
 
@@ -304,18 +305,14 @@ En aquest apartat tractarem els diferents atacs. Aquests els dividirem bàsicame
 L'arrayFullAtacs serà més fàcil de tractar, ja que només s'han d'anar afegint al final els nous atacs, de manera individual. 
 En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'ha de comparar si l'atacant ja ha atacat amb anterioritat i, en cas afirmatiu, 
 cal acumular al comptador d'accessos aquest nou atac.
-
-    5.1 - Preparació del tractament
-    
-        tput sc; --> Amb aquesta comanda es guarda la posició del cursor, que en aquest moment es troba a la part superior de la pantalla. 
         
-    5.2 - Bucle de lectura dels fitxers d'atacs (S'efectuarà mentre la variable $quit no sigui 1 (l'usuari no vol tancar el programa encara))
+    5.1 - Bucle de lectura dels fitxers d'atacs (S'efectuarà mentre la variable $quit no sigui 1 (l'usuari no vol tancar el programa encara))
 
         Mentre $comptLinia < $numAccesosSimultanis --> Bucle que s'executa tantes vegades com el numero d'accessos simultanis decidits (per defecte 10), 
         aquest anirà llegint línies i tractant-les (guardant valors als arrays) fins arribar al limit o  a una línia en blanc, en qualsevol dels casos 
         sortirà del bucle i posteriorment es netejarà el fitxer atacs.log.
             
-            5.2.1 - Recollida de dades dels atacs --> Anirem recorrent cada línia, agafant els paràmetres que necessitem i guardant-los als arrays 
+            5.1.1 - Recollida de dades dels atacs --> Anirem recorrent cada línia, agafant els paràmetres que necessitem i guardant-los als arrays 
             corresponents.
         
             hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log) --> Comanda que guarda l'hora de l'atac corresponent.
@@ -335,12 +332,12 @@ cal acumular al comptador d'accessos aquest nou atac.
             port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5) --> Comanda que guarda el port de l'atac corresponent, 
             fa el mateix que l'anterior però en comptes de quedar-se amb els quatre primers paràmetre (la IP) es queda amb l'últim (el port).
             
-            5.2.2 - Inici tractament de dades
+            5.1.2 - Inici tractament de dades
 
             Si $hora i $ipNouAtac no estan buides:
                 atacActual="$hora-$ipNouAtac-$port" --> Inicialització de la variable $atacActual, que conté la hora, la IP i el port de l'atac a tractar.
                
-                5.2.2.1. - Cas Inicial 
+                5.1.2.1. - Cas Inicial 
                 
                 Si $arrayAtacs i $arrayFullAtacs estan buits significarà que és el primer atac que tractem del fitxer. Per tant, caldrà realitzar algunes 
                 accions específiques:
@@ -351,13 +348,13 @@ cal acumular al comptador d'accessos aquest nou atac.
                                                    (com és el primer atac serà 1). 
                     arrayAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayAtacs.
                 
-                5.2.2.2 - Cas bucle
+                5.1.2.2 - Cas bucle
                 
                 Sino (significarà que l'els arrays ja tenen informació d'altres atacs guardada i, per tant, ja no es tracta del primer atac):
                     ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
                     arrayFullAtacs+="$atacActual" --> Afegim l'$atacActual a l'arrayFullAtacs.
                     
-                    5.2.2.2.1 - Bucle de verificació d'atacs repetits
+                    5.1.2.2.1 - Bucle de verificació d'atacs repetits
                     Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que 
                     $ipNouAtac. En aquest cas haurem d'incrementar en 1 el número d'accessos. En cas contrari, afegirem l'atac al final de l'array amb el número 
                     d'accessos de valor 1.Assignació
@@ -389,7 +386,7 @@ cal acumular al comptador d'accessos aquest nou atac.
                 comptLinia=$((numAccesosSimultanis + 2)) --> S'incrementa el valor de $comptLinia per tal de no tornar a entrar al bucle i finalitzar la 
                                                              lectura, ja que ja no hi ha res al fitxer.     
         
-    5.3 - Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
+    5.2 - Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
 
         comptLinia=2 --> Es torna a posar la variable $comptLinia a 2 per tal de tenir en compte la capçalera del fitxer atacs.log
         echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log --> Neteja del fitxer atacs.log. Aquesta decisió està basada en la robustesa i escalabilitat de l'script, 
@@ -404,8 +401,6 @@ printant per pantalla, a la vista de l'usuari.
     6.1 - Preparacions Maquetació
 
         true > log_honeypot --> Es buida l'arxiu log_honeypot.
-        tput ed --> Es fa una neteja des de la posició actual del cursor fins al final de la pantalla (en aquest moment el cursor es troba a la zona superior 
-                    de la pantalla).
         read -r -t 0.01 -N 1 input --> Aquesta comanda s'utilitza per saber si l'usuari ha escrit la 'q' per acabar amb l'execució. La comanda read llegeix 
                                        una línia de l'input. Opcions:
             
@@ -556,9 +551,10 @@ printant per pantalla, a la vista de l'usuari.
             
             En cas contrari:
                 sleep 1; --> Es realitza un sleep d'un segon per tal de no estar llegint el fitxer cada instant. 
-            D'aquesta manera l'sleep no es farà en la primera iteració i sí ho farà en les següents. 
-            
-            tput rc; --> Restauració de la posició del cursor.
+                             D'aquesta manera l'sleep no es farà en la primera iteració i sí ho farà en les següents. 
+
+                clear --> Es neteja la pantalla per tal de deixar-la buida i preparada per la següent iteració. 
+
             
             cat log_honeypot; --> Impressió per pantalla del fitxer log_honeypot (comanda cat - mostra per pantalla el contingut de l'arxiu especificat)
 
@@ -602,11 +598,6 @@ test tcp connections --> nc -z -v ip port
     trigar massa en la lectura del fitxer i per tant no actualitzar bé l'interfície. També el fet d'utilitzar arrays ens pot fer perdre temps d'execució amb 
     grans quantita de dades.
 
-    - Scroll  --> Aquest problema tracta de que el nostre output que apareix per pantalla mentre executem el programa necessita que la pantalla sigui 
-    suficientment gran per no necessitar fer scroll. Això passa perquè el programa funciona amb el sistema del cursor, qua va canviant de posició i 
-    netejant la pantalla. El cursor només es pot moure per les línies que apareixen a la pantalla, és per això que l'scroll no funcionaria i apareixerien
-    errors de format, ja que el cursor no pot moure's a línies que no apareixen a la pantalla (per dalt de l'output que veiem).
-
     - Tancament forçat --> Si el programa es tanca de manera forçada (ja sigui amb un control+C), l'arxiu atacs.log no s'elimina. I queda existent al mateix    
                            directori que l'script. 
 
@@ -614,8 +605,6 @@ test tcp connections --> nc -z -v ip port
 
     - Maquetació --> Es podria solucionar el problema del format a l'hora de fer l'scroll utilitzant el mètode clear. Però el problema és que no apareixeria 
                      el prompt, i aquesta és una possibilitat que es pot contemplar però no la veiem adient.
-                  
-    - Solució al problema simultani (variable) --> 
 
     - Proves a més SO --> Als Sistemes Operatius que no suporten l'execució correcta de l'script, sobretot en el cas de la comanda tcpdump, només evitem que 
                           s'executi,però es podria ampliar fent més proves a d'altres SO per avisar a l'usuari en el moment de l'execució de quin és el seu 
