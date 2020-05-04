@@ -1,0 +1,74 @@
+
+ÍNDEX
+1. QUÈ ÉS UN HONEYPOT?
+2. COM FUNCIONA EL NOSTRE HONEYPOT.SH
+3. MÉTODE D'ÚS
+4. PREGUNTES FREQÜENTS
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+1 - Què és un honeypot? Quines capacitats té?
+
+    - Un honeypot és una eina molt útil i utilitzada en l'àmbit de la seguretat informàtica. La seva funció és la d'atreure i analitzar atacs realitzats des de 
+    l'exterior, ja sigui per bots o per hackers. D'aquesta manera podem conéixer en més profunditat l'atacant. Podem analitzar les seves pautes d'atac, les 
+    paraules que utilitza... per tal de poder defensar-nos millor sobre ell.
+    El honeypot serà un equip vulnerable que estarà constantment rebent informació dels diferents intrusos, que s'utilitzarà al nostre servidor original, per
+    tal de protegir-nos. Per exemple, actualitzant les taules IP del tallafocs o realitzant diferents actualitzacions que ens permetin evitar el perill.
+    
+    - El honeypot realitza tres funcions principals. La primera és la d'escoltar (rep els diferents atacs amb el seu corresponent contingut). La segona és la 
+    de monitoritzar (es fa el tractament de la informació) per tal de tenir tot controlat. I la tercera és la d'informar l'usuari (mitjançant l'output per 
+    pantalla)
+
+    - El honeypot pot ser col·locat en dos llocs principals, depenent de les necessitats de l'usuari.
+
+        - A fora de l'external firewall: En aquest posició no perilla la xarxa interna. A més, redueix el tràfic d'atacs cap al firewall. 
+                                         El principal problema d'aquesta posició és que al trobar-se a l'exterior, no pot atrapar als intrussos de la xarxa 
+                                         interna, el que segons en quins casos pot ser un problema greu. 
+
+        - A la xarxa interna: En aquest punt el programa pot detectar atacs més interns de la nostra xarxa. Com els atacs han de passar a través del firewall, 
+                              un avantatge que té aquesta posició del honeypot és que pot detectar errors del firewall que ja tenim configurat, que s'han de 
+                              solucionar per evitar problemes. 
+                              Un dels inconvenients principals d'aquesta posició del honeypot és la pròpia posició. En el cas de que no tinguem ben configurat 
+                              el honeypot i algun atac es pugui realitzar amb èxit, l'intrús tindrà acces a totes les altres màquines situades a la xarxa 
+                              interna, el que és extremadament crític i perillós.
+                              Per tant, podríem dir que aquesta posició pot arribar a monitoritzar un número d'atacs major i de diferents tipus, però el perill 
+                              que es corre és màxim. Hem de tenir la seguretat de que està funcionant sense cap tipus d'anomalia. 
+
+
+2. Com funciona el nostre honeypot.sh ?
+
+    - 
+     
+2 - Prerequisits
+
+    - Primer de tot necessitarem una maquina o servidor amb un Sistema Operatiu basant el Linux, s'ha dissenyat al SO Debian 10(Buster) però pot funcionar a un
+    altre sempre que es compleixin tots els requisits. 
+    
+    - Després necessitarem una interfície activa al nostre ordinador que tingui com a mínim una IP assignada(en cas de tenir més d'una s'escollirà l'assignada 
+    primer). 
+    
+    - També haurem de tenir accés a permisos de SuperUser per a executar el script, ja sigui des de l'usuasi root, o amb un usuari sudoer. Per acabar la part 
+    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 700) per donar-li permisos de lecutura escrpitura i execució al 
+    propietari del script. 
+    - Permisos 
+    - Paquets --> tcpdump / iproute2
+    - accés a un superusuari
+    - 
+
+
+3 - Exemples d'execució
+
+    Com un usuari ha d'utilitzar l'script?
+
+        - 
+    
+
+    Quins paràmetres d'entrada té?
+
+        - 
+
+    En quins casos d'ús es pot fer servir?
+
+        - 
+
+5 - Preguntes freqüents

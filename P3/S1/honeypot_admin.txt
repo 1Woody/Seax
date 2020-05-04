@@ -632,13 +632,11 @@ podria arribar a monitoritzar un flux major d'informació (quantitat major d'ata
 possible aplicar una programació modelable que permeti canviar diversos paràmetres només modificant variables, aixó donarà flexibilitat en un ús futur de
 l'script ja sigui per la funció que s'ha creat o per un altre. 
 
-El lloc principal de treball ha sigut amb el sistema operatiu debian 10(buster), tot i així després de diverses proves s'han pogut aplicar comprovacions que
+El lloc principal de treball ha sigut amb el sistema operatiu debian 10(buster). Tot i així després de diverses proves s'han pogut aplicar comprovacions que
 permeten a usuaris d'altres SO (basats en linux) instal·lar els paquets necessaris per fer-lo funcionar correctament. Com a primera versió dona una funcionalitat
-completa respecta la seva tasca (monitorització de ports sobre un protocol) i és un bon punt de partida per seguir treballant en la ...
+completa respecta la seva tasca (monitorització d'atacs sobre un protocol i una IP) i és un bon punt de partida per seguir treballant en la seguretat del nostre
+equip i la nostra xarxa. 
 
-toy comiending el segunding
-
-Cesar --> leete las CONCLUSIONS i arregla lo que sea. Cuando lo tengas ponte con el de usuarios ya, me voy a comer.
 
 
 
