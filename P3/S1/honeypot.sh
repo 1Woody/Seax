@@ -26,6 +26,7 @@ PR="$2"
 protocolMajus=${PR^^}
 protocolMinus=${PR,,}
 interfaceActual="$1"
+interfacesLlista=$(ls /sys/class/net/)
 
 # Variables de característiques necessaries per l'script
 usuari=$(whoami)
@@ -103,7 +104,7 @@ else
     echo "$usageInvalidArg"; exit 1
 fi
 # Comprovació interfície
-for interface in $(ls /sys/class/net/); do
+for interface in $interfacesLlista; do
     if [ "$interface" == "$interfaceActual" ]
     then
         ((i+=1))
@@ -149,7 +150,7 @@ fi
 sleep 0.3
 tcpdumpgood=$(grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot)
 true > log_honeypot
-if [ $tcpdumpgood -ne 2 ]
+if [ "$tcpdumpgood" -ne 2 ]
 then
     echo "$usageExecucio"; exit 1
 fi

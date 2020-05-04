@@ -58,6 +58,7 @@ A continuació, trobem la inicialització de les variables del programa.
     - protocolMajus --> Conté el protocol anterior (variable 'PR') convertit tot a majúscules.
     - protocolMinus --> Conté el protocol (variable 'PR') convertit a minúscules.
     - interfaceActual --> Conté la interfície especificada per l'usuari a l'input d'execució (1r argument)
+    - interfacesLlista --> Conté la llista d'interfícies que es troben al sistema.
 
 1.3 - Per continuar trobem les variables de característiques de l'usuari necessàries per l'script:
 
@@ -83,31 +84,40 @@ A continuació, trobem la inicialització de les variables del programa.
     - repetit --> S'utilitza per saber si la IP d'un nou atac ja ha atacat amb anterioritat o no.
     - primeraHora --> S'utilitza per guardar la hora del primer atac rebut (si és que n'hi ha hagut).
     - ultimaHora --> S'utilitza per guardat la hora de l'últim atac rebut.
+    
 
 ####### 2. COMPROVACIONS PREVIES #######
-En aquest punt es faran les diferents comprovacions de l'usuari, per tal de que es pugui executar l'script sense problemes. Tant en relació a paquets instal·lats (tcpdump, iproute2) com a comprovació del tipus d'usuari (superuser).
-També es tractaran els diferents problemes que poden sorgir amb la entrada dels arguments pertinents. Tant en el número d'aquests com en la seva correctesa (interfície, protocol i port) 
+En aquest punt es faran les diferents comprovacions de l'usuari, per tal de que es pugui executar l'script sense problemes. Tant en relació a paquets 
+instal·lats (tcpdump, iproute2) com a comprovació del tipus d'usuari (superuser).
+També es tractaran els diferents problemes que poden sorgir amb la entrada dels arguments pertinents. Tant en el número d'aquests com en la seva 
+correctesa (interfície, protocol i port).
 
 2.1 - Comprovació del superusuari --> En aquest apartat es comprova que l'usuari que executa l'script sigui "root".
 
                                     Si "$(whoami)" != "root" --> L'usuari no és root.
-                                    En aquest cas, s'envia el missatge $usageSuperUser per informar l'usuari. Després d'això es tanca l'execució del programa.
+                                    En aquest cas, s'envia el missatge $usageSuperUser per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa.
                                     * Comanda: whoami --> Bàsicament exposa per pantalla el nom d'usuari de l'actual usuari.
 
 2.2 - Comprovació del paquet tcpdump --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de tcpdump.
 
                                     Si "$(dpkg -l | grep -c tcpdump)" == 0 --> Paquet tcpdump no instal·lat.
-                                    En aquest cas, s'envia el missatge $usagePaquettcpdump per informar l'usuari. Després d'això es tanca l'execució del programa.
-                                    * Comanda: dpkg -l --> Llista tots els paquets instal·lats al sistema. Gràcies al 'grep -c tcpdump' busquem a la llista anterior el paquet amb el nom tcpdump 
+                                    En aquest cas, s'envia el missatge $usagePaquettcpdump per informar l'usuari. Després d'això es tanca l'execució 
+                                    del programa.
+                                    * Comanda: dpkg -l --> Llista tots els paquets instal·lats al sistema. Gràcies al 'grep -c tcpdump' busquem a la 
+                                                           llista anterior el paquet amb el nom tcpdump.
                                     i amb el flag -c comptem el nombre d'encerts que ha tingut la instrucció grep.
 
-2.3 - Comprovació del paquet iproute2 --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de iproute2 (del cual la instrucció ip forma part i serà utilitzada posteriorment).
+2.3 - Comprovació del paquet iproute2 --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de iproute2 (del cual la instrucció 
+ip forma part i serà utilitzada posteriorment).
 
                                     Si "$(dpkg -l | grep -c iproute2)" == 0 --> Paquet iproute2 no instal·lat.
-                                    En aquest cas, s'envia el missatge $usagePaquetip per informar l'usuari. Després d'això es tanca l'execució del programa.
+                                    En aquest cas, s'envia el missatge $usagePaquetip per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa.
                                     * Comanda: dpkg -l | grep -c iproute2 --> Mateix funcionament que l'anterior apartat pero amb el paquet iproute2.
 
-2.4 - Detecció de la correctesa dels arguments d'entrada --> En aquest apartat comprovarem la correctesa tant del número d'arguments com del contingut d'aquests.
+2.4 - Detecció de la correctesa dels arguments d'entrada --> En aquest apartat comprovarem la correctesa tant del número d'arguments com del contingut 
+d'aquests.
 
     Variable '$#' --> Conté el nombre d'arguments que ha introduit l'usuari per pantalla.
 
@@ -116,12 +126,19 @@ També es tractaran els diferents problemes que poden sorgir amb la entrada dels
                       En cas de tenir dos arguments, realitzarem les següents comprovacions:
 
                       El protocol haurà de ser ICMP.
+                      
                       Si "$protocolMajus" != "ICMP" --> El protocol no és ICMP.
                       En aquest cas, realitzarem les següents accions:
                       Es fa el tractament de si el protocol és TCP o UDP.
+                      
                       Si "$protocolMajus" == "TCP" o "$protocolMajus" == "UDP", el protocol serà TCP o UDP.
-                      En aquest cas s'informa a l'usuari amb el missatge $usageTCPUDP de que si selecciona TCP o UDP ha d'especificar un port. Després d'això es tanca l'execució del programa.
-                      En cas contrari, de que no sigui cap dels anteriors protocols esmentats, s'envia el missatge $usageICMP, per tal d'avisar a l'usuari de que ha d'utilitzar el protocol ICMP en cas de posar només dos arguments.
+                      
+                      En aquest cas s'informa a l'usuari amb el missatge $usageTCPUDP de que si selecciona TCP o UDP ha d'especificar un port. Després 
+                      d'això es tanca l'execució del programa.
+                      
+                      En cas contrari, de que no sigui cap dels anteriors protocols esmentats, s'envia el missatge $usageICMP, per tal d'avisar a 
+                      l'usuari de que ha d'utilitzar el protocol ICMP en cas de posar només dos arguments.
+                      
                       Després d'això es tanca l'execució del programa.
 
     2.4.2 - 3 arguments --> Si "$#" == 3 --> Hi ha 3 arguments.
@@ -140,28 +157,45 @@ També es tractaran els diferents problemes que poden sorgir amb la entrada dels
                       Si "$protocolMajus" != "TCP" i "$protocolMajus" != "UDP" --> El protocol no és ni TCP ni UDP.
                       En aquest cas, s'envia el missatge $usageProtocolInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
 
-    2.4.3 - Nº d'arguments invàlid --> En el cas de que el nombre d'arguments no sigui ni 2 ni 3, s'envia el missatge $usageInvalidArg per tal d'informar l'usuari de l'error.
+    2.4.3 - Nº d'arguments invàlid --> En el cas de que el nombre d'arguments no sigui ni 2 ni 3, s'envia el missatge $usageInvalidArg per tal d'informar 
+                                       l'usuari de l'error.
                                        Després d'això es tanca l'execució del programa.
 
-2.5 - Comprovació interfície --> En aquest cas es comprova que la interfície escollida per l'usuari es trobi en la llista d'interfícies actives del sistema. En cas d'estar-hi, cal revisar si té una IP assignada en la interfície.
+2.5 - Comprovació interfície --> En aquest cas es comprova que la interfície escollida per l'usuari es trobi en la llista d'interfícies actives del 
+                                 sistema. En cas d'estar-hi, cal revisar si té una IP assignada en la interfície.
 
-                             * Comanda: $(ls /sys/class/net/); --> Aquesta comanda llista totes les interfícies actives del sistema. Cada interfície de xarxa del sistema conté un directori situat a /sys/class/net, amb els diferents fitxers que conformen l'estructura de la interfície (els fitxers adreça, broadcast o device en són exemples).
+                             La variable $interfacesLlistas'extre de la següent comanda:
+                             
+                             * Comanda: $(ls /sys/class/net/); --> Aquesta comanda llista totes les interfícies actives del sistema. Cada interfície de 
+                                                                   xarxa del sistema conté un directori situat a /sys/class/net, amb els diferents fitxers 
+                                                                   que conformen l'estructura de la interfície (els fitxers adreça, broadcast o device en 
+                                                                   són exemples).
                              Llavors, cada interfície ($interface) situada a /sys/class/net/, la compararem amb la interfície de l'usuari.
                              Si  "$interface" == "$interfaceActual" --> Interfície trobada al sistema.
+                             
                              En el cas de que la interfície es trobi s'incrementa en 1 el booleà $i.
-                             Després es comprova si el booleà $i no és 1. En aquest cas significarà que no s'ha trobat la interfície i s'envia el missatge $usageInterficieInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+                             Després es comprova si el booleà $i no és 1. En aquest cas significarà que no s'ha trobat la interfície i s'envia el missatge 
+                             $usageInterficieInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+                             
                              En el cas de que la interfície sí hagi estat trobada ($i == 1), es buscarà que la interfície tingui una IP assignada.
-                             * Comanda: $(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1); --> Aquesta comanda recull la IPv4 de la interfície especificada ($1), en cas de que tingui més d'una agafarem la primera IP disponible.
-                                        - ip -4 addr show dev "$1" --> Exposa la interfície de xarxa especificada amb algunes característiques i la seva adreça IP associada.
+                             * Comanda: $(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1); --> Aquesta comanda recull 
+                                        la IPv4 de la interfície especificada ($1), en cas de que tingui més d'una agafarem la primera IP disponible.
+                                        - ip -4 addr show dev "$1" --> Exposa la interfície de xarxa especificada amb algunes característiques i la seva 
+                                        adreça IP associada.
                                         - grep inet --> Es filtra i s'agafa la línia on es troba l'string 'inet'
                                         - awk '{print $2}' --> Es filtra i s'agafa el segon string ($2) de la línia.
                                         - cut -d '/' -f1 | head -n 1 --> Es divideix l'string per '/' i s'agafa la primera fila.
+                             
                              Si aquesta comanda anterior no retorna cap valor, voldrà dir que no hi ha cap IPv4 assignada.
-                             En aquest cas, s'envia el missatge $usageIP per tal d'informar l'usuari de que no té cap IPv4 assignada. Després d'això es tanca l'execució del programa.
+                             
+                             En aquest cas, s'envia el missatge $usageIP per tal d'informar l'usuari de que no té cap IPv4 assignada. Després d'això es 
+                             tanca l'execució del programa.
+                             
                              En el cas de que sí es trobi IPv4, seguirem amb el programa.
 
 ####### 3. CREACIÓ DE FITXERS NECESSARIS #######
-En aquest apartat tractarem la creació dels fitxers necessaris per la realització del nostre script (tant el fitxer de l'output com el fitxer de la monitorització d'atacs). 
+En aquest apartat tractarem la creació dels fitxers necessaris per la realització del nostre script (tant el fitxer de l'output com el fitxer de la 
+monitorització d'atacs). 
 
     3.1 - Creació dels fitxers
 
@@ -175,73 +209,101 @@ En aquest apartat tractarem la creació dels fitxers necessaris per la realitzac
         S'ha aplicat una capçalera al fitxer per evitar errors en l'escriptura en temps real de la comanda tcpdump
 
 ####### 4. MONITORITZACIÓ DE PAQUETS #######
-En aquest apartat tractarem l'execució del programa tcpdump per capturar paquets, dintre tindrem tres opcions en funció del protocol que l'usuari hagi seleccionat al iniciar l'script.
+En aquest apartat tractarem l'execució del programa tcpdump per capturar paquets, dintre tindrem tres opcions en funció del protocol que l'usuari hagi 
+seleccionat al iniciar l'script.
 
-    4.1 - Totes les comandes tcpdump es mantenen al background amb la funció "&" al final d'aquestes, aixó permet crear un procés per mantenir llegint mentre seguiexen les funcionalitats de
-    l'script. Després de cada comanda s'executa la funció "$!" i es guarda en la varibale pidtcpdump, el que fa és guardar el pid (identificador de procés) de l'últim procés executat, 
-    permetent parar el procés quan sigui necessari (comanda kill, veure a l'apartat 6).
+    4.1 - Totes les comandes tcpdump es mantenen al background amb la funció "&" al final d'aquestes, això permet crear un procés per mantenir llegint 
+    mentre seguiexen les funcionalitats de l'script. Després de cada comanda s'executa la funció "$!" i es guarda en la varibale pidtcpdump, el que fa és 
+    guardar el pid (identificador de procés) de l'últim procés executat, permetent parar el procés quan sigui necessari (comanda kill, veure a l'apartat 6).
     Part comú de la instrucció tcpdump:
+    
     *Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" --> Inicialitza el programa amb els paràmetres decidits pels flags següents:
         -l --> Permet que la sortida del tcpdump sigui llegible(o enviable) en temps real, permeten així guardar la sortida al fitxer atacs.log
         -q --> Redueix la informació que es mostra de cada captura (less verbose) 
         -nni --> conjunt de dos flags: 
                 -nn --> Evita la conversió d'adreces, ports habituals, etc a noms. (Permetent així la sortida d'una ip en comptes del seu nom de domini)
-                -i --> Marca la intefície a la qual escoltarà l'instrucció tcpdump, després d'aquest flag és on col·locarem la variable amb l'interfície seleccionada per l'usuari.
+                -i --> Marca la intefície a la qual escoltarà l'instrucció tcpdump, després d'aquest flag és on col·locarem la variable amb l'interfície 
+                       seleccionada per l'usuari.
         dst --> Limita la captura de paquets a aquells que tenen com a direcció destí la IP de la intefície selecciona per l'usuari. 
 
    
-    4.2 - Cas TCP --> Amb el protocol TCP seleccionat, es filtren els paquets específicament per evitar els casos que no són accessos, més concretament s'accedeix a les capçaleres
-    dels paquets tcp i només s'agafen els de tipus SYN (en qualsevol connexió tcp trobem l'anomenat handshake, on una maquina1 envia a una maquina2 un paquet tcp de tipus SYN i la maquina2
-    respon amb un de tipus ACK). Aquesta informació s'aconsegueix al byte número 14 de la capçalera tcp, i si és un flag de tipus SYN tindrà un valor de 00000010, que en decimal equival a 2. Per tant, 
-    ens queda el següent filtre per tcp:
-    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" --> Captura paquets de la interfície seleccionada, de tipus SYN i que pasen pel port seleccionat.
+    4.2 - Cas TCP --> Amb el protocol TCP seleccionat, es filtren els paquets específicament per evitar els casos que no són accessos, més concretament 
+    s'accedeix a les capçaleres dels paquets tcp i només s'agafen els de tipus SYN (en qualsevol connexió tcp trobem l'anomenat handshake, on una maquina1 
+    envia a una maquina2 un paquet tcp de tipus SYN i la maquina2 respon amb un de tipus ACK). Aquesta informació s'aconsegueix al byte número 14 de la 
+    capçalera tcp, i si és un flag de tipus SYN tindrà un valor de 00000010, que en decimal equival a 2. Per tant, ens queda el següent filtre per tcp:
+    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" --> Captura paquets de la interfície seleccionada, de tipus SYN i que 
+               passen pel port seleccionat.
         - filter_tcp="tcp[13]=2 and port $3"
         - filter_tcp: tcp[13]=2  --> flag iniciat des de 0 per tant 0-13=14è byte
         - port $3 --> Especificat als arguments d'entrada.
 
     
-    4.3 - Cas UDP --> Amb el protocol UDP seleccionat, es capturen tots el paquets que tenen com a destí la IP de la interfície seleccionada, donat que el protocol UDP a diferència del handshake del TCP, funciona 
-    amb una petició(REQUEST) directa de la maquina1 i una resposta de la maquina2 retornant l'informació demanada (no hi ha verificació d'informació). Per tant el filtre es el següent: 
-    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and port "$3" and udp --> Captura paquets de la interfície seleccionada, de tipus UDP, on el seu destí és la direcció IP de la maquina on 
-    s'executa l'script i que pasen pel port decidit per l'usuari.
+    4.3 - Cas UDP --> Amb el protocol UDP seleccionat, es capturen tots el paquets que tenen com a destí la IP de la interfície seleccionada, donat que el 
+    protocol UDP a diferència del handshake del TCP, funciona amb una petició(REQUEST) directa de la maquina1 i una resposta de la maquina2 retornant 
+    l'informació demanada (no hi ha verificació d'informació). 
+    
+    Per tant, el filtre és el següent: 
+
+    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and port "$3" and udp --> Captura paquets de la interfície seleccionada, de tipus UDP, on 
+    el seu destí és la direcció IP de la maquina on s'executa l'script i que pasen pel port decidit per l'usuari.
     
    
-    4.4 - Cas ICMP --> Amb el protocol ICMP seleccionat, al igual que al cas UDP, es capturen tots els paquets que tenen com a destí la direcció IP seleccionada, es podria limitar a agafar paquets de tipus
-    request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan executa un ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat. En aquest cas, degut
-    a que el protocol ICMP es part de la capa 3, no hi apliquem cap port a la monitorització. 
-    Per tant el filtre es el següent: 
-    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp --> Captura paquets de la intefície seleccionada, de tipus ICMP, on el seu destí és la direcció IP de la maquina on s'executa l'script. 
+    4.4 - Cas ICMP --> Amb el protocol ICMP seleccionat, al igual que al cas UDP, es capturen tots els paquets que tenen com a destí la direcció IP 
+    seleccionada, es podria limitar a agafar paquets de tipus request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan 
+    executa un ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat. En aquest cas, degut a que el protocol ICMP es part de 
+    la capa 3, no hi apliquem cap port a la monitorització. 
+
+    Per tant, el filtre és el següent: 
+    
+    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and icmp --> Captura paquets de la intefície seleccionada, de tipus ICMP, on el seu destí 
+                                                                              és la direcció IP de la maquina on s'executa l'script. 
 
 
-    4.5 - Sortida d'errors --> Cada comanda tcpdump te redirigida la seva sortida d'errors al fixter log_honeypot, amb l'objectiu de fer comprovacions previes de funcionament, explicades a sota.
+    4.5 - Sortida d'errors --> Cada comanda tcpdump te redirigida la seva sortida d'errors al fixter log_honeypot, amb l'objectiu de fer comprovacions 
+    prèvies de funcionament, explicades a sota.
+
     * Comanda: 2>log_honeypot
 
-    4.6 - Sortida normal --> La sortida normal, és a dir, tota la informació que es va capturant dels paquets s'escriu al fitxer atacs.log, on s'aniran llegint i analitzant de manera simultanea. 
+    4.6 - Sortida normal --> La sortida normal, és a dir, tota la informació que es va capturant dels paquets s'escriu al fitxer atacs.log, on s'aniran 
+    llegint i analitzant de manera simultanea. 
+    
     * Comanda: >> atacs.log &
 
-    4.7 - Comprovació d'errors en l'execució de la comanda tcpdump --> Evita la continuitat de l'script quan hi han errors en l'execució de la comanda tcpdump, en aquesta comprovació evitem per exemple sistemes Operatius 
-    que compleixen els requisits de l'script però per alguna raó no funciona correctament tcpdump (Cas WSL de windows a la qual encara no es troba implementat). Per fer aquesta comprovació es revisa la sortida inicial de 
+    4.7 - Comprovació d'errors en l'execució de la comanda tcpdump --> Evita la continuitat de l'script quan hi han errors en l'execució de la comanda 
+    tcpdump, en aquesta comprovació evitem per exemple sistemes Operatius que compleixen els requisits de l'script però per alguna raó no funciona 
+    correctament tcpdump (Cas WSL de windows a la qual encara no es troba implementat). Per fer aquesta comprovació es revisa la sortida inicial de 
     tcpdump que es guarda al fitxer log_honeypot. 
 
     sleep 0.3 --> S'executa una espera de 0.3 segons per donar temps a l'escriptura dels errors al fitxer log_honeypot.
 
-    tcpdumpgood --> Variable que guarda la comprovació de que la sortida d'errors(al fitxer log_honeypot) tingui la informació que ens diu que funciona correctament, per aixó fem la seguent comprovació:
+    tcpdumpgood --> Variable que guarda la comprovació de que la sortida d'errors(al fitxer log_honeypot) tingui la informació que ens diu que funciona 
+    correctament, per això fem la seguent comprovació:
+    
     *Comanda: grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot
-        - grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" --> comprova que el fitxer log_honeypot tingui la frase seleccionada (frase que trobarem sempre que funcioni bé ja que a cap de les
-        comandes tcpdump trobem el flag -v i per tant sempre ens avisa amb aquesta linia).
-        - -e "listening on $1" --> El mateix que la anterior però amb la frase marcada (frase que trobem sempre a tcpdump i a més comprova que estem escoltant l'intefície correcte amb l'argument de l'usuari)
-        log_honeypot
+        - grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" --> comprova que el fitxer log_honeypot tingui la 
+                                                                                                      frase seleccionada (frase que trobarem sempre que 
+                                                                                                      funcioni bé ja que a cap de les comandes tcpdump 
+                                                                                                      trobem el flag -v i per tant sempre ens avisa amb 
+                                                                                                      aquesta linia).
+        
+        - -e "listening on $1" --> El mateix que la anterior però amb la frase marcada (frase que trobem sempre a tcpdump i a més comprova que estem 
+        escoltant l'intefície correcte amb l'argument de l'usuari)
+        
         - El flag -c compten si ha trobat l'string corresponent i el flag -e serveix per incloure dos cerques en la mateixa intrucció grep.
+        
         - log_honeypot --> fitxer al qual executem la comanda grep
 
-    true > log_honeypot --> Amb la comprovació guardada a la variable tcpudumpgood, es neteja el fitxer log_honeypot per utilitzar-ho posteriorment a la part de Maquetació. Si no es neteja, a la primera execució apareixeràn les dades 
-    del canal d'errors del tcpdump. 
+    true > log_honeypot --> Amb la comprovació guardada a la variable tcpudumpgood, es neteja el fitxer log_honeypot per utilitzar-ho posteriorment a 
+    la part de Maquetació. Si no es neteja, a la primera execució apareixeràn les dades del canal d'errors del tcpdump. 
 
-    Finalment es comprova que el número d'acerts de la instrucció grep al fitxer log_honeypot sigui de dos (els dos strings explicats), en cas contrari es mostrarà el missatge de usageExecucio i es sortirà amb un exit 1.
+    Finalment es comprova que el número d'acerts de la instrucció grep al fitxer log_honeypot sigui de dos (els dos strings explicats), en cas contrari 
+    es mostrarà el missatge de usageExecucio i es sortirà amb un exit 1.
 
 ####### 5. TRACTAMENT D'ATACS #######
-En aquest apartat tractarem els diferents atacs. Aquests els dividirem bàsicament en dos arrays, $arrayAtacs i $arrayFullAtacs (explicats en l'apartat 1.5). L'arrayFullAtacs serà més fàcil de tractar, ja que només s'han d'anar afegint al final els nous atacs, de manera individual. 
-En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'ha de comparar si l'atacant ja ha atacat amb anterioritat i, en cas afirmatiu, cal acumular al comptador d'accessos aquest nou atac.
+En aquest apartat tractarem els diferents atacs. Aquests els dividirem bàsicament en dos arrays, $arrayAtacs i $arrayFullAtacs (explicats en l'apartat 1.5). 
+L'arrayFullAtacs serà més fàcil de tractar, ja que només s'han d'anar afegint al final els nous atacs, de manera individual. 
+En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'ha de comparar si l'atacant ja ha atacat amb anterioritat i, en cas afirmatiu, 
+cal acumular al comptador d'accessos aquest nou atac.
 
     5.1 - Preparació del tractament
     
@@ -249,22 +311,29 @@ En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'
         
     5.2 - Bucle de lectura dels fitxers d'atacs (S'efectuarà mentre la variable $quit no sigui 1 (l'usuari no vol tancar el programa encara))
 
-        Mentre $comptLinia < $numAccesosSimultanis --> Bucle que s'executa tantes vegades com el numero d'accessos simultanis decidits (per defecte 10), aquest anirà llegint línies i tractant-les (guardant valors als arrays) 
-        fins arribar al limit o  a una línia en blanc, en qualsevol dels casos sortirà del bucle i posteriorment es netejarà el fitxer atacs.log.
+        Mentre $comptLinia < $numAccesosSimultanis --> Bucle que s'executa tantes vegades com el numero d'accessos simultanis decidits (per defecte 10), 
+        aquest anirà llegint línies i tractant-les (guardant valors als arrays) fins arribar al limit o  a una línia en blanc, en qualsevol dels casos 
+        sortirà del bucle i posteriorment es netejarà el fitxer atacs.log.
             
-            5.2.1 - Recollida de dades dels atacs --> Anirem recorrent cada línia, agafant els paràmetres que necessitem i guardant-los als arrays corresponents.
+            5.2.1 - Recollida de dades dels atacs --> Anirem recorrent cada línia, agafant els paràmetres que necessitem i guardant-los als arrays 
+            corresponents.
         
             hora=$(awk -v line=$comptLinia '/./{if(NR==line) print $1}' atacs.log) --> Comanda que guarda l'hora de l'atac corresponent.
-                - awk -v line=$comptLinia --> funció que utilitzarem per recollir el paràmetre necessari, flag -v servereix per guardar en una variable el parametre que vulguem i així poder-ho utilitzar dintre de la comanda.
+                - awk -v line=$comptLinia --> funció que utilitzarem per recollir el paràmetre necessari, flag -v servereix per guardar en una variable el 
+                                              paràmetre que vulguem i així poder-ho utilitzar dintre de la comanda.
                 En aquest cas guardem el comptador per agafar el paràmetre hora de la línia que ens trobem.
-                - '/./{if(NR==line) print $1}' --> Agafa el primer element de la línia x(valor de la variable line), en cas de no trobar la línia retorna buit.
+                - '/./{if(NR==line) print $1}' --> Agafa el primer element de la línia x(valor de la variable line), en cas de no trobar la línia retorna 
+                                                   buit.
                 - atacs.log --> fitxer al qual estem executant la comanda awk.
            
-            ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4) --> Comanda que guarda l'ip de l'atac corresponent, fa el mateix que l'anterior però amb el 3r paràmetre de la línia.
-                -  cut -d '.' -f1,2,3,4 --> agafa de la ip recollida per la comanda awk (la qual porta també el port, ex: 192.168.0.26.22) i talla en funció de punt('.') agafant només els 4 primers paràmetres (-f1,2,3,4)
+            ipNouAtac=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f1,2,3,4) --> Comanda que guarda l'ip de l'atac 
+                                                                                                                   corresponent, fa el mateix que l'anterior 
+                                                                                                                   però amb el 3r paràmetre de la línia.
+                -  cut -d '.' -f1,2,3,4 --> agafa de la ip recollida per la comanda awk (la qual porta també el port, ex: 192.168.0.26.22) i talla en funció 
+                                            de punt('.') agafant només els 4 primers paràmetres (-f1,2,3,4).
             
-            port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5) --> Comanda que guarda el port de l'atac corresponent, fa el mateix que l'anterior però en comptes de quedar-se amb els 
-            quatre primers paràmetre (la IP) es queda amb l'últim (el port).
+            port=$(awk -v line=$comptLinia '/./{if(NR==line) print $3}' atacs.log | cut -d '.' -f5) --> Comanda que guarda el port de l'atac corresponent, 
+            fa el mateix que l'anterior però en comptes de quedar-se amb els quatre primers paràmetre (la IP) es queda amb l'últim (el port).
             
             5.2.2 - Inici tractament de dades
 
@@ -273,11 +342,13 @@ En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'
                
                 5.2.2.1. - Cas Inicial 
                 
-                Si $arrayAtacs i $arrayFullAtacs estan buits significarà que és el primer atac que tractem del fitxer. Per tant, caldrà realitzar algunes accions específiques:
+                Si $arrayAtacs i $arrayFullAtacs estan buits significarà que és el primer atac que tractem del fitxer. Per tant, caldrà realitzar algunes 
+                accions específiques:
                     primeraHora=$hora --> Assignació de la variable $primeraHora amb el valor de $hora (hora exacte del primer atac rebut del fitxer)
                     ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
                     arrayFullAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayFullAtacs.
-                    atacActual="$atacActual-1" --> Se li afegeix un 1 al final que significarà el número d'accessos que ha realitzat aquella IP en concret (com és el primer atac serà 1). 
+                    atacActual="$atacActual-1" --> Se li afegeix un 1 al final que significarà el número d'accessos que ha realitzat aquella IP en concret 
+                                                   (com és el primer atac serà 1). 
                     arrayAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayAtacs.
                 
                 5.2.2.2 - Cas bucle
@@ -287,17 +358,23 @@ En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'
                     arrayFullAtacs+="$atacActual" --> Afegim l'$atacActual a l'arrayFullAtacs.
                     
                     5.2.2.2.1 - Bucle de verificació d'atacs repetits
-                    Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que $ipNouAtac. En aquest cas haurem d'incrementar en 1 el número d'accessos. En cas contrari, afegirem l'atac al final de l'array amb el número d'accessos de valor 1.Assignació
+                    Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que 
+                    $ipNouAtac. En aquest cas haurem d'incrementar en 1 el número d'accessos. En cas contrari, afegirem l'atac al final de l'array amb el número 
+                    d'accessos de valor 1.Assignació
                     
                     for pos in "${!arrayAtacs[@]}" --> Per cada posició de l'#arrayAtacs (acumulacions d'atacs de cada IP)
                         ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2) --> S'agafa la IP la que volem comparar en aquest moment.
                         
                         Si "$ipNouAtac" == "$ipAtac" --> Si les dues IP coincideixen
-                            auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3) --> S'assigna a la variable $auxValors la informació de la hora, la IP i el port extretes de l'$arrayAtacs. 
-                            comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}') --> S'incrementa en 1 la quarta fila d'aquests atacs d'IpAtac, que equival al número d'accessos. 
-                            nouAtac="$auxValors-$comptAtacs" --> A la variable $nouAtac se li concatenen les dues variables anteriors. D'aquesta manera tindrem una nova línia d'atacs de la IP $IpAtac, actualitzada amb un número d'accés més.
+                            auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3) --> S'assigna a la variable $auxValors la informació de la hora, la IP 
+                                                                                             i el port extretes de l'$arrayAtacs. 
+                            comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}') --> S'incrementa en 1 la quarta fila d'aquests atacs 
+                                                                                                               d'IpAtac, que equival al número d'accessos. 
+                            nouAtac="$auxValors-$comptAtacs" --> A la variable $nouAtac se li concatenen les dues variables anteriors. D'aquesta manera tindrem 
+                                                                 una nova línia d'atacs de la IP $IpAtac, actualitzada amb un número d'accés més.
                             arrayAtacs[$pos]="$nouAtac" --> S'actualitza aquesta línia anterior a la mateixa posició on es trobava anteriorment. 
-                            repetit=1 --> Es posa el booleà a 1 per tal de saber que amb el nou atac hem actualitzat un dels conjunts d'atacs de les IP ja existents a l'array $arrayAtacs.
+                            repetit=1 --> Es posa el booleà a 1 per tal de saber que amb el nou atac hem actualitzat un dels conjunts d'atacs de les IP ja 
+                                          existents a l'array $arrayAtacs.
                             break --> Intrucció per sortir directament del bucle.
 
                     Si "$repetit" != 1  --> Si no s'ha trobat aquest element a l'arrayAtacs, ho guardem com a nou element. 
@@ -309,21 +386,28 @@ En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'
                 ((comptLinia+=1)) --> S'incrementa el comptador d'atacs en 1. 
 
             En canvi, si $hora i $ipNouAtac estan buides:
-                comptLinia=$((numAccesosSimultanis + 2)) --> S'incrementa el valor de $comptLinia per tal de no tornar a entrar al bucle i finalitzar la lectura, ja que ja no hi ha res al fitxer.     
+                comptLinia=$((numAccesosSimultanis + 2)) --> S'incrementa el valor de $comptLinia per tal de no tornar a entrar al bucle i finalitzar la 
+                                                             lectura, ja que ja no hi ha res al fitxer.     
         
     5.3 - Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
 
         comptLinia=2 --> Es torna a posar la variable $comptLinia a 2 per tal de tenir en compte la capçalera del fitxer atacs.log
-        echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log --> Neteja del fitxer atacs.log. Aquesta decisió està basada en la robustesa i escalabilitat de l'script, ja que si no es netejés l'arxiu constantment, el conjunt d'informació seria massa gran (per exemple si es manté actiu durant més d'un dia) i produiria una reducció a la velocitat(degut a les llargues lectures del fitxer). 
+        echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log --> Neteja del fitxer atacs.log. Aquesta decisió està basada en la robustesa i escalabilitat de l'script, 
+                                                        ja que si no es netejés l'arxiu constantment, el conjunt d'informació seria massa gran (per exemple si 
+                                                        es manté actiu durant més d'un dia) i produiria una reducció a la velocitat(degut a les llargues 
+                                                        lectures del fitxer). 
 
 ####### 6. MAQUETACIÓ DE DADES #######
-En aquest apartat tractarem més el format i la impressió final de les dades. Veurem com l'output es redirigeix a l'arxiu log_honeypot i finalment s'acaba printant per pantalla, a la vista de l'usuari.
+En aquest apartat tractarem més el format i la impressió final de les dades. Veurem com l'output es redirigeix a l'arxiu log_honeypot i finalment s'acaba 
+printant per pantalla, a la vista de l'usuari.
 
     6.1 - Preparacions Maquetació
 
         true > log_honeypot --> Es buida l'arxiu log_honeypot.
-        tput ed --> Es fa una neteja des de la posició actual del cursor fins al final de la pantalla (en aquest moment el cursor es troba a la zona superior de la pantalla).
-        read -r -t 0.01 -N 1 input --> Aquesta comanda s'utilitza per saber si l'usuari ha escrit la 'q' per acabar amb l'execució. La comanda read llegeix una línia de l'input. Opcions:
+        tput ed --> Es fa una neteja des de la posició actual del cursor fins al final de la pantalla (en aquest moment el cursor es troba a la zona superior 
+                    de la pantalla).
+        read -r -t 0.01 -N 1 input --> Aquesta comanda s'utilitza per saber si l'usuari ha escrit la 'q' per acabar amb l'execució. La comanda read llegeix 
+                                       una línia de l'input. Opcions:
             
             -r: Evita problemes de sintaxi amb barres verticals '/'.
             -t 0.01: Timeout. Si l'input no és llegit en aquest temps es realitza el time-out i no es retorna res.
@@ -332,27 +416,38 @@ En aquest apartat tractarem més el format i la impressió final de les dades. V
 
         Si la variable $input (retornada en l'anterior read) == "q" :
 
-        kill "$pidtcpdump" --> S'elimina el procés de tcpdump, fent un kill del seu PID, creat anteriorment al principi de l'apartat de monitorització de paquets. 
+        kill "$pidtcpdump" --> S'elimina el procés de tcpdump, fent un kill del seu PID, creat anteriorment al principi de l'apartat de monitorització de 
+                               paquets. 
         true > log_honeypot --> Es buida l'arxiu log_honeypot.
         dataCompilacioFi=$(date --rfc-3339=date) --> Conté la data (any, mes i dia) del moment en el que es tanca el programa. 
         horaCompilacioFi=$(date | cut -d ' ' -f5) --> Conté la hora exacta en la que es tanca el programa. 
         quit=1 --> Posem el booleà $quit a 1, que marcarà que es la última iteració del programa, ja que no es tornarà a entrar al bucle general. 
-        exec 1<>log_honeypot --> Comanda utilitzada per a que el resultat de totes les següents comandes 'echo' vagi directament a parar a l'arxiu especificat (log-honeypot).
+        exec 1<>log_honeypot --> Comanda utilitzada per a que el resultat de totes les següents comandes 'echo' vagi directament a parar a l'arxiu especificat 
+                                 (log-honeypot).
         
     6.2 - Impressió de línies
 
-        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en una línia diferent. Totes aquestes línies printades seran redirigides directament al fitxer log_honeypot, gràcies a estar entre { } i finalment enviades (>> log_honeypot)
-        Totes són línies bàsiques d'output, excepte la quarta. Que contindrà l'adreça IP de l'usuari ($myIP), el protocol utilitzat en minúscules ($protocolMinus), el port ($3), l'hora del primer atac ($primeraHora) i la hora de l'últim (en cas d'haver-hi)($ultimaHora).
+        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en 
+        una línia diferent. Totes aquestes línies printades seran redirigides directament al fitxer log_honeypot, gràcies a estar entre { } i finalment 
+        enviades (>> log_honeypot).
+        Totes són línies bàsiques d'output, excepte la quarta. Que contindrà l'adreça IP de l'usuari ($myIP), el protocol utilitzat en minúscules 
+        ($protocolMinus), el port ($3), l'hora del primer atac ($primeraHora) i la hora de l'últim (en cas d'haver-hi)($ultimaHora).
 
     6.3 - Tractament del format d'escriptura del resum dels accessos
         
-        En aquest moment l'output de la zona superior de la pantalla està redirigit al fitxer log_honeypot, i ara apareix la primera zona d'actualització, on s'aniran refrescant les IP's que han fet algun accés i quantes vegadas ho ha fet cadascuna.
+        En aquest moment l'output de la zona superior de la pantalla està redirigit al fitxer log_honeypot, i ara apareix la primera zona d'actualització, on 
+        s'aniran refrescant les IP's que han fet algun accés i quantes vegadas ho ha fet cadascuna.
         Per cada conjunt d'atacs de cada IP (trobats a l'array $arrayAtacs) es realitzaran les següents accions:
         
-            espaiBlancIP=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlancIP, que és l'encarregada de col·locar els espais en blanc adients per tal de que les IPs sempre quedin alineades amb el format de l'output.
-            ipAcces=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f2 ) --> Inicialització de la variable $ipAcces, que conté la segona fila, separades amb guions, de la actual línia (on es troba la IP de l'atacant).
-            numAccessos=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f4 ) --> Inicialització de la variable $numAccessos, que conté la quarta fila, separades amb guions, de la actual línia (on es troba el número d'accessos de la IP de l'atacant).
-            x=7 --> Inicialització de la variable $x, que es compararà amb el número de caràcters que ocupa la variable $ipAcces, per tal d'alinear en format a totes les diferents IP's. S'inicialitza amb el valor 7 perquè és el mínim que pot tenir una IP (X.X.X.X)
+            espaiBlancIP=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlancIP, que és l'encarregada de col·locar els espais en blanc adients 
+                                  per tal de que les IPs sempre quedin alineades amb el format de l'output.
+            ipAcces=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f2 ) --> Inicialització de la variable $ipAcces, que conté la segona fila, separades amb guions, 
+                                                                         de la actual línia (on es troba la IP de l'atacant).
+            numAccessos=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f4 ) --> Inicialització de la variable $numAccessos, que conté la quarta fila, separades 
+                                                                             amb guions, de la actual línia (on es troba el número d'accessos de la IP de 
+                                                                             l'atacant).
+            x=7 --> Inicialització de la variable $x, que es compararà amb el número de caràcters que ocupa la variable $ipAcces, per tal d'alinear en format a 
+                    totes les diferents IP's. S'inicialitza amb el valor 7 perquè és el mínim que pot tenir una IP (X.X.X.X)
             trobat=0 --> Inicialització de la variable $trobat, que funcionarà com a booleà. 
 
             6.3.1 Tractament de l'espai assignat a les adreces IP
@@ -361,39 +456,56 @@ En aquest apartat tractarem més el format i la impressió final de les dades. V
 
                 Si "${#ipAcces}" == "$x" --> (En el cas de que el número de caràcters de la IP de $ipAcces sigui el mateix que el de la variable $x)
 
-                    num=15-$x; --> Inicialització de la variable $num. Conté els espais exactes que aniran abans de la IP a l'output per tal de que estiguin totes alineades. (15 línies totals - $x línies d'IP)
+                    num=15-$x; --> Inicialització de la variable $num. Conté els espais exactes que aniran abans de la IP a l'output per tal de que estiguin 
+                                   totes alineades. (15 línies totals - $x línies d'IP)
                     A continuació, li afegirem a la variable $espaiBlancIP $num espais en blanc. 
-                    trobat=1; Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais en blanc fixats.
+                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais 
+                                 en blanc fixats.
                     
-            stringResum="$espaiBlancIP$ipAcces" --> Inicialització de l'string $stringResum, que conté els espais en blanc adients i la IP per tal d'estar alineada amb les altres IP's. Conté la línia que es printarà per pantalla. 
+            stringResum="$espaiBlancIP$ipAcces" --> Inicialització de l'string $stringResum, que conté els espais en blanc adients i la IP per tal d'estar 
+                                                    alineada amb les altres IP's. Conté la línia que es printarà per pantalla. 
             
             Ara, repetirem el mateix procés però per col·locar els espais en blanc i el número d'accessos alineats. 
 
-            espaiBlancAccessos="   "; --> S'inicialitza amb tres espais en blanc la variable $espaiBlancAccessos, que és l'encarregada de col·locar els espais en blanc adients per tal de que els accessos sempre quedin alineats amb el format de l'output.
-            x=0 --> Assignació de la variable $x a 0, que es compararà amb el número de caràcters que ocupa la variable $numAccessos, per tal d'alinear en format a tots els números d'accessos. 
+            espaiBlancAccessos="   "; --> S'inicialitza amb tres espais en blanc la variable $espaiBlancAccessos, que és l'encarregada de col·locar els espais 
+                                          en blanc adients per tal de que els accessos sempre quedin alineats amb el format de l'output.
+            x=0 --> Assignació de la variable $x a 0, que es compararà amb el número de caràcters que ocupa la variable $numAccessos, per tal d'alinear en 
+                    format a tots els números d'accessos. 
             trobat=0 --> Assignació de la variable $trobat, que funcionarà com a booleà. 
 
             6.3.2 - Tractament de l'espai assignat al número d'accessos 
 
             Sempre que $x sigui <= a 11 i $trobat == 0
 
-                Si "${#numAccessos}" == "$x" --> (En el cas de que el número de caràcters del número d'accessos de $numAccessos sigui el mateix que el de la variable $x)
+                Si "${#numAccessos}" == "$x" --> (En el cas de que el número de caràcters del número d'accessos de $numAccessos sigui el mateix que el
+                                                 de la variable $x)
 
-                    num=11-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del número d'accessos a l'output per tal de que estiguin totes alineades. (11 caràcters totals - $x caràcters d'accessos) 
+                    num=11-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del número d'accessos a l'output per tal 
+                                   de que estiguin totes alineades. (11 caràcters totals - $x caràcters d'accessos) 
                     A continuació, li afegirem a la variable $espaiBlancAccessos $num espais en blanc. 
-                    trobat=1; Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais en blanc fixats.
+                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els 
+                                 espais en blanc fixats.
                     
-            stringResum="$stringResum$espaiBlancAccessos$numAccessos" --> Assignació de l'string $stringResum, que ara conté els espais en blanc adients i la IP per tal d'estar alineada amb les altres IP's, i seguidament els espais en blanc i el número d'accessos, alineats amb les altres files també. L'string conté la línia final d'atacs d'una mateixa IP que es printarà per pantalla. 
-            { echo "$stringResum" } >> log_honeypot --> Redirecció de la sortida d'output de l'stringResum cap al fitxer log_honeypot, on s'afegirà la línia on correspon. 
+            stringResum="$stringResum$espaiBlancAccessos$numAccessos" --> Assignació de l'string $stringResum, que ara conté els espais en blanc adients 
+                                                                          i la IP per tal d'estar alineada amb les altres IP's, i seguidament els espais 
+                                                                          en blanc i el número d'accessos, alineats amb les altres files també. L'string 
+                                                                          conté la línia final d'atacs d'una mateixa IP que es printarà per pantalla. 
+            
+            { echo "$stringResum" } >> log_honeypot --> Redirecció de la sortida d'output de l'stringResum cap al fitxer log_honeypot, on s'afegirà la 
+                                                        línia on correspon. 
             
     6.4 - Impressió de línies 
             
-        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en una línia diferent. Totes aquestes línies printades seran redirigides directament al fitxer log_honeypot, gràcies a estar entre { } i finalment enviades (>> log_honeypot)
-        Totes són línies bàsiques d'output, sense major complicacions. Aquestes línies estaran sobre el conjunt de tots els atacs de totes les IP que siguin registrats, que tractarem a continuació. 
+        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en 
+        una línia diferent. Totes aquestes línies printades seran redirigides directament al fitxer log_honeypot, gràcies a estar entre { } i finalment enviades 
+        (>> log_honeypot).
+        Totes són línies bàsiques d'output, sense major complicacions. Aquestes línies estaran sobre el conjunt de tots els atacs de totes les IP que siguin 
+        registrats, que tractarem a continuació. 
 
     6.5 - Tractament del format d'escriptura de la evolució dels accessos
 
-        En aquest punt apareix la segona zona d'actualitzacions del fitxer. Es tractaran absolutament tots els atacs monitoritzats i es printaran per pantalla per separat, independentment de tenir IP repetides (si fos el cas).
+        En aquest punt apareix la segona zona d'actualitzacions del fitxer. Es tractaran absolutament tots els atacs monitoritzats i es printaran per pantalla 
+        per separat, independentment de tenir IP repetides (si fos el cas).
         Per cada atac monitoritzat (trobat a l'array $arrayFullAtacs) es realitzaran les següents accions:
         
             6.5.1 - Tractament de l'espai assignat a les adreces IP
@@ -402,18 +514,32 @@ En aquest apartat tractarem més el format i la impressió final de les dades. V
 
             6.5.2 - Tractament de l'espai assignat als ports 
 
-            portAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f3 ) --> Inicialització de la variable $portAcces, que conté la tercera fila, separades amb guions, de l'actual línia (on es troba el port de l'atacant).
-            espaiBlancPort=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlancPort, que és l'encarregada de col·locar els espais en blanc adients per tal de que el port sempre quedi alineat amb el format de l'output dels altres ports existents.
+            portAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f3 ) --> Inicialització de la variable $portAcces, que conté la tercera fila, separades 
+                                                                               amb guions, de l'actual línia (on es troba el port de l'atacant).
+            
+            espaiBlancPort=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlancPort, que és l'encarregada de col·locar els espais en blanc 
+                                    adients per tal de que el port sempre quedi alineat amb el format de l'output dels altres ports existents.
+            
             Sempre que $x sigui <= a 5 (rang màxim de caràcters pel port) i $trobat == 0
 
                 Si "${#portAcces}" == "$x" --> (En el cas de que el número de caràcters del port de $portAcces sigui el mateix que el de la variable $x)
 
-                    num=5-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del port a l'output per tal de que estigui alineat amb els altres ja existents. (5 caràcters totals - $x caràcters del port) 
-                    A continuació, li afegirem a la variable $espaiBlancPort $num espais en blanc. 
-                    trobat=1; Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais en blanc fixats.
+                    num=5-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del port a l'output per tal de que estigui 
+                                  alineat amb els altres ja existents. (5 caràcters totals - $x caràcters del port) 
                     
-            stringResum="$stringResum$espaiBlancPort$portAcces" --> Assignació de l'string $stringResum, que ara conté els espais en blanc adients i la IP per tal d'estar alineada amb les altres IP's, i seguidament els espais en blanc i el número del port, alineats amb les altres files també. L'string conté la línia final d'un atac individual que es printarà per pantalla. 
-            { echo "$stringResum" } >> log_honeypot --> Redirecció de la sortida d'output de l'stringResum cap al fitxer log_honeypot, on s'afegirà la línia on correspon.
+                    A continuació, li afegirem a la variable $espaiBlancPort $num espais en blanc. 
+                    
+                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais 
+                                 en blanc fixats.
+                    
+            stringResum="$stringResum$espaiBlancPort$portAcces" --> Assignació de l'string $stringResum, que ara conté els espais en blanc adients i la 
+                                                                    IP per tal d'estar alineada amb les altres IP's, i seguidament els espais en blanc 
+                                                                    i el número del port, alineats amb les altres files també. L'string conté la línia 
+                                                                    final d'un atac individual que es printarà per pantalla. 
+            
+            { echo "$stringResum" } >> log_honeypot --> Redirecció de la sortida d'output de l'stringResum cap al fitxer log_honeypot, on s'afegirà la línia on 
+                                                        correspon.
+            
             S'afegeixen al format de l'output també dos línies més amb 'echo -e', que també van redirigides al fitxer log_honeypot. 
 
     6.6 - Accions a realitzar en cas de que l'usuari no vulgui tancar el programa.
@@ -422,13 +548,18 @@ En aquest apartat tractarem més el format i la impressió final de les dades. V
 
             echo -e "Prem [q] per sortir." >> log_honeypot
             echo -e " " >> log_honeypot
+            
             Redirecció de les dues línies anteriors a l'output del fitxer log_honeypot.log_honeypot
+            
             Si la variable $primerCop == 1 (ens trobem a la primera iteració del programa):
                 Es posa la variable a 0 (false). 
+            
             En cas contrari:
                 sleep 1; --> Es realitza un sleep d'un segon per tal de no estar llegint el fitxer cada instant. 
             D'aquesta manera l'sleep no es farà en la primera iteració i sí ho farà en les següents. 
+            
             tput rc; --> Restauració de la posició del cursor.
+            
             cat log_honeypot; --> Impressió per pantalla del fitxer log_honeypot (comanda cat - mostra per pantalla el contingut de l'arxiu especificat)
 
 7 - Fi del programa
@@ -439,23 +570,75 @@ En aquest apartat tractarem més el format i la impressió final de les dades. V
 
 ####### 7. PROVES DE VALIDACIÓ #######
 
+- Programes utilitzats per testejar connexions tcp/upd/icmp 
+    - TCP --> netcat amb la instrucció: 
+            * Comanda: nc -v -z ipaddrres port --> el programa intenta una connexió tcp per el port seleccionat (Exemple: nc -v -z 192.168.0.26 22).
+            - -v: flag que ens dona informació sobre la connexió
+            - -z: flag que activa el mode zero-I/O (Envia paquets sense dades, només un paquet tcp sense payload).
+              
+    - UDP --> netcat amb la instrucció: 
+            * Comanda: nc -v -u -z ipaddrres port --> El mateix que el cas anterior però amb udp (Exemple: nc -v -u -z 192.168.0.26 161).
+            - -u: Activa el mode UDP
+
+    - ICMP --> ping amb la instrucció: 
+               * Comanda: ping ipadddres -w X (X son els paquets que volem que siguin enviat abans de tancar) --> el progrma prova la connexió a la ip marcada
+               - -w X: Flag que ens permet decidir quants paquets volem enviar
+
+
 - Proves amb diverses maquines simultaneas
+
 - Proves amb diferents sistemes Operatius (Ubuntu, Mint, Windows, WSL, Debian 9 ...)
-- Test connexions tcp /upd /icmp 
+
+
 - Proves amb gran quantitat de paquets
 
 test connections --> nc
 test tcp connections --> nc -z -v ip port
 
 ####### 8. ESCENARIS DE FALLIDA #######
-- Massa connexions simultaneas 
-- Massa paquets a la vegada 
-- Scroll lmao
+
+    - Proves amb moltes connexions simultànies --> En els casos que trobem massa connexions al mateix temps, la capacitat de agafar-los tots es troba 
+    limitada per la variable d'numAccesosSimultanis, per defecte serà 10, però tot i que la podem aumentar, si la pujem a un número massa alt podria 
+    trigar massa en la lectura del fitxer i per tant no actualitzar bé l'interfície. També el fet d'utilitzar arrays ens pot fer perdre temps d'execució amb 
+    grans quantita de dades.
+
+    - Scroll  --> Aquest problema tracta de que el nostre output que apareix per pantalla mentre executem el programa necessita que la pantalla sigui 
+    suficientment gran per no necessitar fer scroll. Això passa perquè el programa funciona amb el sistema del cursor, qua va canviant de posició i 
+    netejant la pantalla. El cursor només es pot moure per les línies que apareixen a la pantalla, és per això que l'scroll no funcionaria i apareixerien
+    errors de format, ja que el cursor no pot moure's a línies que no apareixen a la pantalla (per dalt de l'output que veiem).
+
+    - Tancament forçat --> Si el programa es tanca de manera forçada (ja sigui amb un control+C), l'arxiu atacs.log no s'elimina. I queda existent al mateix    
+                           directori que l'script. 
 
 ####### 9. PUNTS DE MILLORA #######
-- Maquetació 
-- Solució al problema simultani (variable)
-- Proves a més SO
 
+    - Maquetació --> Es podria solucionar el problema del format a l'hora de fer l'scroll utilitzant el mètode clear. Però el problema és que no apareixeria 
+                     el prompt, i aquesta és una possibilitat que es pot contemplar però no la veiem adient.
+                  
+    - Solució al problema simultani (variable) --> 
+
+    - Proves a més SO --> Als Sistemes Operatius que no suporten l'execució correcta de l'script, sobretot en el cas de la comanda tcpdump, només evitem que 
+                          s'executi,però es podria ampliar fent més proves a d'altres SO per avisar a l'usuari en el moment de l'execució de quin és el seu 
+                          problema.
+
+    - Ús d'arrays --> Degut a l'estructura seguida en la programació i per evitar grans complicacions envers la Maquetació, s'ha decidit utilitzar previament 
+                      arrays per guardar l'informació que es mostrarà a la pantalla, això com hem explicat als punts de fallida és més ineficient als casos 
+                      amb grans quantitats de dades.  
+ 
 ####### 10. CONCLUSIONS GENERALS #######
+
+Una de les característiques més importants d'aquest script és l'escalabilitat, i aquest és un poder que es podria potenciar en les següents versions. Es 
+podria arribar a monitoritzar un flux major d'informació (quantitat major d'atacs), el que fa que el programa sigui potent. S'ha intentat en la mida de lo 
+possible aplicar una programació modelable que permeti canviar diversos paràmetres només modificant variables, aixó donarà flexibilitat en un ús futur de
+l'script ja sigui per la funció que s'ha creat o per un altre. 
+
+El lloc principal de treball ha sigut amb el sistema operatiu debian 10(buster), tot i així després de diverses proves s'han pogut aplicar comprovacions que
+permeten a usuaris d'altres SO (basats en linux) instal·lar els paquets necessaris per fer-lo funcionar correctament. Com a primera versió dona una funcionalitat
+completa respecta la seva tasca (monitorització de ports sobre un protocol) i és un bon punt de partida per seguir treballant en la ...
+
+toy comiending el segunding
+
+Cesar --> leete las CONCLUSIONS i arregla lo que sea. Cuando lo tengas ponte con el de usuarios ya, me voy a comer.
+
+
 
