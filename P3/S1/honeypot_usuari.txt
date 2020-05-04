@@ -61,7 +61,7 @@
 
     - Com un usuari ha d'utilitzar l'script? Quins paràmetres d'entrada té?
 
-        - L'usuari només ha de descarregar l'arxiu honeypot.sh i col·locar-lo al directori desitjat. 
+        - L'usuari només ha de descarregar l'arxiu honeypot.sh, col·locar-lo al directori desitjat i asegurar-se que compleix els prerequisits. 
 
         - En quant a paràmetres, a part del de l'execució del propi script (./honeypot.sh), s'ha d'afegir la interfície, el protocol i el port, en cas de ser necessari. 
         En el cas d'utilitzar el protocol ICMP, no farà falta especificar un port.
@@ -74,5 +74,95 @@
 
         - 
 
+    - Exemples d'execució
+    
+    * El protocol es por col·locar en mayúscula o minúscula, és indiferent.
+
+    TCP --> ./honeypot.sh enp0s3 tcp 22
+
+    UDP --> ./honeypot.sh enp0s3 udp 161
+
+    ICMP --> ./honeypot.sh enp0s3 icmp
+
+    - Explicació UI
+
+Exemple ICMP: 
+
+-----------------------------------------------------------------------------
+Accesos a l'adreça 192.168.0.26 port icmp  [15:58:29.507280 , 15:58:48.142297] 
+-----------------------------------------------------------------------------
+
+------------------------------
+Resum dels accessos
+------------------------------
+    Adreces IP     Nº accessos
+ ---------------   -----------
+    192.168.0.23             7
+    192.168.0.30             5
+ ---------------   -----------        
+                                      
+--------------------------------------
+Evolució dels accessos                
+--------------------------------------
+      Temps         Adreça IP     Port
+ --------------- --------------- -----
+ 15:58:29.507280    192.168.0.23      
+ 15:58:31.548130    192.168.0.23      
+ 15:58:33.628044    192.168.0.23      
+ 15:58:35.675986    192.168.0.23      
+ 15:58:39.949366    192.168.0.30      
+ 15:58:41.998994    192.168.0.30      
+ 15:58:44.046892    192.168.0.30      
+ 15:58:44.381600    192.168.0.23      
+ 15:58:45.404808    192.168.0.23      
+ 15:58:46.094208    192.168.0.30      
+ 15:58:47.498156    192.168.0.23      
+ 15:58:48.142297    192.168.0.30      
+ --------------- --------------- -----
+                 
+Prem [q] per sortir.
+
+
+Exemple TCP: 
+
+-----------------------------------------------------------------------------
+Accesos a l'adreça 192.168.0.26 port tcp 22 [16:00:09.319956 , 16:00:48.351998] 
+-----------------------------------------------------------------------------
+
+------------------------------
+Resum dels accessos
+------------------------------
+    Adreces IP     Nº accessos
+ ---------------   -----------
+    192.168.0.23             2
+    192.168.0.30             3
+ ---------------   -----------        
+                                      
+--------------------------------------
+Evolució dels accessos                
+--------------------------------------
+      Temps         Adreça IP     Port
+ --------------- --------------- -----
+ 16:00:09.319956    192.168.0.23 50390
+ 16:00:13.063966    192.168.0.23 50392
+ 16:00:42.496250    192.168.0.30 45160
+ 16:00:45.695640    192.168.0.30 45162
+ 16:00:48.351998    192.168.0.30 45164
+ --------------- --------------- -----
+                    
+Prem [q] per sortir.
+ 
+
+- Complement fitxer log_honeypot 
+
+----------------------------------------------------------------------------------------------------------
+Monitorització realitzada per l'usuari root de l'equip honeypot.
+Sistema operatiu Debian GNU/Linux 10 (buster).
+Versió del script 1.0 compilada el 2020-04-25.
+Monitorització iniciada en data 2020-02-04 a les 08:59:45 i finalitzada en data 2020-02-04 a les 09:02:15.
+----------------------------------------------------------------------------------------------------------
+
+
 5 - Preguntes freqüents
+
 

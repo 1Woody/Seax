@@ -77,8 +77,8 @@ A continuació, trobem la inicialització de les variables del programa.
 
 1.5 -  Variables utilitzades en el core del programa:
 
-    - revisat --> Funciona com a booleà 
-    - tractament --> Funciona com a booleà 
+    - revisat --> Funciona com a booleà per controlar que una IP d'un atac tipus ICMP ja es troba tractada en el període de temps especificat. 
+    - tractament --> Funciona com a booleà per saber si s'ha de tractar un atac amb el protocol ICMP o no. 
     - primerCop --> Funciona com a booleà per tal d'evitar el primer sleep del programa.
     - numAccesosSimultanis --> Estableix el número d'accessos màxims que es permeten simultàniament (X accessos + 1 de capçalera)
     - comptLinia --> Funciona com a comptador de les línies dels diferents atacs (sempre és menor a $numAccesosSimultanis)
@@ -350,6 +350,9 @@ cal acumular al comptador d'accessos aquest nou atac.
                     atacActual="$atacActual-1" --> Se li afegeix un 1 al final que significarà el número d'accessos que ha realitzat aquella IP en concret 
                                                    (com és el primer atac serà 1). 
                     arrayAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayAtacs.
+                    
+                    Si "$protocolMajus" == "ICMP" --> En cas de que el protocol seleccionat sigui ICMP
+                        arrayICMPAtacs[0]="$ipNouAtac" --> Assignació de la $ipNouAtac a la primera posició de l'arrayICMPAtacs.
                 
                 5.1.2.2 - Cas bucle
                 
