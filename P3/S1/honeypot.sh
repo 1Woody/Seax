@@ -395,19 +395,19 @@ do
         # Accions a realitzar en cas de que l'usuari no vulgui tancar el programa.
         echo -e "Prem [q] per sortir." >> log_honeypot
         echo -e " " >> log_honeypot
-        if [ $primerCop == 1 ]
+        if [ "${arrayFullAtacs[0]}" == "" ]
         then
-            primerCop=0
+            sleep 0.25
         else
             # Elecció de temps en funció del protocol
             if [ "$protocolMajus" == "ICMP" ]
             then
-                sleep 3;
+                sleep 2;
             else 
                 sleep 1;
             fi
-            clear
         fi
+        clear
         cat log_honeypot
     fi
 done
