@@ -76,7 +76,8 @@
 
         - Un altre cas també podria ser el de algun curiós de la tecnologia que volgués aprendre en part com funciona un honeypot de manera simple i clara. 
 
-        - Per últim, un cas seria el d'un petit grup de treball o empresa, que volgués incrementar una mica en la seguretat dels seus arxius durant els seus inicis.
+        - Per últim, un cas seria el d'un petit grup de treball o petita empresa, que volgués incrementar una mica en la seguretat dels seus arxius durant els 
+        seus inicis. (Sempre que no tingui un valor imprescindible al sistema)
 
     - Exemples d'execució
     
@@ -177,12 +178,30 @@ Prem [q] per sortir.
 
     1 - És realment segur el honeypot?
 
-    2 - Té algun tipus de cost? 
+        - Realment sí. Només s'ha de tenir compte on es col·loca i amb quina funció.
 
-        - No, 
+    2 - Puc entrar més d'un port ?
 
-    - 
+        - No, el programa no implementa la captura de més d'un port. 
 
-    - 
+    3. Que pasa si tinc els ports tancats, veure algún accés?
 
-    - 
+        - Si, ja el programara revisarà els accesos tot i que després es denegi la connexió
+
+    4. Puc executar-ho si no sóc usuari root ?
+
+        - No, com ja s'ha explicat abans, no podem asegurar un bon funcionament per la comanda de captura de paquets, per tant necessitarem ser un usuari 
+        amb privilegis de superuser.
+
+    5. Podría implementar aquest honeypot al servidor de la meva empresa?
+
+        - Tot i que abans hem explicat que és possible aplicar-ho a la empresa, no es recomanable plantejar-ho per un gran sistema o una empresa mitjana o gran, 
+        la idea principal d'aquest programa és la de conéixer millor les funcionalitats d'un honeypot i poder testejar les connexions.  
+
+    6. És compatible el meu Sistema Operatiu ?
+
+        - Com a norma general, si tens un Sistema Operatiu basat en linux sense grans modificacions (mateixa estructura de dades) i es compleixen els prerequisits
+        si que funcionarà, en tot cas és pot provar ja que el programa ens avisarà de qualsevol error que es trobi a l'execució. 
+
+        SO provats durant el desenvolupament: Debian, més concretament debian 10(buster) / Linux Mint versió 19.3 / ... 
+    

@@ -704,7 +704,60 @@ Evolució dels accessos
 
 - Proves amb diferents sistemes Operatius (Ubuntu, Mint, Windows, WSL, Debian 9 ...)
 
+Prova amb Sistema Operatiu Linux Mint:
 
+Tot funciona correctament en el cas de Linux Mint.
+
+----------------------------------------------------------------------------------------------------------
+Monitorització realitzada per l'usuari root de l'equip Floppy.
+Sistema operatiu Linux Mint 19.3.
+Versió del script 1.0 compilada el 2020-04-25.
+Monitorització iniciada en data 2020-05-05 a les 02:28:23 i finalitzada en data 2020-05-05 a les 02:28:47.
+----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------
+Accesos a l'adreça 192.168.0.27 port tcp 22 [02:28:26.975679 , 02:28:38.136067] 
+-----------------------------------------------------------------------------
+
+------------------------------
+Resum dels accessos
+------------------------------
+    Adreces IP     Nº accessos
+ ---------------   -----------
+    192.168.0.11             5
+    192.168.0.23             1
+    192.168.0.30             3
+ ---------------   -----------
+
+--------------------------------------
+Evolució dels accessos
+--------------------------------------
+      Temps         Adreça IP     Port
+ --------------- --------------- -----
+ 02:28:26.975679    192.168.0.11  2131
+ 02:28:27.590153    192.168.0.11  2131
+ 02:28:28.204514    192.168.0.11  2131
+ 02:28:28.208122    192.168.0.23 42774
+ 02:28:28.818501    192.168.0.11  2131
+ 02:28:29.433255    192.168.0.11  2131
+ 02:28:29.436715    192.168.0.30 38260
+ 02:28:34.454265    192.168.0.30 38262
+ 02:28:38.136067    192.168.0.30 38264
+ --------------- --------------- -----
+
+
+Prova al WSL(Subsitemad de Linux per Windows):
+
+En aquest cas, ja que no es troba implementat encara el programa tcpdump per els desarrolladors de windows, provoca un error de l'execució i mostra el missatge 
+de usage.
+
+> sudo ./honeypot.sh eth0 udp 161
+[sudo] password for dani:
+
+No s'ha pogut inicialitzar la captura de paquets. Sembla que el sistema operatiu té algún tipus d'incompatibilitat amb tcpdump.
+
+Prova amb SO Ubuntu: 
 
 
 - Proves amb gran quantitat de paquets
