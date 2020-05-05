@@ -252,9 +252,12 @@ seleccionat al iniciar l'script.
     
    
     4.4 - Cas ICMP --> Amb el protocol ICMP seleccionat, al igual que al cas UDP, es capturen tots els paquets que tenen com a destí la direcció IP 
-    seleccionada, es podria limitar a agafar paquets de tipus request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan 
-    executa un ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat. En aquest cas, degut a que el protocol ICMP es part de 
-    la capa 3, no hi apliquem cap port a la monitorització. 
+    seleccionada, amb una limitació de ràfagues de 3 segons per evitar la captura de molts paquets enviats a la vegada per un mateix atacant (per exemple un ping
+    que envia molts paquets en curts periodes de temps per ampliar les possibilitats de resposta). 
+    
+    També es podria limitar a agafar paquets de tipus request (ICMP ECHO REQUEST --> tipus de missatge que envia una maquina1 a una maquina2 quan  executa un 
+    ping), però degut a que podem trobar més d'un tipus de paquet ICMP no s'ha limitat. En aquest cas, ja que el protocol ICMP és part de la capa 3, no hi 
+    apliquem cap port a la monitorització. 
 
     Per tant, el filtre és el següent: 
     
@@ -307,11 +310,12 @@ En aquest apartat tractarem els diferents atacs. Aquests els dividirem bàsicame
 L'arrayFullAtacs serà més fàcil de tractar, ja que només s'han d'anar afegint al final els nous atacs, de manera individual. 
 En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'ha de comparar si l'atacant ja ha atacat amb anterioritat i, en cas afirmatiu, 
 cal acumular al comptador d'accessos aquest nou atac.
+
 També hi existeix un cas especial, que són els atacs amb el protocol ICMP. Aquests casos tindran el seu propi array ($arrayICMPAtacs), que contindrà les 
 IPs que han realitzat un atac en un període de temps (que podem escollir nosaltres) amb aquest protocol. La funcionalitat d'aquest array és no tenir cap IP 
 repetida. El que ens dóna la possibilitat de realitzar ràfagues de temps, on només podran aparéixer atacs de diferents IPs, sense repeticions. Si posem que 
-el període de temps és de 2 segons, durant aquests temps, encara que es rebi més d'un atac d'una mateixa IP, només ens apareixerà a l'output una sola vegada. 
-Això fa que no hi hagi una sobresaturació de dades a l'output. 
+el període de temps és de 3 segons, durant aquests temps, encara que es rebi més d'un atac d'una mateixa IP, només ens apareixerà a l'output una sola vegada. 
+Això fa que no hi hagi una sobresaturació de dades a l'output (es pot comprovar a l'apartat 7 de proves de validació). 
         
     5.1 - Bucle de lectura dels fitxers d'atacs (S'efectuarà mentre la variable $quit no sigui 1 (l'usuari no vol tancar el programa encara))
 
