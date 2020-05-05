@@ -1,7 +1,5 @@
 #!/bin/bash
 #!utf-8
-# Elegir bien los PERMISOS!!!
-# COMPROBAR LO QUE NECESITA EL USUARIO (PAQUETES, ROOT ...)
 
 ####### 1. VARIABLES #######
 
@@ -42,6 +40,8 @@ horaCompilacioInici=$(date | cut -d ' ' -f5)
 filter_tcp="tcp[13]=2 and port $3"
 
 # Variables utilitzades en el core del programa
+revisat=0
+tractament=1
 primerCop=1
 numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
 comptLinia=2
@@ -180,8 +180,13 @@ do
                 arrayFullAtacs[0]="$atacActual"
                 atacActual="$atacActual-1"
                 arrayAtacs[0]="$atacActual"
+                if [ "$protocolMajus" == "ICMP" ]
+                then
+                    arrayICMPAtacs[0]="$ipNouAtac"
+                fi
             # Cas bucle
             else
+                # Cas ICMP recollir repetits en un timestamp de 1s
                 if [ "$protocolMajus" == "ICMP" ]
                 then 
                     if [ "${arrayICMPAtacs[0]}" == "" ]
@@ -190,23 +195,23 @@ do
                     else 
                         for pos in "${!arrayICMPAtacs[@]}"
                         do
-                            if [ "${arrayAtacs[$pos]}" == "$ipNouAtac" ]
+                            if [ "${arrayICMPAtacs[$pos]}" == "$ipNouAtac" ]
                             then
-                                revisat="true"
+                                revisat=1
                                 break
                             fi
                         done
-                        if [ "$revisat" == "false" ]
+                        if [ $revisat == 0 ]
                         then
                             arrayICMPAtacs+=("$ipNouAtac")
-                        else 
-                            tractament="false"
+                        else
+                            tractament=0;
                         fi
-                        revisat="false"
+                        revisat=0
                     fi
                 fi
                 # Guardat de l'hora de l'últim accés
-                if [ "$tractament" == "true" ]
+                if [ $tractament == 1 ]
                 then
                     ultimaHora=$hora
                     arrayFullAtacs+=("$atacActual")
@@ -232,7 +237,7 @@ do
                     fi
                     repetit=0
                 fi
-                tractament="true" 
+                tractament=1 
             fi
             ((comptLinia+=1))
         else
@@ -240,7 +245,8 @@ do
             comptLinia=$((numAccesosSimultanis + 2))
         fi
     done
-    arrayICMPAtacs=""
+    unset arrayICMPAtacs # buidem l'array d'IP per la seguent lectura del fitxer
+    
     # Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
     comptLinia=2
     echo -e "ÚLTIM ACCÈS REGISTRAT" > atacs.log 
@@ -254,6 +260,7 @@ do
         # Tractament del cas de que l'usuari polsi la 'q' (tancar el programa)
         kill "$pidtcpdump"
         true > log_honeypot
+        clear
         dataCompilacioFi=$(date --rfc-3339=date)
         horaCompilacioFi=$(date | cut -d ' ' -f5)
         quit=1
@@ -389,14 +396,20 @@ do
         # Accions a realitzar en cas de que l'usuari no vulgui tancar el programa.
         echo -e "Prem [q] per sortir." >> log_honeypot
         echo -e " " >> log_honeypot
-        if [ $primerCop == 1 ]
-        then
-            primerCop=0
-        else
-            sleep 1;
-            clear
-        fi
+
+        clear
         cat log_honeypot
+
+        # Elecció de temps en funció del protocol
+        if [ "$protocolMajus" == "ICMP" ]
+        then
+            sleep 2;
+        else
+            if [ "${arrayFullAtacs[0]}" != "" ]
+            then
+                sleep 1;
+            fi
+        fi
     fi
 done
 rm atacs.log

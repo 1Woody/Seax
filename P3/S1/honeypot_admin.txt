@@ -654,7 +654,7 @@ de diversos paquets simultanis i també el filtre de ràfagues que descarta el p
 Monitorització realitzada per l'usuari root de l'equip honeypot.
 Sistema operatiu Debian GNU/Linux 10 (buster).
 Versió del script 1.0 compilada el 2020-04-25.
-Monitorització iniciada en data 2020-05-04 a les 07:42:10 i finalitzada en data 2020-05-04 a les 07:43:19.
+Monitorització iniciada en data 2020-05-04 a les 19:42:10 i finalitzada en data 2020-05-04 a les 19:43:19.
 ----------------------------------------------------------------------------------------------------------
 
 
@@ -712,7 +712,7 @@ Tot funciona correctament en el cas de Linux Mint.
 Monitorització realitzada per l'usuari root de l'equip Floppy.
 Sistema operatiu Linux Mint 19.3.
 Versió del script 1.0 compilada el 2020-04-25.
-Monitorització iniciada en data 2020-05-05 a les 02:28:23 i finalitzada en data 2020-05-05 a les 02:28:47.
+Monitorització iniciada en data 2020-05-04 a les 02:28:23 i finalitzada en data 2020-05-05 a les 02:28:47.
 ----------------------------------------------------------------------------------------------------------
 
 
@@ -757,10 +757,48 @@ de usage.
 
 No s'ha pogut inicialitzar la captura de paquets. Sembla que el sistema operatiu té algún tipus d'incompatibilitat amb tcpdump.
 
+
 Prova amb SO Ubuntu: 
 
+Tot funciona correctament en el cas de Ubuntu.
 
-- Proves amb gran quantitat de paquets
+----------------------------------------------------------------------------------------------------------
+Monitorització realitzada per l'usuari root de l'equip cesar.
+Sistema operatiu Ubuntu 18.04.2 LTS.
+Versió del script 1.0 compilada el 2020-04-25.
+Monitorització iniciada en data 2020-05-05 a les 13:46:26 i finalitzada en data 2020-05-05 a les 14:05:40.
+----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------
+Accesos a l'adreça 192.168.1.43 port udp 161 [13:52:08.556421 , 14:04:59.931224]
+-----------------------------------------------------------------------------
+
+------------------------------
+Resum dels accessos
+------------------------------
+    Adreces IP     Nº accessos
+ ---------------   -----------
+    192.168.1.45             1
+    192.168.1.49             1
+ ---------------   -----------
+
+--------------------------------------
+Evolució dels accessos
+--------------------------------------
+      Temps         Adreça IP     Port
+ --------------- --------------- -----
+ 13:52:08.556421    192.168.1.45 36157
+ 14:04:59.931224    192.168.1.49 44578
+ --------------- --------------- -----
+
+
+- Proves amb gran quantitat de paquets: 
+
+També s'han verificat connexions amb una gran quantitat de paquets (treient les limitacions de icmp, per així agafar tots el paquets possibles). No s'adjunten 
+les proves degut a que ocupen massa espai. Sempre és pot seguir el mateix procés per provar-les.
+
+
 
 test connections --> nc
 test tcp connections --> nc -z -v ip port

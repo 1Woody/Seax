@@ -260,6 +260,7 @@ do
         # Tractament del cas de que l'usuari polsi la 'q' (tancar el programa)
         kill "$pidtcpdump"
         true > log_honeypot
+        clear
         dataCompilacioFi=$(date --rfc-3339=date)
         horaCompilacioFi=$(date | cut -d ' ' -f5)
         quit=1
@@ -395,20 +396,20 @@ do
         # Accions a realitzar en cas de que l'usuari no vulgui tancar el programa.
         echo -e "Prem [q] per sortir." >> log_honeypot
         echo -e " " >> log_honeypot
-        if [ "${arrayFullAtacs[0]}" == "" ]
+
+        clear
+        cat log_honeypot
+
+        if [ "${arrayFullAtacs[0]}" != "" ]
         then
-            sleep 0.25
-        else
             # Elecció de temps en funció del protocol
             if [ "$protocolMajus" == "ICMP" ]
             then
-                sleep 2;
-            else 
+                sleep 3;
+            else
                 sleep 1;
             fi
         fi
-        clear
-        cat log_honeypot
     fi
 done
 rm atacs.log
