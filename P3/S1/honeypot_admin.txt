@@ -308,6 +308,11 @@ En aquest apartat tractarem els diferents atacs. Aquests els dividirem bàsicame
 L'arrayFullAtacs serà més fàcil de tractar, ja que només s'han d'anar afegint al final els nous atacs, de manera individual. 
 En canvi, el tractament de l'arrayAtacs tindrà una complexitat major, ja que s'ha de comparar si l'atacant ja ha atacat amb anterioritat i, en cas afirmatiu, 
 cal acumular al comptador d'accessos aquest nou atac.
+També hi existeix un cas especial, que són els atacs amb el protocol ICMP. Aquests casos tindran el seu propi array ($arrayICMPAtacs), que contindrà les 
+IPs que han realitzat un atac en un període de temps (que podem escollir nosaltres) amb aquest protocol. La funcionalitat d'aquest array és no tenir cap IP 
+repetida. El que ens dóna la possibilitat de realitzar ràfagues de temps, on només podran aparéixer atacs de diferents IPs, sense repeticions. Si posem que 
+el període de temps és de 2 segons, durant aquests temps, encara que es rebi més d'un atac d'una mateixa IP, només ens apareixerà a l'output una sola vegada. 
+Això fa que no hi hagi una sobresaturació de dades a l'output. 
         
     5.1 - Bucle de lectura dels fitxers d'atacs (S'efectuarà mentre la variable $quit no sigui 1 (l'usuari no vol tancar el programa encara))
 
@@ -338,17 +343,23 @@ cal acumular al comptador d'accessos aquest nou atac.
             5.1.2 - Inici tractament de dades
 
             Si $hora i $ipNouAtac no estan buides:
+
                 atacActual="$hora-$ipNouAtac-$port" --> Inicialització de la variable $atacActual, que conté la hora, la IP i el port de l'atac a tractar.
                
-                5.1.2.1. - Cas Inicial 
+                5.1.2.1 - Cas Inicial 
                 
                 Si $arrayAtacs i $arrayFullAtacs estan buits significarà que és el primer atac que tractem del fitxer. Per tant, caldrà realitzar algunes 
                 accions específiques:
-                    primeraHora=$hora --> Assignació de la variable $primeraHora amb el valor de $hora (hora exacte del primer atac rebut del fitxer)
-                    ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
+
+                    primeraHora=$hora --> Assignació de la variable $primeraHora amb el valor de $hora (hora exacta del primer atac rebut del fitxer)
+
+                    ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacta de l'últim atac tractat del fitxer, l'actual)
+
                     arrayFullAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayFullAtacs.
+
                     atacActual="$atacActual-1" --> Se li afegeix un 1 al final que significarà el número d'accessos que ha realitzat aquella IP en concret 
                                                    (com és el primer atac serà 1). 
+                    
                     arrayAtacs[0]="$atacActual" --> Assignació de l'$atacActual a la primera posició de l'arrayAtacs.
                     
                     Si "$protocolMajus" == "ICMP" --> En cas de que el protocol seleccionat sigui ICMP
@@ -357,36 +368,67 @@ cal acumular al comptador d'accessos aquest nou atac.
                 5.1.2.2 - Cas bucle
                 
                 Sino (significarà que l'els arrays ja tenen informació d'altres atacs guardada i, per tant, ja no es tracta el primer atac):
-                    ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
-                    arrayFullAtacs+="$atacActual" --> Afegim l'$atacActual a l'arrayFullAtacs.
                     
-                    --------
+                    5.1.2.2.1 - Cas ICMP recollir repetits en un timestamp de 1s
                     
-                    5.1.2.2.1 - Bucle de verificació d'atacs repetits
-                    Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que 
-                    $ipNouAtac. En aquest cas haurem d'incrementar en 1 el número d'accessos. En cas contrari, afegirem l'atac al final de l'array amb el número 
-                    d'accessos de valor 1.Assignació
-                    
-                    for pos in "${!arrayAtacs[@]}" --> Per cada posició de l'#arrayAtacs (acumulacions d'atacs de cada IP)
-                        ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2) --> S'agafa la IP la que volem comparar en aquest moment.
+                    Si "$protocolMajus" == "ICMP" --> En cas de que el protocol seleccionat sigui ICMP
                         
-                        Si "$ipNouAtac" == "$ipAtac" --> Si les dues IP coincideixen
-                            auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3) --> S'assigna a la variable $auxValors la informació de la hora, la IP 
-                                                                                             i el port extretes de l'$arrayAtacs. 
-                            comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}') --> S'incrementa en 1 la quarta fila d'aquests atacs 
-                                                                                                               d'IpAtac, que equival al número d'accessos. 
-                            nouAtac="$auxValors-$comptAtacs" --> A la variable $nouAtac se li concatenen les dues variables anteriors. D'aquesta manera tindrem 
-                                                                 una nova línia d'atacs de la IP $IpAtac, actualitzada amb un número d'accés més.
-                            arrayAtacs[$pos]="$nouAtac" --> S'actualitza aquesta línia anterior a la mateixa posició on es trobava anteriorment. 
-                            repetit=1 --> Es posa el booleà a 1 per tal de saber que amb el nou atac hem actualitzat un dels conjunts d'atacs de les IP ja 
-                                          existents a l'array $arrayAtacs.
-                            break --> Intrucció per sortir directament del bucle.
+                        Si "${arrayICMPAtacs[0]}" == "" --> Si l'array d'ICMP està buit
 
-                    Si "$repetit" != 1  --> Si no s'ha trobat aquest element a l'arrayAtacs, ho guardem com a nou element. 
-                    atacActual="$atacActual-1" --> Col·loquem un guió 1 ("-1") per assignar el seu número d'accesos a 1
-                    arrayAtacs+=("$atacActual") -> Es guarda a l'arrayAtacs com a nou element amb comptador d'accessos a 1.
-                
-                    repetit=0 --> La variable repetit es torna a posar a 0 per tal de poder tornar a realitzar el bucle. 
+                                arrayICMPAtacs[0]="$ipNouAtac" --> Es col·loca la IP de l'atac a la primera posició de l' d'atacs ICMP
+
+                        Sino --> En el cas de que l'array d'ICMP sí que tingui contingut (conté algun atac anterior)
+
+                            for pos in "${!arrayICMPAtacs[@]}" --> Per cada posició de l'array arrayICMPAtacs 
+
+                                Si "${arrayICMPAtacs[$pos]}" == "$ipNouAtac" --> Si la IP de l'atac actual concorda amb la IP de la posició $pos de l'array
+
+                                    revisat=1 --> Assignem al booleà el valor de 1 (true). Significarà que aquesta IP ja ha estat tractada en un anterior atac. 
+                                    break --> Sortim del bucle per tal de continuar amb el programa
+
+                            Si $revisat == 0 --> Si el booleà revisat és 0 (Significa que la IP no es troba en tot el fitxer d'atacs ICMP)
+
+                                arrayICMPAtacs+=("$ipNouAtac") --> S'afegeix a l'array d'ICMP la IP de l'actual atacant, que encara no ha estat registrada.
+                            
+                            Sino
+
+                                tractament=0; --> Assignem al booleà el valor 0, que voldrà dir que no caldrà fer-li cap altre tipus de tractament. 
+
+                            revisat=0 --> Es torna a assignar el valor 0 al booleà de revisat. Per estar preparat per quan es torni a entrar al bucle. 
+                    
+                    Si $tractament == 1 --> En el cas de que el booleà tingui valor 1 (Significarà que cal tractar l'atac, ja que és un atac d'una nova IP)
+                    
+                        ultimaHora=$hora --> Assignació de la variable $ultimaHora amb el valor de $hora (hora exacte de l'últim atac tractat del fitxer, l'actual)
+                        arrayFullAtacs+="$atacActual" --> Afegim l'$atacActual a l'arrayFullAtacs.
+
+                    
+                        5.1.2.2.1 - Bucle de verificació d'atacs repetits
+                        Ara cal realitzar un bucle que recorri tots els atacs (amb els seus números d'accessos) i trobi si algun d'aquests té la mateixa IP que 
+                        $ipNouAtac. En aquest cas haurem d'incrementar en 1 el número d'accessos. En cas contrari, afegirem l'atac al final de l'array amb el número 
+                        d'accessos de valor 1.Assignació
+                        
+                        for pos in "${!arrayAtacs[@]}" --> Per cada posició de l'#arrayAtacs (acumulacions d'atacs de cada IP)
+                            ipAtac=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f2) --> S'agafa la IP la que volem comparar en aquest moment.
+                            
+                            Si "$ipNouAtac" == "$ipAtac" --> Si les dues IP coincideixen
+                                auxValors=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f1,2,3) --> S'assigna a la variable $auxValors la informació de la hora, la IP 
+                                                                                                i el port extretes de l'$arrayAtacs. 
+                                comptAtacs=$(echo "${arrayAtacs[$pos]}" | cut -d '-' -f4 | awk '{print $0+1}') --> S'incrementa en 1 la quarta fila d'aquests atacs 
+                                                                                                                d'IpAtac, que equival al número d'accessos. 
+                                nouAtac="$auxValors-$comptAtacs" --> A la variable $nouAtac se li concatenen les dues variables anteriors. D'aquesta manera tindrem 
+                                                                    una nova línia d'atacs de la IP $IpAtac, actualitzada amb un número d'accés més.
+                                arrayAtacs[$pos]="$nouAtac" --> S'actualitza aquesta línia anterior a la mateixa posició on es trobava anteriorment. 
+                                repetit=1 --> Es posa el booleà a 1 per tal de saber que amb el nou atac hem actualitzat un dels conjunts d'atacs de les IP ja 
+                                            existents a l'array $arrayAtacs.
+                                break --> Intrucció per sortir directament del bucle.
+
+                        Si "$repetit" != 1  --> Si no s'ha trobat aquest element a l'arrayAtacs, ho guardem com a nou element. 
+                        atacActual="$atacActual-1" --> Col·loquem un guió 1 ("-1") per assignar el seu número d'accesos a 1
+                        arrayAtacs+=("$atacActual") -> Es guarda a l'arrayAtacs com a nou element amb comptador d'accessos a 1.
+                    
+                        repetit=0 --> La variable repetit es torna a posar a 0 per tal de poder tornar a realitzar el bucle. 
+
+                    tractament=1 --> Es torna a assignar el valor 1 al booleà tractament. Per estar preparat per quan es torni a entrar al bucle. 
                 
                 ((comptLinia+=1)) --> S'incrementa el comptador d'atacs en 1. 
 
@@ -394,6 +436,9 @@ cal acumular al comptador d'accessos aquest nou atac.
                 comptLinia=$((numAccesosSimultanis + 2)) --> S'incrementa el valor de $comptLinia per tal de no tornar a entrar al bucle i finalitzar la 
                                                              lectura, ja que ja no hi ha res al fitxer.     
         
+        unset arrayICMPAtacs --> Es buida l'array d'IPs d'ICMP per la següent lectura del fitxer.
+
+
     5.2 - Inicialització de lectura de línia (2 per tenir en compte la capçalera) i neteja del fitxer
 
         comptLinia=2 --> Es torna a posar la variable $comptLinia a 2 per tal de tenir en compte la capçalera del fitxer atacs.log
@@ -555,15 +600,23 @@ printant per pantalla, a la vista de l'usuari.
             Redirecció de les dues línies anteriors a l'output del fitxer log_honeypot.log_honeypot
             
             Si la variable $primerCop == 1 (ens trobem a la primera iteració del programa):
-                Es posa la variable a 0 (false). 
+                
+                Es posa la variable a 0 (false), per tal de només entrar en aquest if la primera vegada (i així no fer el primer pause innecessari) 
             
             En cas contrari:
-                sleep 1; --> Es realitza un sleep d'un segon per tal de no estar llegint el fitxer cada instant. 
-                             D'aquesta manera l'sleep no es farà en la primera iteració i sí ho farà en les següents. 
+                
+                Si "$protocolMajus" == "ICMP" --> Si el protocol de la monitorització és el de ICMP
+
+                    sleep 3; --> Es realitza un sleep de tres segons.
+                
+                Sino
+
+                    sleep 1; --> Es realitza un sleep d'un segon. Aquest temps és menor que amb el protocol ICMP, ja que amb l'ICMP rep més quantitat 
+                    d'informació constant durant un cert temps. En canvi, amb el TCP i UDP no és necessari fer un sleep tan gran perquè només rebem un 
+                    avís d'accés per cada atac.
 
                 clear --> Es neteja la pantalla per tal de deixar-la buida i preparada per la següent iteració. 
 
-            
             cat log_honeypot; --> Impressió per pantalla del fitxer log_honeypot (comanda cat - mostra per pantalla el contingut de l'arxiu especificat)
 
 7 - Fi del programa
@@ -591,7 +644,67 @@ printant per pantalla, a la vista de l'usuari.
 
 - Proves amb diverses maquines simultaneas
 
+ICMP --> Output d'una prova amb 3 màquines simultaneas fent ping a la nostra màquina:
+
+En aquesta prova s'han provat 3 màquines fent 20 missatges de tipus echo request, degut a que hem limitat a 3 segons les lectures per evitar agafar els missatges
+que s'envien en una diferencia molt baixa, hem aconseguit aprox 7 accesos icmp de cadascuna de les maquines. Això confirma que funciona correctament la captura
+de diversos paquets simultanis i també el filtre de ràfagues que descarta el paquets repetits en el periode de temps decidit.
+
+----------------------------------------------------------------------------------------------------------
+Monitorització realitzada per l'usuari root de l'equip honeypot.
+Sistema operatiu Debian GNU/Linux 10 (buster).
+Versió del script 1.0 compilada el 2020-04-25.
+Monitorització iniciada en data 2020-05-04 a les 07:42:10 i finalitzada en data 2020-05-04 a les 07:43:19.
+----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------
+Accesos a l'adreça 192.168.0.26 port icmp  [19:42:35.123911 , 19:42:56.787322] 
+-----------------------------------------------------------------------------
+
+------------------------------
+Resum dels accessos
+------------------------------
+    Adreces IP     Nº accessos
+ ---------------   -----------
+    192.168.0.30             7
+    192.168.0.23             7
+    192.168.0.11             8
+ ---------------   -----------        
+                                      
+--------------------------------------
+Evolució dels accessos                
+--------------------------------------
+      Temps         Adreça IP     Port
+ --------------- --------------- -----
+ 19:42:35.123911    192.168.0.30      
+ 19:42:36.181280    192.168.0.23      
+ 19:42:37.765291    192.168.0.11      
+ 19:42:38.189240    192.168.0.30      
+ 19:42:38.256924    192.168.0.23      
+ 19:42:38.766882    192.168.0.11      
+ 19:42:41.261254    192.168.0.30      
+ 19:42:41.338990    192.168.0.23      
+ 19:42:41.770817    192.168.0.11      
+ 19:42:44.332972    192.168.0.30      
+ 19:42:44.411000    192.168.0.23      
+ 19:42:44.773254    192.168.0.11      
+ 19:42:47.404773    192.168.0.30      
+ 19:42:47.484111    192.168.0.23      
+ 19:42:47.777918    192.168.0.11      
+ 19:42:50.477225    192.168.0.30      
+ 19:42:50.555884    192.168.0.23      
+ 19:42:50.780724    192.168.0.11      
+ 19:42:53.549181    192.168.0.30      
+ 19:42:53.627752    192.168.0.23      
+ 19:42:53.783926    192.168.0.11      
+ 19:42:56.787322    192.168.0.11      
+ --------------- --------------- -----
+
+
 - Proves amb diferents sistemes Operatius (Ubuntu, Mint, Windows, WSL, Debian 9 ...)
+
+
 
 
 - Proves amb gran quantitat de paquets
@@ -610,9 +723,6 @@ test tcp connections --> nc -z -v ip port
                            directori que l'script. 
 
 ####### 9. PUNTS DE MILLORA #######
-
-    - Maquetació --> Es podria solucionar el problema del format a l'hora de fer l'scroll utilitzant el mètode clear. Però el problema és que no apareixeria 
-                     el prompt, i aquesta és una possibilitat que es pot contemplar però no la veiem adient.
 
     - Proves a més SO --> Als Sistemes Operatius que no suporten l'execució correcta de l'script, sobretot en el cas de la comanda tcpdump, només evitem que 
                           s'executi,però es podria ampliar fent més proves a d'altres SO per avisar a l'usuari en el moment de l'execució de quin és el seu 

@@ -72,11 +72,15 @@
 
     - En quins casos d'ús es pot fer servir?
 
-        - 
+        - Un cas seria el d'alguna persona que sospités d'algun tipus de comportament extrany a la seva xarxa. 
+
+        - Un altre cas també podria ser el de algun curiós de la tecnologia que volgués aprendre en part com funciona un honeypot de manera simple i clara. 
+
+        - Per últim, un cas seria el d'un petit grup de treball o empresa, que volgués incrementar una mica en la seguretat dels seus arxius durant els seus inicis.
 
     - Exemples d'execució
     
-    * El protocol es por col·locar en mayúscula o minúscula, és indiferent.
+    * El protocol es pot col·locar en mayúscula o minúscula, és indiferent.
 
     TCP --> ./honeypot.sh enp0s3 tcp 22
 
@@ -86,25 +90,71 @@
 
     - Explicació UI
 
+Exemple TCP (segueix el mateix format que pel protocol UDP): 
+
+-----------------------------------------------------------------------------
+Accesos a l'adreça 192.168.0.26 port tcp 22 [16:00:09.319956 , 16:00:48.351998] --> Aquesta és la primera línea d'informació de l'output. Conté l'adreça IP de la 
+-----------------------------------------------------------------------------       màquina des de la qual s'executa l'script. Després conté el protocol especificat
+                                                                                    (en minúscules) junt amb el port pel qual escoltem. 
+                                                                                    A més, trobem la hora exacta del primer atac rebut i de l'últim. 
+
+------------------------------
+Resum dels accessos             --> En aquest apartat de resum d'accessos podem trobar dos columnes principals. Les adreces IP i el Nº d'accessos. 
+------------------------------      En quant a les adreces IP apareixeran totes les que han realitzat algun atac. I no podran haver repetides. 
+    Adreces IP     Nº accessos      Cada IP tindrà a la dreta el seu número d'accessos (el Nº d'atacs que ha realitzat) cadascuna. 
+ ---------------   -----------
+    192.168.0.23             2
+    192.168.0.30             3
+ ---------------   -----------        
+                                      
+--------------------------------------
+Evolució dels accessos                  -->  En aquest apartat de la evolució dels accessos apareixeran tots els accessos que s'han monitoritzat, per separat. 
+--------------------------------------       Trobem tres columnes. El temps, l'adreça IP i el port. 
+      Temps         Adreça IP     Port       En quant al temps, aquest serà la hora exacta de l'atac. 
+ --------------- --------------- -----       En quant a l'adreça IP, aquesta serà l'adreça IP de l'atacant. 
+ 16:00:09.319956    192.168.0.23 50390       Per últim, trobem el port des d'on realitza el seu accés l'atacant amb la IP i data anterior.
+ 16:00:13.063966    192.168.0.23 50392
+ 16:00:42.496250    192.168.0.30 45160
+ 16:00:45.695640    192.168.0.30 45162
+ 16:00:48.351998    192.168.0.30 45164
+ --------------- --------------- -----
+
+Prem [q] per sortir.
+
+
+- Complement fitxer log_honeypot (situat a la part superior): 
+
+----------------------------------------------------------------------------------------------------------
+Monitorització realitzada per l'usuari root de l'equip honeypot.
+Sistema operatiu Debian GNU/Linux 10 (buster).
+Versió del script 1.0 compilada el 2020-04-25.
+Monitorització iniciada en data 2020-02-04 a les 08:59:45 i finalitzada en data 2020-02-04 a les 09:02:15.
+----------------------------------------------------------------------------------------------------------
+
+    --> En aquest apartat trobarem, per ordre d'aparició, el nom d'usuari (username), el nom de l'equip (hostname) de l'atacant, el sistema operatiu, la 
+        versió de l'script, la data de compilació, i per últim les dates d'inici i final de la monitorització, amb les seves respectives hores exactes. 
+
+
 Exemple ICMP: 
 
+                    
 -----------------------------------------------------------------------------
-Accesos a l'adreça 192.168.0.26 port icmp  [15:58:29.507280 , 15:58:48.142297] 
------------------------------------------------------------------------------
+Accesos a l'adreça 192.168.0.26 port icmp  [15:58:29.507280 , 15:58:48.142297]  --> Mateix apartat que en l'exemple de TCP, però en aquest cas no apareix el 
+-----------------------------------------------------------------------------       port, ja que amb el protocol ICMP no s'especifica. 
 
 ------------------------------
-Resum dels accessos
+Resum dels accessos             --> Mateix apartat que amb TCP
 ------------------------------
-    Adreces IP     Nº accessos
+    Adreces IP     Nº accessos  
  ---------------   -----------
     192.168.0.23             7
     192.168.0.30             5
  ---------------   -----------        
                                       
 --------------------------------------
-Evolució dels accessos                
+Evolució dels accessos                   --> Mateix apartat que amb TCP però sense l'aparició dels ports. 
 --------------------------------------
-      Temps         Adreça IP     Port
+      Temps         Adreça IP     Port  
  --------------- --------------- -----
  15:58:29.507280    192.168.0.23      
  15:58:31.548130    192.168.0.23      
@@ -120,49 +170,19 @@ Evolució dels accessos
  15:58:48.142297    192.168.0.30      
  --------------- --------------- -----
                  
-Prem [q] per sortir.
-
-
-Exemple TCP: 
-
------------------------------------------------------------------------------
-Accesos a l'adreça 192.168.0.26 port tcp 22 [16:00:09.319956 , 16:00:48.351998] 
------------------------------------------------------------------------------
-
-------------------------------
-Resum dels accessos
-------------------------------
-    Adreces IP     Nº accessos
- ---------------   -----------
-    192.168.0.23             2
-    192.168.0.30             3
- ---------------   -----------        
-                                      
---------------------------------------
-Evolució dels accessos                
---------------------------------------
-      Temps         Adreça IP     Port
- --------------- --------------- -----
- 16:00:09.319956    192.168.0.23 50390
- 16:00:13.063966    192.168.0.23 50392
- 16:00:42.496250    192.168.0.30 45160
- 16:00:45.695640    192.168.0.30 45162
- 16:00:48.351998    192.168.0.30 45164
- --------------- --------------- -----
-                    
-Prem [q] per sortir.
- 
-
-- Complement fitxer log_honeypot 
-
-----------------------------------------------------------------------------------------------------------
-Monitorització realitzada per l'usuari root de l'equip honeypot.
-Sistema operatiu Debian GNU/Linux 10 (buster).
-Versió del script 1.0 compilada el 2020-04-25.
-Monitorització iniciada en data 2020-02-04 a les 08:59:45 i finalitzada en data 2020-02-04 a les 09:02:15.
-----------------------------------------------------------------------------------------------------------
+Prem [q] per sortir.   
 
 
 5 - Preguntes freqüents
 
+    1 - És realment segur el honeypot?
 
+    2 - Té algun tipus de cost? 
+
+        - No, 
+
+    - 
+
+    - 
+
+    - 

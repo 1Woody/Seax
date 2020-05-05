@@ -401,7 +401,13 @@ do
         then
             primerCop=0
         else
-            sleep 1;
+            # Elecció de temps en funció del protocol
+            if [ "$protocolMajus" == "ICMP" ]
+            then
+                sleep 3;
+            else 
+                sleep 1;
+            fi
             clear
         fi
         cat log_honeypot
