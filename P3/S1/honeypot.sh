@@ -1,7 +1,5 @@
 #!/bin/bash
 #!utf-8
-# Elegir bien los PERMISOS!!!
-# COMPROBAR LO QUE NECESITA EL USUARIO (PAQUETES, ROOT ...)
 
 ####### 1. VARIABLES #######
 
