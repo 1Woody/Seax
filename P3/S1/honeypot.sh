@@ -42,7 +42,6 @@ filter_tcp="tcp[13]=2 and port $3"
 # Variables utilitzades en el core del programa
 revisat=0
 tractament=1
-primerCop=1
 numAccesosSimultanis=11 # Establiment dels accessos màxims (X accessos + 1 de capçalera)
 comptLinia=2
 arrayAtacs+=("") # Array amb comptador de repetició

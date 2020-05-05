@@ -79,7 +79,6 @@ A continuació, trobem la inicialització de les variables del programa.
 
     - revisat --> Funciona com a booleà per controlar que una IP d'un atac tipus ICMP ja es troba tractada en el període de temps especificat. 
     - tractament --> Funciona com a booleà per saber si s'ha de tractar un atac amb el protocol ICMP o no. 
-    - primerCop --> Funciona com a booleà per tal d'evitar el primer sleep del programa.
     - numAccesosSimultanis --> Estableix el número d'accessos màxims que es permeten simultàniament (X accessos + 1 de capçalera)
     - comptLinia --> Funciona com a comptador de les línies dels diferents atacs (sempre és menor a $numAccesosSimultanis)
     - arrayAtacs --> Array que durant el programa contindrà el número d'atacs que ha realitzat cada IP atacant.
@@ -596,15 +595,14 @@ printant per pantalla, a la vista de l'usuari.
 
             echo -e "Prem [q] per sortir." >> log_honeypot
             echo -e " " >> log_honeypot
-            
             Redirecció de les dues línies anteriors a l'output del fitxer log_honeypot.log_honeypot
+
+            clear --> Es neteja la pantalla per tal de deixar-la buida i preparada per la següent iteració. 
+
+            cat log_honeypot; --> Impressió per pantalla del fitxer log_honeypot (comanda cat - mostra per pantalla el contingut de l'arxiu especificat)
             
-            Si la variable $primerCop == 1 (ens trobem a la primera iteració del programa):
-                
-                Es posa la variable a 0 (false), per tal de només entrar en aquest if la primera vegada (i així no fer el primer pause innecessari) 
-            
-            En cas contrari:
-                
+            Si "${arrayFullAtacs[0]}" != "" --> Si l'array que conté tots els atacs és buit (primera vegada)
+                                
                 Si "$protocolMajus" == "ICMP" --> Si el protocol de la monitorització és el de ICMP
 
                     sleep 3; --> Es realitza un sleep de tres segons.
@@ -614,10 +612,6 @@ printant per pantalla, a la vista de l'usuari.
                     sleep 1; --> Es realitza un sleep d'un segon. Aquest temps és menor que amb el protocol ICMP, ja que amb l'ICMP rep més quantitat 
                     d'informació constant durant un cert temps. En canvi, amb el TCP i UDP no és necessari fer un sleep tan gran perquè només rebem un 
                     avís d'accés per cada atac.
-
-                clear --> Es neteja la pantalla per tal de deixar-la buida i preparada per la següent iteració. 
-
-            cat log_honeypot; --> Impressió per pantalla del fitxer log_honeypot (comanda cat - mostra per pantalla el contingut de l'arxiu especificat)
 
 7 - Fi del programa
 
