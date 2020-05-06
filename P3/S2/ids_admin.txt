@@ -33,15 +33,53 @@ casos com els accents.
 
 
 ####### 1. VARIABLES #######
+1.1 - Primer de tot trobarem els usage (missatges d'error distribuits per les diferents comprovacions dintre del codi). Seran els següents:
 
+    - usageArguments --> Tracta el nombre d'usuaris en l'execució de l'script.
+    - usageSuperUse --> Especifica a l'usuari que ha de ser root per poder executar l'script.
+    - usagePaquetnmap --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a nmap.
+    - usagePaquetip --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a iproute.
 
+1.2 - Per continuar trobem les variables de característiques de l'usuari necessàries per l'script:
+
+    - usuari --> Conté el nom d'usuari des d'on s'executa l'script
+    - SO --> Conté el sistema operatiu de l'usuari que executa l'script (s'extreu amb un cat de la informació del fitxer /etc/release)
+    - host --> Conté el nom de la màquina de l'usuari que executa l'script.
+    - scriptVersion --> Conté la versió de l'script.
+    - dataInicial --> Conté la data de la última compilació del programa.
+    - myIP --> Conté la direcció IPv4 de l'usuari que executa l'script.
+    - dataCompilacioInici --> Conté la data (any, mes i dia) en que s'inicia l'execució de l'script.
+    - horaCompilacioInici --> Conté la hora en que s'inicia l'execució de l'script.
+    - interfacelist --> Conté una llista de totes les interfíces a les que l'equip es troba connectat (per cable), sense tenir en compte la de loopback
 
 ####### 2. COMPROVACIONS PREVIES #######
 
 
 
-####### 3. CREACIÓ DE FITXERS NECESSARIS #######
 
+####### 3. CREACIÓ DE FITXERS NECESSARIS #######
+En aquest apartat tractarem la creació dels fitxers necessaris per la realització del nostre script. Donat que molts dels fitxers utilitzats són temporals s'ha 
+decidit amagar-los de l'usuari(el punt que trobem davant de cada nom de fitxer, ho converteix en ocult) i esborra-los al final. 
+
+Tots els fitxers els creem amb la comanda touch, que ens permet crear-los només en cas de que no existeixin ja.
+
+    3.1 - Creació dels fitxers
+
+        touch .llistaEquips --> Es crea un fitxer on es guardarà una llista filtrada amb l'informació necessaria per extreure la IP, la Mac, el fabricant i el 
+        nom DNS de tots els dispositius detectats a la xarxa per la instrucció nmap. 
+        touch .xarxes --> Es crea un fitxer on es guardarà una llista amb el nom de cada interfíce i la xarxa a la qual pertany.
+        touch .scanlist.log --> Es crea un fitxer on es guardarà una llista amb la (IP | Mac | fabricant | nom equip conegut | nom DNS) filtrat del fitxer 
+        .llistaEquips
+        touch equips_coneguts --> Es crea un fitxer on l'usuari pot guardar la MAC i un nom assignat a un dispositiu, per que a la llista quedi identificat amb 
+        aquest nom.
+        touch log_ids --> Es crea un fitxer que guardarà tota la taula de dades maquetades corresponentment amb l'informació d'entorn.
+        
+
+    3.2 - Inicialització capçalera dels fitxer d'atacs
+
+        true > log_ids --> Es neteja el fitxer abans de treballar amb ell.
+        true > .scanlist.log --> Es neteja el fitxer abans de treballar amb ell.
+        true > .xarxes --> Es neteja el fitxer abans de treballar amb ell.
 
 
 ####### 4. MAQUETACIÓ DE DADES PART 1 #######
@@ -49,6 +87,22 @@ casos com els accents.
 
 
 ####### 5. TRACTAMENT DE DADES #######
+En aquest apartat es prepara un fitxer amb tota la llista de dispositius conectats a les N interfíces actives del usuari, es treballa sobre cada interfície de
+manera individual i es guarden totes les dades al fitxer abans explicat .scanlist.log .
+
+    5.1 Tractament de totes les interfíces --> Anem recorrent cadasucuna de les interfíces guardades a la llista.
+
+        5.1.1 Comprovació validesa de la xarxa --> S'agafa la ip de la interfíce corresponent i es comprova que no està buida, si ho està saltem a la interfície
+        següent: 
+        * Comanda: $(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1); --> Aquesta comanda recull 
+                                        la IPv4 de la interfície especificada ($1), en cas de que tingui més d'una agafarem la primera IP disponible.
+                                        - ip -4 addr show dev "$1" --> Exposa la interfície de xarxa especificada amb algunes característiques i la seva 
+                                        adreça IP associada.
+                                        - grep inet --> Es filtra i s'agafa la línia on es troba l'string 'inet'
+                                        - awk '{print $2}' --> Es filtra i s'agafa el segon string ($2) de la línia.
+                                        - cut -d '/' -f1 | head -n 1 --> Es divideix l'string per '/' i s'agafa la primera fila.
+
+            5.1.1.1 
 
 
 

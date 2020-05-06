@@ -23,7 +23,7 @@ INFORMACIÓ SCRIPT
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
-Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, alla trobarem dues
+Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, allà trobarem dues
 linies importants:
 
 #!/bin/bash --> Amb aquesta intrucció forçarem al sistema a utilitzar la sheel de bash, imprescindible ja
@@ -34,25 +34,140 @@ casos com els accents.
 
 
 ####### 1. VARIABLES #######
+A continuació, trobem la inicialització d'algunes de les variables del programa.
+
+1.1 - Primer de tot trobarem els usage (missatges d'error distribuits per les diferents comprovacions dintre del codi). Seran els següents:
+
+    - usageInvalidArg --> Tracta el nombre d'arguments que escriu l'usuari en la execució de l'script.
+    - usagePaquetNmap --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a nmap.
+    - usagePaquetDig --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a dig (dnsutils).
+    - usagePaquetWhois --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a whois.
+    - usageSuperUser --> Especifica a l'usuari que ha de ser root per poder executar l'script.
+    - usageIP --> Especifica a l'usuari que el format de l'argument no és el de una IP.
+
+1.2 - Després trobem les variables de característiques de l'usuari necessàries per l'script
+
+    - usuari --> Conté el nom d'usuari des d'on s'executa l'script
+    - SO --> Conté el sistema operatiu de l'usuari que executa l'script (s'extreu amb un cerca al fitxer /etc/release) 
+    - host --> Conté el nom de la màquina de l'usuari que executa l'script.
+    - scriptVersion --> Conté la versió de l'script.
+    - dataInicial --> Conté la data de la última compilació del programa.
+    - dataCompilacioInici --> Conté la data (any, mes i dia) en que s'inicia l'execució de l'script.
+    - horaCompilacioInici --> Conté la hora en que s'inicia l'execució de l'script.
+
+####### 2. COMPROVACIONS I ACCIONS PRÈVIES #######
+En aquest punt es faran les diferents comprovacions de l'usuari, per tal de que es pugui executar l'script sense problemes. Tant en relació a paquets 
+instal·lats (nmap, dnsutils, whois) com a comprovació del tipus d'usuari (superuser).
+També es declararà alguna variable i es tractaran els diferents problemes que poden sorgir amb la entrada dels arguments pertinents. Tant en el número 
+d'aquests com en la seva correctesa (format IP correcte).
+
+2.1 - Comprovació dels arguments --> En aquest apartat es comprova que l'usuari hagi afegit el nombre d'arguments correcte.
+
+                                    Si $# != 1 --> Si el total d'arguments és diferent a 1 (la variable $# ofereix el nombre d'arguments de l'execució)
+                                    En aquest cas, s'envia el missatge $usageInvalidArg per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+
+2.2 - Declaració de la variable IP -->  En aquest punt ja podem passar l'argument d'entrada a una variable, per tal de poder treballar millor amb ell. 
+                                        
+                                        IP="$1"
 
 
-####### 2. COMPROVACIONS PREVIES #######
+2.3 - Comprovació paràmetre IP correcte --> En aquest apartat es comprova que l'argument afegit per l'usuari sigui una IP
+
+                                    Si ! "$IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ --> Si la variable IP no té quatre nombres enters entre tres punts
+                                                                                       (Format IP -> X.X.X.X)
+                                    En aquest cas, s'envia el missatge $usageIP per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+
+2.4 - Comprovació del superusuari --> En aquest apartat es comprova que l'usuari que executa l'script sigui "root".
+
+                                    Si "$(whoami)" != "root" --> L'usuari no és root.
+                                    En aquest cas, s'envia el missatge $usageSuperUser per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1)..
+                                    * Comanda: whoami --> Bàsicament exposa per pantalla el nom d'usuari de l'actual usuari.
+
+2.5 - Comprovació del paquet nmap --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet nmap, que s'utilitzarà per extreure informació
+                                      gràcies a la comanda nmap. 
+
+                                    Si "$(dpkg -l | grep -c nmap)" -eq 0 --> Si paquet nmap no istal·lat
+                                    En aquest cas, s'envia el missatge $usagePaquetNmap per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+                                    * Comanda: dpkg -l --> Llista tots els paquets instal·lats al sistema. Gràcies al 'grep -c nmap' busquem a la 
+                                                           llista anterior el paquet amb el nom nmap.
+                                                           I amb el flag -c comptem el nombre d'encerts que ha tingut la instrucció grep.
+
+2.6 - Comprovació del paquet dig --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de dnsutils, necessari per realitzar algunes
+                                     comandes 'dig' en el programa. 
+
+                                    Si "$(dpkg -l | grep -c dnsutils)" == 0 --> Paquet dnsutils no instal·lat.
+                                    En aquest cas, s'envia el missatge $usagePaquetDig per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+                                    * Comanda: dpkg -l | grep -c dnsutils --> Mateix funcionament que en l'apartat 2.5 per amb el paquet dnsutils.
+
+2.7 - Comprovació del paquet whois --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de whois, necessari per realitzar algunes
+                                       comandes 'whois' en el programa. 
+
+                                    Si "$(dpkg -l | grep -c whois)" == 0 --> Paquet whois no instal·lat.
+                                    En aquest cas, s'envia el missatge $usagePaquetWhois per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+                                    * Comanda: dpkg -l | grep -c whois --> Mateix funcionament que en l'apartat 2.5 per amb el paquet whois.
 
 
 ####### 3. MAQUETACIÓ DE DADES PART 1 #######
 
 
+
+echo -e "                                                                "
+echo -e "Programa de geolocalització i anàlisi automàtic d'una adreça IP."
+echo -e " Versió $scriptVersion compilada el $dataInicial."
+echo -e " Iniciant-se el $dataCompilacioInici a les $horaCompilacioInici ...          [ok]"
+echo -e " El fitxer log_ip sera sobrescrit...                   [ok]"
+espaiBlanc=" ";
+x=0;
+trobat=0;
+while (( $x <= 17 )) && (( $trobat == 0))
+do
+    # Tractament de l'espai assignat a la IP
+    if [ "${#IP}" == "$x" ]
+    then
+        num=17-$x;
+        for ((y=0; y<num; y++))
+        do
+            espaiBlanc=" $espaiBlanc";
+        done
+        trobat=1;
+    else
+        ((x+=1))
+    fi
+done
+echo -ne " Iniciant l'escanneig de l'adreça $IP...$espaiBlanc"
+
 ####### 4. RECOPILACIÓ DE DADES PART 1 #######
 
 
 ####### 5. CREACIÓ DE FITXERS NECESSARIS #######
+En aquest apartat tractarem la creació dels fitxers necessaris per la realització del nostre script (tant el fitxer de l'output com els diferents fitxers
+de dades). 
+
+        5.1 - Creació dels fitxers
+
+            - touch log_ip --> Creació del fitxer de sortida on es situarà tota la informació aconseguida una vegada finalitzada l'execució del programa.
+            - touch .dades.log --> Creació del fitxer on es tractaran algunes dades de geolocalització de la IP seleccionada per l'usuari. 
+            - touch .infonmap.log --> Creació del fitxer on 
+            - touch .ports.log -->
+
+        5.2 - Comprovacions fitxers buits
+
+            - true > log_ip -->
+            - true > .dades.log -->
+            - true > .infonmap.log -->
+            - true > .ports.log -->
 
 
 ####### 6. RECOPILACIÓ DE DADES PART 2 #######
 
 
 ####### 7. MAQUETACIÓ DE DADES PART 2 #######
-
 
 
 ####### 8. PROVES DE VALIDACIÓ #######

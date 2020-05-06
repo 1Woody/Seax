@@ -29,7 +29,6 @@ then
 fi
 
 IP="$1"
-
 # Comprovació paràmetre Ip correcte
 if [[ ! "$IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
 then
@@ -70,7 +69,7 @@ echo -e " El fitxer log_ip sera sobrescrit...                   [ok]"
 espaiBlanc=" ";
 x=0;
 trobat=0;
-while (( $x <= 17 )) && (( $trobat == 0))
+while (( x <= 17 )) && (( trobat == 0))
 do
     # Tractament de l'espai assignat a la IP
     if [ "${#IP}" == "$x" ]
@@ -93,7 +92,7 @@ touch .infowhois.log
 
 whois "$IP" > .infowhois.log
 
-dnsNom=$(dig -x $IP +short | head -n 1)
+dnsNom=$(dig -x "$IP" +short | head -n 1)
 if [ -z "$dnsNom" ]
 then
     equipIP="$IP (DNS desconegut)"
@@ -134,16 +133,15 @@ touch log_ip
 touch .dades.log
 touch .infonmap.log
 touch .ports.log
-touch .dades.log
-true > .infonmap.log
-true > .ports.log
 true > log_ip
 true > .dades.log
+true > .infonmap.log
+true > .ports.log
 
 ####### 6. RECOPILACIÓ DE DADES PART 2 #######
 
 # Recollim les dades dades principals de la IP
-curl -s ipinfo.io/$IP > .dades.log
+curl -s ipinfo.io/"$IP" > .dades.log
 gestorASN=$(grep "org" .dades.log | cut -d '"' -f4)
 if [ -z "$gestorASN" ]
 then
@@ -169,7 +167,7 @@ else
     coordenades="Latitud $latitud i longitud $longitud, amb zona horària $zonaHoraria"
 fi
 
-nmap -O $IP >> .infonmap.log
+nmap -O "$IP" >> .infonmap.log
 
 # Cerquem SO
 SOequip=$(grep "OS details" .infonmap.log | cut -d' ' -f3-)
@@ -214,10 +212,10 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
         numPort=$(echo "$line" | awk '{print $1}' | cut -d '/' -f1)
         if [ $primera == 0 ] 
         then
-            echo -e " Ports:        $protocolTrans/$numPort\t($protocolWeb)"
+            echo -e " Ports:        $protocolTrans/$numPort\\t($protocolWeb)"
             primera=1
         else
-            echo -e "               $protocolTrans/$numPort\t($protocolWeb)"
+            echo -e "               $protocolTrans/$numPort\\t($protocolWeb)"
         fi
     done < .ports.log
     echo -e "---------------------------------------------------------------------------------------------------------"

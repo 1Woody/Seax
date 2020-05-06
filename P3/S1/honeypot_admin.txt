@@ -32,7 +32,7 @@ que està programat en bash.
 casos com els accents.
 
 ####### 1. VARIABLES #######
-A continuació, trobem la inicialització de les variables del programa.
+A continuació, trobem la inicialització d'algunes de les variables del programa.
 
 1.1 - Primer de tot trobarem els usage (missatges d'error distribuits per les diferents comprovacions dintre del codi). Seran els següents:
 
@@ -61,7 +61,7 @@ A continuació, trobem la inicialització de les variables del programa.
 
 1.3 - Per continuar trobem les variables de característiques de l'usuari necessàries per l'script:
 
-    - usuari --> Conté el nom d'usuari des d'on s'executa l'script ('root')
+    - usuari --> Conté el nom d'usuari des d'on s'executa l'script
     - SO --> Conté el sistema operatiu de l'usuari que executa l'script (s'extreu amb un cat de la informació del fitxer /etc/release)
     - host --> Conté el nom de la màquina de l'usuari que executa l'script.
     - scriptVersion --> Conté la versió de l'script.
@@ -97,24 +97,24 @@ correctesa (interfície, protocol i port).
 
                                     Si "$(whoami)" != "root" --> L'usuari no és root.
                                     En aquest cas, s'envia el missatge $usageSuperUser per informar l'usuari. Després d'això es tanca l'execució del 
-                                    programa.
+                                    programa amb un codi d'error (exit 1).
                                     * Comanda: whoami --> Bàsicament exposa per pantalla el nom d'usuari de l'actual usuari.
 
 2.2 - Comprovació del paquet tcpdump --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de tcpdump.
 
                                     Si "$(dpkg -l | grep -c tcpdump)" == 0 --> Paquet tcpdump no instal·lat.
                                     En aquest cas, s'envia el missatge $usagePaquettcpdump per informar l'usuari. Després d'això es tanca l'execució 
-                                    del programa.
+                                    del programa amb un codi d'error (exit 1).
                                     * Comanda: dpkg -l --> Llista tots els paquets instal·lats al sistema. Gràcies al 'grep -c tcpdump' busquem a la 
                                                            llista anterior el paquet amb el nom tcpdump.
-                                    i amb el flag -c comptem el nombre d'encerts que ha tingut la instrucció grep.
+                                                           I amb el flag -c comptem el nombre d'encerts que ha tingut la instrucció grep.
 
 2.3 - Comprovació del paquet iproute2 --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de iproute2 (del cual la instrucció 
 ip forma part i serà utilitzada posteriorment).
 
                                     Si "$(dpkg -l | grep -c iproute2)" == 0 --> Paquet iproute2 no instal·lat.
                                     En aquest cas, s'envia el missatge $usagePaquetip per informar l'usuari. Després d'això es tanca l'execució del 
-                                    programa.
+                                    programa amb un codi d'error (exit 1).
                                     * Comanda: dpkg -l | grep -c iproute2 --> Mateix funcionament que l'anterior apartat pero amb el paquet iproute2.
 
 2.4 - Detecció de la correctesa dels arguments d'entrada --> En aquest apartat comprovarem la correctesa tant del número d'arguments com del contingut 
@@ -135,12 +135,12 @@ d'aquests.
                       Si "$protocolMajus" == "TCP" o "$protocolMajus" == "UDP", el protocol serà TCP o UDP.
                       
                       En aquest cas s'informa a l'usuari amb el missatge $usageTCPUDP de que si selecciona TCP o UDP ha d'especificar un port. Després 
-                      d'això es tanca l'execució del programa.
+                      d'això es tanca l'execució del programa amb un codi d'error (exit 1).
                       
                       En cas contrari, de que no sigui cap dels anteriors protocols esmentats, s'envia el missatge $usageICMP, per tal d'avisar a 
                       l'usuari de que ha d'utilitzar el protocol ICMP en cas de posar només dos arguments.
                       
-                      Després d'això es tanca l'execució del programa.
+                      Després d'això es tanca l'execució del programa amb un codi d'error (exit 1).
 
     2.4.2 - 3 arguments --> Si "$#" == 3 --> Hi ha 3 arguments.
     
@@ -148,19 +148,22 @@ d'aquests.
 
                       Primer, es comprova que el 3r argument (port) sigui un nombre enter.
                       Si "$3 =~ ^[0-9]+$" --> El port és un nombre enter.
-                      En cas contrari, s'envia el missatge $usagePortEnter per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+                      En cas contrari, s'envia el missatge $usagePortEnter per tal d'informar l'usuari. Després d'això es tanca l'execució del programa
+                      amb un codi d'error (exit 1).
 
                       Després, es comprova que el número de port es trobi entre el rang permés (0-65535).
                       Si "$3" > "65535" o "$3" < "0"" --> El nombre no es troba en el rang.
-                      En aquest cas, s'envia el missatge $usagePortRang per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+                      En aquest cas, s'envia el missatge $usagePortRang per tal d'informar l'usuari. Després d'això es tanca l'execució del programa 
+                      amb un codi d'error (exit 1).
 
                       Per últim, es comprova que el protocol sigui TCP o UDP.
                       Si "$protocolMajus" != "TCP" i "$protocolMajus" != "UDP" --> El protocol no és ni TCP ni UDP.
-                      En aquest cas, s'envia el missatge $usageProtocolInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa.
+                      En aquest cas, s'envia el missatge $usageProtocolInc per tal d'informar l'usuari. Després d'això es tanca l'execució del programa 
+                      amb un codi d'error (exit 1).
 
     2.4.3 - Nº d'arguments invàlid --> En el cas de que el nombre d'arguments no sigui ni 2 ni 3, s'envia el missatge $usageInvalidArg per tal d'informar 
                                        l'usuari de l'error.
-                                       Després d'això es tanca l'execució del programa.
+                                       Després d'això es tanca l'execució del programa amb un codi d'error (exit 1).
 
 2.5 - Comprovació interfície --> En aquest cas es comprova que la interfície escollida per l'usuari es trobi en la llista d'interfícies actives del 
                                  sistema. En cas d'estar-hi, cal revisar si té una IP assignada en la interfície.
