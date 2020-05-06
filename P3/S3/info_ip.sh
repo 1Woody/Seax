@@ -40,6 +40,8 @@ then
 	echo "$usagePaquetCurl"; exit 1
 fi
 
+
+
 if [ $# == 1 ] 
 then
     echo -e "                                                                "
