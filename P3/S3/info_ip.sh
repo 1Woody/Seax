@@ -67,8 +67,25 @@ echo -e "Programa de geolocalització i anàlisi automàtic d'una adreça IP."
 echo -e " Versió $scriptVersion compilada el $dataInicial."
 echo -e " Iniciant-se el $dataCompilacioInici a les $horaCompilacioInici ...          [ok]"
 echo -e " El fitxer log_ip sera sobrescrit...                   [ok]"
-
-echo -e " Iniciant l'escanneig de l'adreça $IP...      [ok]"
+espaiBlanc=" ";
+x=0;
+trobat=0;
+while (( $x <= 17 )) && (( $trobat == 0))
+do
+    # Tractament de l'espai assignat a la IP
+    if [ "${#IP}" == "$x" ]
+    then
+        num=17-$x;
+        for ((y=0; y<num; y++))
+        do
+            espaiBlanc=" $espaiBlanc";
+        done
+        trobat=1;
+    else
+        ((x+=1))
+    fi
+done
+echo -ne " Iniciant l'escanneig de l'adreça $IP...$espaiBlanc"
 
 ####### 4. RECOPILACIÓ DE DADES PART 1 #######
 
@@ -108,8 +125,8 @@ then
 fi
 entitatEquip="$entitatEquip ($paisEquip)"
 
-
-echo -e " Iniciant la localització de l'adreça...               [ok]"
+echo -e "[ok]"
+echo -ne " Iniciant la localització de l'adreça...               "
 
 ####### 5. CREACIÓ DE FITXERS NECESSARIS #######
 
@@ -166,7 +183,8 @@ grep -e "tcp" -e "udp" .infonmap.log | awk '{print $1, $3}' > .ports.log
 
 ####### 3. MAQUETACIÓ PART 2 #######
 
-echo -e " Processant les dades...                               [ok]"
+echo -e "[ok]"
+echo -ne " Processant les dades...                               "
 
 dataCompilacioFi=$(date --rfc-3339=date)
 horaCompilacioFi=$(date | cut -d ' ' -f5)
@@ -208,11 +226,12 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
 dataCompilacioFi=$(date --rfc-3339=date)
 horaCompilacioFi=$(date | cut -d ' ' -f5)
 
+echo -e "[ok]"
 echo -e " Resultats de l'anàlisi en el fitxer log_ip            [ok]"
 echo -e " Finalitzat el $dataCompilacioFi a les $horaCompilacioFi               [ok]"
 echo -e "                                                                           "
 
-# neteja de fitxers auxiliars
+# Neteja de fitxers auxiliars
 rm .infowhois.log
 rm .ports.log
 rm .infonmap.log
