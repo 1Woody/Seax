@@ -4,20 +4,28 @@ interfacelist=$(ls /sys/class/net/ | grep ^e)
 
 #llistaMACs --> cat /usr/share/nmap/nmap-mac-prefixes
 
+# MOVER AL BUENO
+
+# --> echo de lista de inteficies, linia fabricant y creo que ya
+
 
 # Creació de fitxers
 touch .llistaEquips
+touch .llistainterfaces
+true > .llistainterfaces
 true > .llistaEquips
+true > test.log
 
 
-
-for interface in "$interfacelist"
+for interface in $(ls /sys/class/net/ | grep ^e)
 do 
+    echo $interface
 
     ipInterface=$(ip -4 addr show dev "$interface" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1)
     #echo $ipInterface
     ipXarxa=$(ip r | grep "$ipInterface" | awk '{print $1}')
-    ##echo $ipXarxa
+    
+    echo "$interface $ipXarxa" >> .llistainterfaces
     
     # comanda nmap
     echo "Escanejant la xarxa ..."
@@ -33,23 +41,14 @@ do
     #echo $MACinterface
     MACfabricant="$(echo $MACinterface | cut -d ':' -f1,2,3 |sed "s/://g")"
     #echo $MACfabricant
-    Nomfabricant=$(grep $MACfabricant /usr/share/nmap/nmap-mac-prefixes | sed -r 's/\s+/-/' | cut -d'-' -f2)
+    Nomfabricant=$(grep "$MACfabricant" /usr/share/nmap/nmap-mac-prefixes | cut -d ' ' -f2-)
     #echo $Nomfabricant
 
     echo -e "MAC Address: $MACinterface ($Nomfabricant)" >> .llistaEquips
 
     counter=0
     infoEquip=""
-    #Nmap scan report for 192.168.0.12
-    #MAC Address: 70:26:05:FA:1B:56 (Unknown)
 
-    #llistaEquips=$(cat .llistaEquips)
-    #while IFS= read -r line; do
-    #    echo "Text read from file: $line"
-    #done < .llistaEquips
-
-
-    echo -e "INICI FOR LOOP\n"
     while IFS= read -r line; do
         if [ $counter == 0 ] # tractament d'ips i DNS
         then
@@ -61,16 +60,21 @@ do
             then
                 ipCorrecta="$(echo $line | awk '{print $6}' | cut -d '(' -f2 | cut -d ")" -f1)"
                 dns="$(echo $line | awk '{print $5}')."
-            else 
+            else
                 ipCorrecta="$(echo $line | awk '{print $5}')"
                 dns="."
             fi
             counter=1
         else # tractament de MACs i Fabricants
             mac=$(echo $line | awk '{print $3}')
-            fabricant=$(echo $line | awk '{print $4}' | cut -d '(' -f2 | cut -d ")" -f1)
-            infoEquip="$ipCorrecta|$mac|$fabricant|$dns"
-            echo "$infoEquip"
+            equipConegut=$(cat equips_coneguts | grep "$mac" | cut -d ' ' -f2-)
+            if [ "$equipConegut" == "" ]
+            then 
+                equipConegut="-"
+            fi
+            fabricant=$(echo $line | cut -d '(' -f2 | cut -d ')' -f1)
+            infoEquip="$ipCorrecta|$mac|$fabricant|$equipConegut|$dns"
+            echo "$infoEquip" >> test.log
             counter=0
         fi
     done < .llistaEquips

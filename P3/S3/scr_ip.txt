@@ -1,0 +1,13 @@
+root@seax:/home/entel/seax# ./info_ip.sh 147.83.2.135
+
+Programa de geolocalització i anàlisi automàtic d'una adreça IP.
+ Versió 0.112 compilada el 17/03/2020.
+ Iniciant-se el 2020-03-25 a les 16:22:46...           [ok]
+ El fitxer log_ip sera sobrescrit...                   [ok]
+ Iniciant l'escanneig de l'adreça 147.83.2.135...      [ok]
+ Iniciant la localització de l'adreça...               [ok]
+ Processant les dades...                               [ok]
+ Resultats de l'anàlisi en el fitxer log_ip            [ok]
+ Finalitzat el 2020-03-25 a les 16:23:04               [ok]
+
+root@seax:/home/entel/seax# 

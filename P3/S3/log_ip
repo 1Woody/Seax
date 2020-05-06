@@ -1,0 +1,22 @@
+ 
+ ---------------------------------------------------------------------------------------------------
+ Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 0.112 compilada el 17/03/2020.
+ Anàlisi iniciada en data 2020-03-25 a les 16:22:46 i finalitzada en data 2020-03-25 a les 16:23:04.
+ ---------------------------------------------------------------------------------------------------
+ 
+ 
+--------------------------------------------------------------------------------
+Informació de l'adreça IP
+ Equip:        147.83.2.135 (edicioweb.produccio.upc.edu)
+ Xarxa:        147.83.0.0/16 [147.83.0.0 - 147.83.255.255] (UPCNET)
+ Entitat:      Universitat Politecnica de Catalunya (ES)
+ Gestor ASN:   AS13041 Consorci de Serveis Universitaris de Catalunya
+ Localització: Barcelona (CP 08001), Catalonia, Spain (ES)
+ Coordenades:  Latitud 41.3888 i longitud 2.1590, amb zona horària Europe/Madrid
+ S. Operatiu:  No detectat
+ Ports:        tcp/80    (http)
+               tcp/443   (https)
+--------------------------------------------------------------------------------
+
