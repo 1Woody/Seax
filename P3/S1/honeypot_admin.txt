@@ -1,9 +1,7 @@
-GUIA DE PROGRAMACIÓ
+############## GUIA DE PROGRAMACIÓ ##############
 
-APUNTES ANTES DE ACABAR
--> PROBAR EN VARIOS SISTEMAS
--> AÑADIR COMPROBACIÓN DEL SISTEMA OPERATIVO ?
--> INFO PRACTICA 2 greapplet
+CREADORS: Daniel Benavente Garcia
+          César Gutiérrez Belmar
 
 ÍNDEX
 

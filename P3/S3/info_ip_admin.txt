@@ -1,0 +1,68 @@
+############## GUIA DE PROGRAMACIÓ ##############
+
+CREADORS: Daniel Benavente Garcia
+          César Gutiérrez Belmar
+
+ÍNDEX
+
+CODI
+0. INICIALITZACIÓ SCRIPT
+1. VARIABLES
+2. COMPROVACIONS PREVIES
+3. MAQUETACIÓ DE DADES PART 1
+4. RECOPILACIÓ DE DADES PART 1
+5. CREACIÓ DE FITXERS NECESSARIS
+6. RECOPILACIÓ DE DADES PART 2
+7. MAQUETACIÓ DE DADES PART 2
+
+INFORMACIÓ SCRIPT
+8. PROVES DE VALIDACIÓ
+9. ESCENARIS DE FALLIDA
+10. PUNTS DE MILLORA
+11. CONCLUSIONS GENERALS
+
+
+####### 0. INICIALITZACIÓ SCRIPT #######
+Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, alla trobarem dues
+linies importants:
+
+#!/bin/bash --> Amb aquesta intrucció forçarem al sistema a utilitzar la sheel de bash, imprescindible ja
+que està programat en bash.
+
+#!utf-8 --> Amb aquesta instrucció introduirem el format utf-8 que ens evitarà errors de format en diferents
+casos com els accents.
+
+
+####### 1. VARIABLES #######
+
+
+####### 2. COMPROVACIONS PREVIES #######
+
+
+####### 3. MAQUETACIÓ DE DADES PART 1 #######
+
+
+####### 4. RECOPILACIÓ DE DADES PART 1 #######
+
+
+####### 5. CREACIÓ DE FITXERS NECESSARIS #######
+
+
+####### 6. RECOPILACIÓ DE DADES PART 2 #######
+
+
+####### 7. MAQUETACIÓ DE DADES PART 2 #######
+
+
+
+####### 8. PROVES DE VALIDACIÓ #######
+
+
+####### 9. ESCENARIS DE FALLIDA #######
+
+
+####### 10. PUNTS DE MILLORA #######
+
+
+####### 11. CONCLUSIONS GENERALS #######
+

@@ -157,7 +157,7 @@ do
     fi
 done
 
-####### 6. MAQUETACIÓ DE DADES #######
+####### 6. MAQUETACIÓ DE DADES PART 2 #######
 
 echo -e "[ok]"
 echo -e " Processant les dades...                               [ok]"

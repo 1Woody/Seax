@@ -60,7 +60,7 @@ then
 	echo "$usagePaquetWhois"; exit 1
 fi
 
-####### 3. MAQUETACIÓ PART 1 #######
+####### 3. MAQUETACIÓ DE DADES PART 1 #######
 
 echo -e "                                                                "
 echo -e "Programa de geolocalització i anàlisi automàtic d'una adreça IP."
@@ -181,7 +181,7 @@ fi
 # Cerquem els ports
 grep -e "tcp" -e "udp" .infonmap.log | awk '{print $1, $3}' > .ports.log
 
-####### 3. MAQUETACIÓ PART 2 #######
+####### 7. MAQUETACIÓ DE DADES PART 2 #######
 
 echo -e "[ok]"
 echo -ne " Processant les dades...                               "
