@@ -26,12 +26,16 @@ if [ $# != 0 ]
 then
     if [ $# == 1 ] && [ "$1" == "-h" ]
     then 
-        echo "Ajuda"
-        # no necessita parametres
-        # recopilacio de dades dels dispositius connectats a la xarxa
-        # ip / mac / fabricant / equips de confiança / dns
-        # tracta diferents subxarxes (locals), no tractara wifi amb una ip disponible 
-        # Output guardat al fixter log noseque
+        echo -e " "
+        echo -e "  AJUDA"
+        echo -e "  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        echo -e "  L'execució de l'script no accepta cap argument addicional.                                             "
+        echo -e "  Es basa en una recopilació de dades dels dispositius connectats a la xarxa local.                      "
+        echo -e "  Es mostraran la IP, la MAC, el fabricant MAC, el nom DNS i si és un equip conegut, de tots els equips. "
+        echo -e "  El programa tracta les diferents subxarxes (locals), però no tindra en compte les interfícies wifi.    "
+        echo -e "  El fitxer de sortida s'anomena 'log_ids' i està situat al mateix directori on s'executa l'script.      "
+        echo -e "  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        echo -e ""
         exit 0;
     else
     echo "$usageArguments" ; exit 1
@@ -77,7 +81,7 @@ echo -e "Programa de cerca automàtica d'equips a la xarxa actual."
 echo -e " Versió $scriptVersion compilada el $dataInicial."
 echo -e " Iniciant-se el $dataCompilacioInici a les $horaCompilacioInici ...          [ok]"
 echo -e " El fitxer log_ids sera sobrescrit...                  [ok]"
-echo -e " Detecció d'equips en curs...                          "
+echo -ne " Detecció d'equips en curs...                          "
 
 ####### 5. TRACTAMENT DE DADES #######
 
@@ -93,7 +97,6 @@ do
         
         # Execució comanda nmap
         nmap -sn "$ipXarxa" > .scanmap.log
-        echo -e "[ok]"
 
         # llista neta dels equips (ip i Mac)
         cat .scanmap.log | grep -e "scan report for" -e "MAC" > .llistaEquips
@@ -156,6 +159,7 @@ done
 
 ####### 6. MAQUETACIÓ DE DADES #######
 
+echo -e "[ok]"
 echo -e " Processant les dades...                               [ok]"
 
 # Maquetació de subxarxes
