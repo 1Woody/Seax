@@ -492,68 +492,17 @@ printant per pantalla, a la vista de l'usuari.
         s'aniran refrescant les IP's que han fet algun accés i quantes vegadas ho ha fet cadascuna.
         Per cada conjunt d'atacs de cada IP (trobats a l'array $arrayAtacs) es realitzaran les següents accions:
         
-            espaiBlancIP=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlancIP, que és l'encarregada de col·locar els espais en blanc adients 
-                                  per tal de que les IPs sempre quedin alineades amb el format de l'output.
             ipAcces=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f2 ) --> Inicialització de la variable $ipAcces, que conté la segona fila, separades amb guions, 
                                                                          de la actual línia (on es troba la IP de l'atacant).
             numAccessos=$( echo "${arrayAtacs[$each]}" |cut -d '-' -f4 ) --> Inicialització de la variable $numAccessos, que conté la quarta fila, separades 
                                                                              amb guions, de la actual línia (on es troba el número d'accessos de la IP de 
                                                                              l'atacant).
-            x=7 --> Inicialització de la variable $x, que es compararà amb el número de caràcters que ocupa la variable $ipAcces, per tal d'alinear en format a 
-                    totes les diferents IP's. S'inicialitza amb el valor 7 perquè és el mínim que pot tenir una IP (X.X.X.X)
 
-            trobat=0 --> Inicialització de la variable $trobat, que funcionarà com a booleà. 
+            printf "%16.16s %13.13s \\n" " $ipAcces" "$numAccessos" >> log_honeypot --> Redirigim al fitxer log_honeypot la concatenació en dues columnes de les
+                                                                                        variables $ipAcces i $numAccessos. La opció de %16.16s del printf, té la 
+                                                                                        funció de crear una columna de 16 espais i col·locar l'string dintre, 
+                                                                                        truncant en el cas de que sobrepassi les mesures. 
 
-            6.3.1 Tractament de l'espai assignat a les adreces IP
-
-            Sempre que $x sigui <= a 15 i $trobat == 0
-
-                Si "${#ipAcces}" == "$x" --> (En el cas de que el número de caràcters de la IP de $ipAcces sigui el mateix que el de la variable $x)
-
-                    num=15-$x; --> Inicialització de la variable $num. Conté els espais exactes que aniran abans de la IP a l'output per tal de que estiguin 
-                                   totes alineades. (15 línies totals - $x línies d'IP)
-
-                    A continuació, li afegirem a la variable $espaiBlancIP $num espais en blanc. 
-
-                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais 
-                                 en blanc fixats.
-                    
-            stringResum="$espaiBlancIP$ipAcces" --> Inicialització de l'string $stringResum, que conté els espais en blanc adients i la IP per tal d'estar 
-                                                    alineada amb les altres IP's. Conté la línia que es printarà per pantalla. 
-            
-            Ara, repetirem el mateix procés però per col·locar els espais en blanc i el número d'accessos alineats. 
-
-            espaiBlancAccessos="   "; --> S'inicialitza amb tres espais en blanc la variable $espaiBlancAccessos, que és l'encarregada de col·locar els espais 
-                                          en blanc adients per tal de que els accessos sempre quedin alineats amb el format de l'output.
-
-            x=0 --> Assignació de la variable $x a 0, que es compararà amb el número de caràcters que ocupa la variable $numAccessos, per tal d'alinear en 
-                    format a tots els números d'accessos. 
-
-            trobat=0 --> Assignació de la variable $trobat, que funcionarà com a booleà. 
-
-            6.3.2 - Tractament de l'espai assignat al número d'accessos 
-
-            Sempre que $x sigui <= a 11 i $trobat == 0
-
-                Si "${#numAccessos}" == "$x" --> (En el cas de que el número de caràcters del número d'accessos de $numAccessos sigui el mateix que el
-                                                 de la variable $x)
-
-                    num=11-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del número d'accessos a l'output per tal 
-                                   de que estiguin totes alineades. (11 caràcters totals - $x caràcters d'accessos) 
-
-                    A continuació, li afegirem a la variable $espaiBlancAccessos $num espais en blanc. 
-
-                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els 
-                                 espais en blanc fixats.
-                    
-            stringResum="$stringResum$espaiBlancAccessos$numAccessos" --> Assignació de l'string $stringResum, que ara conté els espais en blanc adients 
-                                                                          i la IP per tal d'estar alineada amb les altres IP's, i seguidament els espais 
-                                                                          en blanc i el número d'accessos, alineats amb les altres files també. L'string 
-                                                                          conté la línia final d'atacs d'una mateixa IP que es printarà per pantalla. 
-            
-            { echo "$stringResum" } >> log_honeypot --> Redirecció de la sortida d'output de l'stringResum cap al fitxer log_honeypot, on s'afegirà la 
-                                                        línia on correspon. 
-            
     6.4 - Impressió de línies 
             
         A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en 
@@ -565,42 +514,19 @@ printant per pantalla, a la vista de l'usuari.
 
     6.5 - Tractament del format d'escriptura de la evolució dels accessos
 
-        En aquest punt apareix la segona zona d'actualitzacions del fitxer. Es tractaran absolutament tots els atacs monitoritzats i es printaran per pantalla 
-        per separat, independentment de tenir IP repetides (si fos el cas).
-
-        Per cada atac monitoritzat (trobat a l'array $arrayFullAtacs) es realitzaran les següents accions:
-        
-            6.5.1 - Tractament de l'espai assignat a les adreces IP
+            horaAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f1 ) --> Inicialització de la variable $horaAcces, que conté la primera fila, separades
+                                                                               amb guions, de l'actual línia (on es troba la hora d'accés de l'atacant).
             
-            Aquest tractament és exactament igual al del apartat 6.3.1. 
-
-            6.5.2 - Tractament de l'espai assignat als ports 
+            ipAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f2 ) --> Inicialització de la variable $ipAcces, que conté la segona fila, separades
+                                                                             amb guions, de l'actual línia (on es troba la IP de l'atacant).
 
             portAcces=$( echo "${arrayFullAtacs[$each]}" |cut -d '-' -f3 ) --> Inicialització de la variable $portAcces, que conté la tercera fila, separades 
                                                                                amb guions, de l'actual línia (on es troba el port de l'atacant).
             
-            espaiBlancPort=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlancPort, que és l'encarregada de col·locar els espais en blanc 
-                                    adients per tal de que el port sempre quedi alineat amb el format de l'output dels altres ports existents.
-            
-            Sempre que $x sigui <= a 5 (rang màxim de caràcters pel port) i $trobat == 0
-
-                Si "${#portAcces}" == "$x" --> (En el cas de que el número de caràcters del port de $portAcces sigui el mateix que el de la variable $x)
-
-                    num=5-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del port a l'output per tal de que estigui 
-                                  alineat amb els altres ja existents. (5 caràcters totals - $x caràcters del port) 
-                    
-                    A continuació, li afegirem a la variable $espaiBlancPort $num espais en blanc. 
-                    
-                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais 
-                                 en blanc fixats.
-                    
-            stringResum="$stringResum$espaiBlancPort$portAcces" --> Assignació de l'string $stringResum, que ara conté els espais en blanc adients i la 
-                                                                    IP per tal d'estar alineada amb les altres IP's, i seguidament els espais en blanc 
-                                                                    i el número del port, alineats amb les altres files també. L'string conté la línia 
-                                                                    final d'un atac individual que es printarà per pantalla. 
-            
-            { echo "$stringResum" } >> log_honeypot --> Redirecció de la sortida d'output de l'stringResum cap al fitxer log_honeypot, on s'afegirà la línia on 
-                                                        correspon.
+            printf "%16.16s %15.15s %5.5s \\n" " $horaAcces" "$ipAcces" "$portAcces"  >> log_honeypot --> Redirigim al fitxer log_honeypot la concatenació en 
+                                                                                                          tres columnes de les variables $ipAcces, $horaAcces i 
+                                                                                                          $portAcces. La opció de %16.16s del printf, ja l'hem
+                                                                                                          explicat a l'apartat anterior.
             
             S'afegeixen al format de l'output també dos línies més amb 'echo -e', que també van redirigides al fitxer log_honeypot. 
 

@@ -221,7 +221,7 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
                 5.1.1.5.1.1 Tractament cas opcional --> Com s'ha explicat, es tracta el cas de que estem esperant una linia de tipus Mac però ens trobem amb un 
                 altre de tipus IP, per tant es guarda la informació que ja teniem de la IP amb buits on hauria d'anar l'informació de la Mac i el seu fabricant.
 
-                5.1.1.5.1,2 Comprovació nom dns --> En aquesta comprovació es revisa si el programa nmap ens ha donat la IP o ha trobat el seu nom DNS, en aquest
+                5.1.1.5.1.2 Comprovació nom dns --> En aquesta comprovació es revisa si el programa nmap ens ha donat la IP o ha trobat el seu nom DNS, en aquest
                 cas la IP es trobarà entre parèntesis just després del dns.
                 * Dos casos: 1cas --> torbem el dns i per tant guardem a la variable ipcorrecta la ip del dispositiu i a la varibale dns el seu nom dns
                              2cas --> no es troba dns, guardem a la variable ipcorrecta la ip del dispositiu i a la varibale dns un punt.

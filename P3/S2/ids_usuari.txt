@@ -42,10 +42,9 @@ CREADORS: Daniel Benavente Garcia
     - També haurem de tenir accés a permisos de SuperUsuari per a executar el script, ja sigui des de l'usuari root, o amb un usuari sudoer. Per acabar la part 
     externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 100) per donar-li permisos d'execució al propietari del script. 
 
-    - Els paquets necessaris són el programa nmap que el podem instal·lar amb la comanda (# sudo apt install nmap) o en el cas del root ( # apt install nmap) 
-    que ens servirà per analitzar la xarxa o xarxes locals. També necessitarem instal·lar (en cas de que no ho tinguem ja) el paquet iproute2, utilitzat per 
-    agafar diversos paràmetres de la nostra interfície. Cal recalcar que l'script t'avisarà en cas de que els programes no es trobin instalats però sempre ho 
-    podem verificar previament nostaltres.
+    - Els paquets necessaris són el programa nmap que el podem instal·lar amb la comanda ( # apt install nmap)  que ens servirà per analitzar la xarxa o xarxes 
+    locals. També necessitarem instal·lar (en cas de que no ho tinguem ja) el paquet iproute2, utilitzat per agafar diversos paràmetres de la nostra interfície. 
+    Cal recalcar que l'script t'avisarà en cas de que els programes no es trobin instalats però sempre ho podem verificar previament nostaltres.
 
 
 4. Métode d'ús 
@@ -159,21 +158,17 @@ CREADORS: Daniel Benavente Garcia
 
         - No, el programa no implementa l'anàlisi de les interfícies wifi. 
 
-    3. Que pasa si tinc els ports tancats, veuré algún accés?
-
-        - Si, ja el programara revisarà els accesos tot i que després es denegi la connexió
-
-    4. Puc executar-ho si no sóc usuari root ?
+    3. Puc executar-ho si no sóc usuari root ?
 
         - No, com ja s'ha explicat abans, no podem asegurar un bon funcionament per la comanda de l'anàlisi de les interfícies, per tant necessitarem ser un 
         usuari amb privilegis de superuser.
 
-    5. Podría implementar aquest ids al servidor de la meva empresa?
+    4. Podría implementar aquest ids al servidor de la meva empresa?
 
         - Com s'ha explicat abans, està orientat per una xarxa local petita, però podria arriba a funcionar sense problemes (sempre que es compleixin els prerequisits)
         tot i que no assegurem que mostri al 100% tots els dispositius connectats.
 
-    6. És compatible amb el meu Sistema Operatiu ?
+    5. És compatible amb el meu Sistema Operatiu ?
 
         - Com a norma general, si tens un Sistema Operatiu basat en linux sense grans modificacions (mateixa estructura de dades) i es compleixen els prerequisits
         si que funcionarà, en tot cas és pot provar ja que el programa ens avisarà de qualsevol error que es trobi a l'execució. 
