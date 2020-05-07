@@ -1,0 +1,186 @@
+############## MANUAL D'USUARI ##############
+
+CREADORS: Daniel Benavente Garcia
+          César Gutiérrez Belmar
+
+ÍNDEX
+1. QUÈ ÉS UN IDS?
+2. COM FUNCIONA EL NOSTRE IDS.SH
+3. PREREQUISITS
+4. MÉTODE D'ÚS
+5. PREGUNTES FREQÜENTS
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+1. Què és un IDS ?
+
+    - Un IDS o Sistema de Detecció d'Intrusos és com diu el seu nom, un sistema que s'ocupa d'analitzar una xarxa o xarxes amb l'objectiu de registrar tots 
+    els equips connectats de manera activa. És molt normal veure que un IDS es trobi actiu de manera permanent en empreses o fins i tot a nivell usuari. 
+
+    Les eines per aconseguir un sistema d'aquest tipus són programes basats en l'anàlisi de ports i enviament de dades, gràcies diversos intents de connexió 
+    per diversos caminos aquestes eines aconsegueixen informació dels dispositius connectats a la xarxa. 
+
+2. Com funciona el nostre ids.sh ?
+
+    - El nostre sistema ids, és bastant simple ja que està pensat per una xarxa local petita com la d'una casa o la d'una petita empresa. Tot i així es pot 
+    veure facilment quin és el potencial d'aquesta eina. L'ids farà un escaneig de les xarxes a les que pertanyen totes les interfícies actives (amb una IP v4 
+    disponible) que estiguin connectades directament (per cable), sense tenir en compte les interfícies wifi. Una vegada acabat obtindràs una llista de 
+    tots els dispositius detectats juntament amb informació rellevant. 
+
+    El nostre ids treballa directament amb el fitxer equips_coneguts, del qual cercarà per cada equip que trobi si pertany a aquesta llista o no, si ho fa, 
+    quedarà registrat a la taula final (veure métode d'ús). 
+
+3. Prerequisits
+
+    - Primer de tot necessitarem una màquina o servidor amb un Sistema Operatiu basat en Linux, s'ha dissenyat al SO Debian 10(Buster) però pot funcionar a un
+    altre sempre que es compleixin tots els requisits. 
+    
+    - Després necessitarem una interfície activa al nostre ordinador, conectada de manera directa a la nostra xarxa o xarxes locals i que aquesta interfície 
+    tingui com a mínim una IPv4 assignada. 
+    
+    - També haurem de tenir accés a permisos de SuperUsuari per a executar el script, ja sigui des de l'usuari root, o amb un usuari sudoer. Per acabar la part 
+    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 100) per donar-li permisos d'execució al propietari del script. 
+
+    - Els paquets necessaris són el programa nmap que el podem instal·lar amb la comanda (# sudo apt install nmap) o en el cas del root ( # apt install nmap) 
+    que ens servirà per analitzar la xarxa o xarxes locals. També necessitarem instal·lar (en cas de que no ho tinguem ja) el paquet iproute2, utilitzat per 
+    agafar diversos paràmetres de la nostra interfície. Cal recalcar que l'script t'avisarà en cas de que els programes no es trobin instalats però sempre ho 
+    podem verificar previament nostaltres.
+
+
+4. Métode d'ús 
+
+    - Com un usuari ha d'utilitzar l'script? Quins paràmetres d'entrada té?
+
+        - L'usuari només ha de descarregar l'arxiu ids.sh, col·locar-lo al directori desitjat i asegurar-se que compleix els prerequisits. 
+        
+        - A elecció del usuari podrà tenir un fitxer anomenat equips_coneguts (nom fixe), on podrà guardar de manera manual equips de confiança per a que una 
+        vegada s'analitzin, quedin detectas com equips coneguts. 
+
+        El format d'escriptura al fitxer serà el següent: (PER CADA LÍNIA --> MAC del dispositius  Nom a elecció de l'usuari)
+        Exemple:
+
+        00:09:0F:A7:B3:2F Router
+        00:0C:29:6A:45:79 DHCP&DNS
+
+        * L'script col·locarà a la taula d'equips coneguts el nom assignat en aquest fitxer.
+        
+        - En quant a paràmetres, a part del de l'execució del propi script (./ids.sh) no és necessari afegir res. Però l'usuari té la possibilitat de 
+        vuere una ajuda si executa l'script de la següent manera: 
+
+        EXECUCIÓ AMB AJUDA:
+
+        --> superusuari@pc:~# ./ids.sh -h  
+
+        * Si aplica el flag -h apreixerà una ajuda per l'usuari. 
+
+        EXECUCIÓ NORMAL: 
+
+        --> superusuari@pc:~# ./ids.sh
+        
+        * Si aplica el flag -h apreixerà una ajuda per l'usuari. 
+
+
+    - En quins casos d'ús es pot fer servir?
+
+        - Un cas seria el d'alguna persona que sospités d'algun tipus de comportament extrany a la seva xarxa o una congestió no habitual d'aquesta, permetent 
+        així revisar quins dispositius es troben connectats i si els identifica a tots.
+
+        - Un altre cas també podria ser el d'algun usuari que volgués conéixer i registrar els dispositius de la seva xarxa per saber quins són i quines 
+        són les seves dades ( MAC / Fabricant / IP ). 
+
+    - Exemples d'execució: 
+
+    1. EXECUCIÓ HELP
+
+    superusuari@pc:~# ./ids.sh -h 
+    
+    AJUDA
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    L'execució de l'script no accepta cap argument addicional.                                             
+    Es basa en una recopilació de dades dels dispositius connectats a la xarxa local.                      
+    Es mostraran la IP, la MAC, el fabricant MAC, el nom DNS i si és un equip conegut, de tots els equips. 
+    El programa tracta les diferents subxarxes (locals), però no tindra en compte les interfícies wifi.    
+    El fitxer de sortida s'anomena 'log_ids' i està situat al mateix directori on s'executa l'script.      
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+    2. EXECUCIÓ NORMAL 
+
+    superusuari@pc:~# ./ids.sh 
+
+    Programa de cerca automàtica d'equips a la xarxa actual.
+     Versió 1.0 compilada el 2020-05-3.
+     Iniciant-se el 2020-05-07 a les 12:27:31 ...          [ok]
+     El fitxer log_ids sera sobrescrit...                  [ok]
+     Detecció d'equips en curs...                          [ok]
+     Processant les dades...                               [ok]
+     Resultats de l'anàlisi en el fitxer log_ids...        [ok]
+     Finalitzat el 2020-05-07 a les 12:28:37               [ok]
+
+
+    3. FITXER LOG_IDS
+
+    superusuari@pc:~# cat log_ids 
+
+    ---------------------------------------------------------------------------------------------------
+    Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip mipc.
+    Sistema operatiu Debian GNU/Linux 10 (buster).
+    Versió del script 1.0 compilada el 2020-05-3.
+    Anàlisi iniciada en data 2020-05-06 a les 10:05:22 i finalitzada en data 2020-05-06 a les 10:06:01.
+    ---------------------------------------------------------------------------------------------------
+    
+    
+    ---------------------------------------------------------------------------------------------------------
+    S'han detectat 10 equips a les subxarxes 192.168.0.0/24 [enp0s3]
+    ---------------------------------------------------------------------------------------------------------
+    Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
+    ---------------  -----------------  ------------------------------  -----------------  ------------------
+    192.168.0.1      B4:A5:EF:A5:9C:C0  Sercomm                         Router             www.adsl.vf.             
+    192.168.0.11     4C:CC:6A:B3:18:B2  Micro-star Intl                 -                  .                        
+    192.168.0.12     70:26:05:FA:1B:56  Unknown                         -                  .                        
+    192.168.0.14     B4:9D:0B:12:2F:B8  BQ                              Sister Phone       .                        
+    192.168.0.15     A0:39:EE:10:40:A7  Unknown                         -                  .                        
+    192.168.0.17     7C:2E:BD:44:D1:5D  Unknown                         -                  .                        
+    192.168.0.19     D4:A1:48:6A:A2:27  Huawei Technologies             -                  .                        
+    192.168.0.24     DC:0B:34:C4:DE:50  LG Electronics                  My phone           .                        
+    192.168.0.32     D0:65:CA:F5:03:8C  Huawei Technologies             -                  .                        
+    192.168.0.30     08:00:27:B3:4C:0A  Oracle VirtualBox virtual NIC   mipc               .                        
+    ---------------  -----------------  ------------------------------  -----------------  ------------------
+
+
+
+    - Explicació UI
+
+
+5 - Preguntes freqüents
+
+    1 - És realment útil utilitzar un ids?
+
+        - Realment sí. Només s'ha de tenir compte on es col·loca i amb quina funció.
+
+    2 - Puc utilitzar-ho a la meva interfície wifi ?
+
+        - No, el programa no implementa l'anàlisi de les interfícies wifi. 
+
+    3. Que pasa si tinc els ports tancats, veuré algún accés?
+
+        - Si, ja el programara revisarà els accesos tot i que després es denegi la connexió
+
+    4. Puc executar-ho si no sóc usuari root ?
+
+        - No, com ja s'ha explicat abans, no podem asegurar un bon funcionament per la comanda de l'anàlisi de les interfícies, per tant necessitarem ser un 
+        usuari amb privilegis de superuser.
+
+    5. Podría implementar aquest ids al servidor de la meva empresa?
+
+        - Com s'ha explicat abans, està orientat per una xarxa local petita, però podria arriba a funcionar sense problemes (sempre que es compleixin els prerequisits)
+        tot i que no assegurem que mostri al 100% tots els dispositius connectats.
+
+    6. És compatible amb el meu Sistema Operatiu ?
+
+        - Com a norma general, si tens un Sistema Operatiu basat en linux sense grans modificacions (mateixa estructura de dades) i es compleixen els prerequisits
+        si que funcionarà, en tot cas és pot provar ja que el programa ens avisarà de qualsevol error que es trobi a l'execució. 
+
+        SO provats durant el desenvolupament: Debian, més concretament debian 10(buster) / Linux Mint versió 19.3 / Ubuntu 18.04.2 LTS 
+    

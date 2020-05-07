@@ -1,0 +1,96 @@
+############## MANUAL D'USUARI ##############
+
+CREADORS: Daniel Benavente Garcia
+          César Gutiérrez Belmar
+
+ÍNDEX
+1. QUÈ ÉS Y COM FUNCIONA EL NOSTRE ANALITZADOR D'EQUIPS
+2. PREREQUISITS
+3. MÉTODE D'ÚS
+4. PREGUNTES FREQÜENTS
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+1. Què és i com funciona el nostre analitzador d'equips?
+
+    - El nostre analitzador d'equips és un programa que té la funció d'extreure certa informació d'una adreça IP en concret, proporcionada per l'usuari.
+      Les eines utilitzades són bàsicament comandes que solen disposar de bases de dades amb la informació de qualsevol adreça amb accés a Internet. Depenent
+      del tipus d'adreça s'aconseguiran més dades o menys.  
+      
+
+2. Prerequisits
+
+    - Primer de tot necessitarem una màquina o servidor amb un Sistema Operatiu basat en Linux, s'ha dissenyat al SO Debian 10(Buster) però pot funcionar a un
+    altre sempre que es compleixin tots els requisits. 
+    
+    - Després necessitarem una interfície activa al nostre ordinador, conectada de manera directa a la nostra xarxa o xarxes locals i que aquesta interfície 
+    tingui com a mínim una IPv4 assignada. 
+    
+    - També haurem de tenir accés a permisos de SuperUsuari per a executar el script, ja sigui des de l'usuari root, o amb un usuari sudoer. Per acabar la part 
+    externa a l'script, necessitarem donar-li permisos pertinents, en aquest cas farem (# chmod 100) per donar-li permisos d'execució al propietari del script. 
+
+    - Els paquets necessaris són el paquet whois, que el podem instal·lar amb la comanda (# sudo apt install whois) o en el cas del root ( # apt install whois) 
+    que ens servirà per analitzar la xarxa i entitat de la IP. També necessitarem instal·lar el paquet dnsutils (apt install dnsutils), del que utilitzarem la 
+    comanda dig per tal d'aconseguir el Domain Name Server (DNS). També utilitzarem el paquet nmap (apt install nmap), per aconseguir el sistema operatiu i els 
+    diferents ports actius. Per últim, també necessitarem el paquet curl (apt install curl), per extreure dades sobretot de localització.
+
+3. Mètode d'ús
+
+    - Com un usuari ha d'utilitzar l'script? Quins paràmetres d'entrada té?
+
+        - L'usuari només ha de descarregar l'arxiu info_ip.sh, col·locar-lo al directori desitjat i asegurar-se que compleix els prerequisits.         
+
+        - En quant a paràmetres, a part del de l'execució del propi script (./info_ip.sh), serà necessari afegir una IP, que serà la que analitzarà el nostre
+          programa. 
+
+    - En quins casos d'ús es pot fer servir?
+
+        - En el cas de que algun usuari volgui conéixer les característiques de la seva pròpia IP, com podrien ser el gestor ASN, el rang de la xarxa...
+
+        - També es podria utilitzar per inspeccionar els ports oberts d'una IP externa, per saber per on es podria enviar informació o rebre.
+
+    - Exemples d'execució
+
+        root@seax:~# ./info_ip.sh 88.27.212.72
+
+        Fitxer log_ip:
+
+        ---------------------------------------------------------------------------------------------------
+        Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
+        Sistema operatiu Debian GNU/Linux 10 (buster).
+        Versió del script 1.0 compilada el 2020-04-30.
+        Anàlisi iniciada en data 2020-05-07 a les 06:27:24 i finalitzada en data 2020-05-07 a les 06:27:28.
+        ---------------------------------------------------------------------------------------------------
+
+
+        --------------------------------------------------------------------------------
+        Informació de l'adreça IP
+        Equip:        88.27.212.72 (72.red-88-27-212.staticip.rima-tde.net.)
+        Xarxa:        88.27.0.0/16 [88.27.0.0 - 88.27.255.255] (RIMA)
+        Entitat:      Telefonica de Espana SAU (NCC#2007050901) Red de servicios IP Spain (ES)
+        Gestor ASN:   AS3352 TELEFONICA DE ESPANA
+        Localització: Santander (39001), Cantabria, ES
+        Coordenades:  Latitud 43.4647 i longitud -3.8044, amb zona horària Europe/Madrid
+        S. Operatiu:  Desconegut
+        Ports:        Desconeguts
+        --------------------------------------------------------------------------------
+
+4. Preguntes freqüents
+
+    1 - Puc afegir qualsevol IP en l'execució?
+
+        - Sí, sempre que sigui una IP vàlida s'analitzarà i s'estreurà tota la informació possible. 
+
+    2 - Puc executar-ho si no sóc usuari root ? 
+
+        - No, com està especificat al punt 2 de prerequisits, l'usuari ha de ser root, o usuari sudooer.
+
+    3 - És compatible el meu Sistema Operatiu? 
+
+        - L'script està programat per executar-se desde Linux, sempre que es compleixen tots els prerequisits del punt 2. 
+        
+        - SO provats durant el desenvolupament: debian 10(buster) / Linux Mint versió 19.3 / Ubuntu 18.04.2 LTS
+
+    4 - És perillós?
+
+        - No. Amb les comandes utilitzades realment estàs accedint a bases de dades obertes per qualsevol persona. 

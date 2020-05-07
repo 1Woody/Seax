@@ -293,7 +293,7 @@ del programa i faciliten certa informació de com ha evolucionat el procés a l'
     - En aquest cas veiem com funciona correctament amb només una interfíce activa, marcant correctament el nom dels dispositius que es troben al fitxer de
     equips_coneguts.
 
-  ---------------------------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------------------------------
  Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip attacker1.
  Sistema operatiu Debian GNU/Linux 10 (buster).
  Versió del script 1.0 compilada el 2020-05-3.

@@ -848,7 +848,7 @@ equip i la nostra xarxa.
 
 11. PÀGINES D'INTERÉS 
 
-Tcpdump 
+tcpdump 
 https://www.tcpdump.org/manpages/tcpdump.1.html
 https://www.comparitech.com/net-admin/tcpdump-cheat-sheet/
 https://danielmiessler.com/study/tcpdump/#port
@@ -859,3 +859,6 @@ https://manpages.debian.org/stretch/iproute2/ip.8.en.html
 
 Arrays info
 https://linuxconfig.org/how-to-use-arrays-in-bash-script
+
+Format output
+https://stackoverflow.com/questions/33153324/make-numbers-in-a-specific-column-to-have-the-same-length-in-bash

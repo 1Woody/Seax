@@ -5,12 +5,12 @@
 
 # Variables usage
 usageInvalidArg="El nombre de arguments és incorrecte. Ha de ser 1 argument (revisar manual de usuari)."
-usagePaquetNmap="Has de tenir instalat el paquet de nmap, instala-ho amb: apt-get install nmap"
-usagePaquetDig="Has de tenir instalat el paquet de dnsutils, instala-ho amb: apt-get install dnsutils"
-usagePaquetWhois="Has de tenir instalat el paquet de whois, instala-ho amb: apt-get install -y whois"
+usagePaquetNmap="Has de tenir instalat el paquet de nmap, instala-ho amb: apt install nmap"
+usagePaquetDig="Has de tenir instalat el paquet de dnsutils, instala-ho amb: apt install dnsutils"
+usagePaquetWhois="Has de tenir instalat el paquet de whois, instala-ho amb: apt install -y whois"
 usageSuperUser="Has de ser root per executar aquest script"
 usageIP="Sembla que no has escrit la IP correctament, revisa el teu paràmetre"
-usagePaquetCurl="Has de tenir instalat el paquet de curl, instala-ho amb: apt-get install curl"
+usagePaquetCurl="Has de tenir instalat el paquet de curl, instala-ho amb: apt install curl"
 
 # Variables entorn
 usuari=$(whoami)

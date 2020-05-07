@@ -350,7 +350,7 @@ comandes principals: curl i nmap.
     
         - O: Aquest flag permet la detecció del sistema operatiu del host.
     
-        Aquesta comanda ens permet analitzar des de tots els dispositus que es troben el rang d'una xarxa fins a host individuals com és aquest cas, l'objectiu 
+        Aquesta comanda ens permet analitzar des de tots els dispositius que es troben el rang d'una xarxa fins a host individuals com és aquest cas, l'objectiu 
         principal aquí és analitzar tots els ports disponibles al host per conéixer quins d'aquests són accessibles (ja sigui perqué estàn oberts, sense 
         filtrar,etc). 
     
@@ -447,7 +447,7 @@ del programa i faciliten certa informació de com ha evolucionat el procés a l'
  Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
  Sistema operatiu Debian GNU/Linux 10 (buster).
  Versió del script 1.0 compilada el 2020-04-30.
- Anàlisi iniciada en data 2020-05-06 a les 13:02:31 i finalitzada en data 2020-05-06 a les 13:02:54.
+ Anàlisi iniciada en data 2020-05-06 a les 09:02:31 i finalitzada en data 2020-05-06 a les 09:02:54.
  ---------------------------------------------------------------------------------------------------
 
 
@@ -474,7 +474,7 @@ Informació de l'adreça IP
  Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
  Sistema operatiu Debian GNU/Linux 10 (buster).
  Versió del script 1.0 compilada el 2020-04-30.
- Anàlisi iniciada en data 2020-05-07 a les 05:28:22 i finalitzada en data 2020-05-07 a les 05:28:26.
+ Anàlisi iniciada en data 2020-05-06 a les 13:28:22 i finalitzada en data 2020-05-06 a les 13:28:26.
  ---------------------------------------------------------------------------------------------------
 
 
@@ -492,13 +492,15 @@ Informació de l'adreça IP
 
 - Prova amb l'adreça 10.1.1.108
 
-    - En aquest cas podem veure un exemple d'una IP privada, que pot ser assignada per qualsevol disposi
+    - En aquest cas podem veure un exemple d'una IP privada, que pot ser assignada per qualsevol dispositiu en qualsevol xarxa local.
+    En aquests casos l'accés a la majoria de la informació és impossible, ja que no hi ha pràcticament res concret. Com podem veure en 
+    aquest cas només podem aconseguir el rang d'adreces (realment extens) i la entitat general. 
 
  ---------------------------------------------------------------------------------------------------
  Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
  Sistema operatiu Debian GNU/Linux 10 (buster).
  Versió del script 1.0 compilada el 2020-04-30.
- Anàlisi iniciada en data 2020-05-07 a les 05:21:22 i finalitzada en data 2020-05-07 a les 05:21:25.
+ Anàlisi iniciada en data 2020-05-06 a les 22:21:22 i finalitzada en data 2020-05-06 a les 22:21:25.
  ---------------------------------------------------------------------------------------------------
 
 
@@ -516,14 +518,45 @@ Informació de l'adreça IP
 
 ####### 10. ESCENARIS DE FALLIDA #######
 
+- No arriba a ser un escenari de fallida però a la hora d'analitzar algunes IP la informació pot ser molt escassa, el que fa que l'script no arribi a ser 
+ del tot útil en algunes situacions. 
 
 
 ####### 11. PUNTS DE MILLORA #######
 
-El principal punt de millora podria ser el de buscar 
+El principal punt de millora podria ser el de buscar altres comandes més potents, per poder augmentar el volum o la qualitat d' informació trobada. 
+S'haurien de buscar alternatives al curl (com l'wget), al whois o al nmap. 
+
+Un altre punt de millora podria ser el de la velocitat de la execució del programa. Encara que creiem que la velocitat actual ja és bastant bona, 
+sempre es podria millorar alguns segons amb la implementació d'altres mètodes d'extracció de dades i del seu tractament.
+
 
 ####### 12. CONCLUSIONS GENERALS #######
 
 
+
 13. PÀGINES D'INTERÉS
 
+whois
+
+https://man.openbsd.org/whois.1
+https://www.tecmint.com/whois-command-get-domain-and-ip-address-information/
+https://www.arin.net/resources/registry/whois/rws/cli/
+
+dig
+
+https://linux.die.net/man/1/dig
+https://linuxize.com/post/how-to-use-dig-command-to-query-dns-in-linux/
+
+nmap
+
+https://linux.die.net/man/1/nmap
+https://nmap.org/book/vscan.html
+https://nmap.org/book/scan-methods-ip-protocol-scan.html
+https://nmap.org/book/nmap-mac-prefixes.html
+https://nmap.org/book/port-scanning-options.html
+
+curl
+https://curl.haxx.se/docs/manpage.html
+https://www.geeksforgeeks.org/curl-command-in-linux-with-examples/
+https://ipinfo.io/developers

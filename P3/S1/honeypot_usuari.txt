@@ -1,4 +1,8 @@
+############## MANUAL D'USUARI ##############
 
+CREADORS: Daniel Benavente Garcia
+          César Gutiérrez Belmar
+          
 ÍNDEX
 1. QUÈ ÉS UN HONEYPOT?
 2. COM FUNCIONA EL NOSTRE HONEYPOT.SH
@@ -184,9 +188,9 @@ Prem [q] per sortir.
 
         - No, el programa no implementa la captura de més d'un port. 
 
-    3. Que pasa si tinc els ports tancats, veure algún accés?
+    3. Que pasa si tinc els ports tancats, veuré algún accés?
 
-        - Si, ja el programara revisarà els accesos tot i que després es denegi la connexió
+        - Sí, ja que el programa revisarà els accesos tot i que després es denegui la connexió
 
     4. Puc executar-ho si no sóc usuari root ?
 
@@ -203,5 +207,5 @@ Prem [q] per sortir.
         - Com a norma general, si tens un Sistema Operatiu basat en linux sense grans modificacions (mateixa estructura de dades) i es compleixen els prerequisits
         si que funcionarà, en tot cas és pot provar ja que el programa ens avisarà de qualsevol error que es trobi a l'execució. 
 
-        SO provats durant el desenvolupament: Debian, més concretament debian 10(buster) / Linux Mint versió 19.3 / ... 
+        SO provats durant el desenvolupament: Debian, més concretament debian 10(buster) / Linux Mint versió 19.3 / Ubuntu 18.04.2 LTS 
     
