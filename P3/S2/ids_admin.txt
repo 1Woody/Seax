@@ -13,13 +13,14 @@ CODI
 4. MAQUETACIÓ DE DADES PART 1
 5. TRACTAMENT DE DADES 
 6. MAQUETACIÓ DE DADES PART 2
-8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA
+7. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA
 
 INFORMACIÓ SCRIPT
-9. PROVES DE VALIDACIÓ
-10. ESCENARIS DE FALLIDA
-11. PUNTS DE MILLORA
-12. CONCLUSIONS GENERALS
+8. PROVES DE VALIDACIÓ
+9. ESCENARIS DE FALLIDA
+10. PUNTS DE MILLORA
+11. CONCLUSIONS GENERALS
+12. PÀGINES D'INTERÉS
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
@@ -62,9 +63,17 @@ correctesa(-h).
 
 2.1 - Comprovació de 0 arguments i help (-h) --> En aquest apartat es comprova que no hi hagi arguments addicionals i es maqueta el help del programa.
 
-                                
+                                    Si $# != 0 --> Si hi ha algun argument
 
-    
+                                        Si $# == 1  &&  "$1" == "-h" --> Si hi ha un argument i és el -h
+
+                                            Printarem per pantalla l'output del help, que seran unes línies amb informació per l'usuari alhora d'executar
+                                            l'script. 
+
+                                        Sino
+
+                                            En aquest cas, s'envia el missatge $usageArguments per informar l'usuari. Després d'això es tanca l'execució del 
+                                            programa amb un codi d'error (exit 1).
 
 2.2 - Comprovació del superusuari --> En aquest apartat es comprova que l'usuari que executa l'script sigui "root".
 
@@ -118,7 +127,14 @@ Tots els fitxers els creem amb la comanda touch, que ens permet crear-los només
 
 
 ####### 4. MAQUETACIÓ DE DADES PART 1 #######
+En aquest apartat tractarem més el format i la impressió inicial de l'output. Veurem que aquestes línies es printen per pantalla al començament de la execució
+del programa i faciliten certa informació de com evoluciona el procés a l'usuari. 
 
+        4.1 - Impressió de línies 
+
+        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en 
+        una línia diferent. Totes aquestes línies printades es veuen directament per pantalla i contenen dades importants extretes de les variables ja 
+        inicialitzades en l'apartat 1.2, com són la versió de l'script, la data de la última actualització i la data i hora de compilació d'inici.
 
 
 ####### 5. TRACTAMENT DE DADES #######
@@ -217,10 +233,53 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
             També agafarem el fabricant i finalment unirem tots els paràmetres recollits a la varibale infoEquip per guardar-los al fitxer .scanlist.log. 
             (i posem el comptador a 0 ja que hem guardat un element)
 
+
+
 ####### 6. MAQUETACIÓ DE DADES PART 2 #######
+En aquest apartat tractarem més el format i la impressió final de l'output. Veurem que aquestes línies es printen per pantalla al final de la execució
+del programa i faciliten certa informació de com ha evolucionat el procés a l'usuari. També omplirem el fitxer de sortida final (log_ids).
 
+        6.1 - Impressió de línies
 
-####### 8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
+            Impressió per pantalla de dues línies d'informació de l'evolució de l'script per l'usuari.
+            
+        6.2 - Maquetació de subxarxes
+
+            numEquips=$(wc -l .scanlist.log | awk '{print $1}') --> Amb la comanda wc -l estem comptant el número de línies del fitxer que li afegim (.scanlist.log)
+                                                                    El número de línies és el número d'equips, ja que cada línia conforma un equip. 
+                                                                    La variable numEquips apareixerà al fitxer de sortida. 
+
+            A continuació llegirem de l'arxiu .xarxes línia per línia i les afegirem a l'string subxarxes. Cada línia del fitxer .xarxes és una adreça IP amb la 
+            seva interfície. L'string subxarxes també apareixerà al fitxer de sortida
+                                                                    
+
+        6.3 - Inicialització de variables
+
+            dataCompilacioFi=$(date --rfc-3339=date) --> Recollim la data actual.
+            horaCompilacioFi=$(date | cut -d ' ' -f5) --> Recollim la hora actual.  
+
+            Aquestes declaracions utilitzen la comanda date, que conté la informació necessària relacionada amb el temps actual. 
+        
+        6.3 - Maquetació de fitxer log
+
+            El fitxer de sortida es genera mitjançant un conjunt d'instruccions d'echo. 
+
+            En la primera part del fitxer trobarem una capçalera, on apareixerà informació sobre el programa i algunes característiques de l'entorn, com 
+            són l'usuari que executa l'script, el nom del seu equip, el sistema operatiu, la versió de l'script, la data de la última modificació, la 
+            data i hora de l'inici de la compilació i la data i hora del final de l'execució. 
+
+            Després, apareixerà certa informació sobre la xarxa, com són el número d'equips que apareixen i les respectives interfícies i subxarxes a les que 
+            pertanyen.
+
+            A continuació es printarà el core del programa. Cada un dels equips amb les seves respectives característiques: adreça IP, adreça MAC, fabricant MAC,
+            equip conegut i nom DNS. Tot en columnes alineades entre si (l'alineació de les columnes està programada amb la comanda printf "%-5.5s" "$var", on 
+            el 5 és el número d'espais de la columna i $var la variable a printar). 
+            
+        6.4 - Impressió de línies finals
+        
+           Per últim, apareixeran les dues línies finals de l'output que apareixeran per pantalla i confirmen que l'script ha funcionat correctament. 
+
+####### 7. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
 
         rm .xarxes --> S'elimina el fitxer que guardava la llista de interfícies amb les seves xarxes.
         rm .scanmap.log --> S'elimina el fitxer que guardava la llista filtarda de dispositius. 
@@ -228,7 +287,7 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
         rm .llistaEquips --> S'elimina el fitxer que guardava la informació auxiliar de l'output d'nmap.
         exit 0; --> Es finalitza el programa. 
 
-####### 9. PROVES DE VALIDACIÓ #######
+####### 8. PROVES DE VALIDACIÓ #######
 
 - Prova amb una interfíce activa:
     - En aquest cas veiem com funciona correctament amb només una interfíce activa, marcant correctament el nom dels dispositius que es troben al fitxer de
@@ -238,12 +297,12 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
  Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip attacker1.
  Sistema operatiu Debian GNU/Linux 10 (buster).
  Versió del script 1.0 compilada el 2020-05-3.
- Anàlisi iniciada en data 2020-05-06 a les 10:19:22 i finalitzada en data 2020-05-06 a les 10:20:07.
+ Anàlisi iniciada en data 2020-05-06 a les 11:19:22 i finalitzada en data 2020-05-06 a les 11:20:07.
  ---------------------------------------------------------------------------------------------------
  
  
  ---------------------------------------------------------------------------------------------------------
- S'han detectat 10 equips a les 192.168.0.0/24 [enp0s3]
+ S'han detectat 10 equips a les subxarxes 192.168.0.0/24 [enp0s3]
  ---------------------------------------------------------------------------------------------------------
  Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
  ---------------  -----------------  ------------------------------  -----------------  ------------------
@@ -261,6 +320,8 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
 
 
 - Prova amb dues interfícies i xarxes diferents:
+    - En aquest cas hem creat un ambient nou amb una nova subxarxa dintre de altra interfíce de la maquina, com es pot veure tot ha funcionat correctament, 
+    aquí es pot apreciar com la nostra màquina surt dues vegades però amb dos Ips diferents i dues Macs diferents. Tot segueix funcionant correctament.
 
  ---------------------------------------------------------------------------------------------------
  Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip attacker1.
@@ -271,7 +332,7 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
  
  
  ---------------------------------------------------------------------------------------------------------
- S'han detectat 13 equips a les 192.168.0.0/24 [enp0s3], 10.0.2.0/24 [enp0s8]
+ S'han detectat 13 equips a les subxarxes 192.168.0.0/24 [enp0s3], 10.0.2.0/24 [enp0s8]
  ---------------------------------------------------------------------------------------------------------
  Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
  ---------------  -----------------  ------------------------------  -----------------  ------------------
@@ -291,16 +352,87 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
  ---------------  -----------------  ------------------------------  -----------------  ------------------
 
 - Prova amb interfíces wifi connectades a la vegada a la mateixa xarxa: 
+    - Un altre prova s'ha fet primer a un altre sistema operatiu, i sobre un portàtil que es trobava connectat a la mateixa xarxa de dues maneres, per enllaç 
+    ethernet i també per el seu adaptador wifi. Com hem explicat al codi, quan s'analitza no ens retorna la Mac degut a que segueix sent la nostra màquina i 
+    per tant queda marcada només amb la IP (amb el DNS es pot veure como tenen el mateix nom). Es mostra tot correctament sense errors al tractament.
+
+ ---------------------------------------------------------------------------------------------------
+ Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip Floppy.
+ Sistema operatiu Linux Mint 19.3.
+ Versió del script 1.0 compilada el 2020-05-3.
+ Anàlisi iniciada en data 2020-05-06 a les 09:31:02 i finalitzada en data 2020-05-06 a les 09:32:05.
+ ---------------------------------------------------------------------------------------------------
+ 
+ 
+ ---------------------------------------------------------------------------------------------------------
+ S'han detectat 12 equips a les subxarxes 192.168.0.0/24 [enx803f5d150b1d]
+ ---------------------------------------------------------------------------------------------------------
+ Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
+ ---------------  -----------------  ------------------------------  -----------------  ------------------
+ 192.168.0.1      B4:A5:EF:A5:9C:C0  Sercomm                         Router             www.adsl.vf.             
+ 192.168.0.11     4C:CC:6A:B3:18:B2  Micro-star Intl                 -                  .                        
+ 192.168.0.12     70:26:05:FA:1B:56  Unknown                         -                  .                        
+ 192.168.0.14     B4:9D:0B:12:2F:B8  BQ                              -                  .                        
+ 192.168.0.15     A0:39:EE:10:40:A7  Unknown                         -                  .                        
+ 192.168.0.17     7C:2E:BD:44:D1:5D  Unknown                         -                  .                        
+ 192.168.0.19     D4:A1:48:6A:A2:27  Huawei Technologies             Dad Phone          .                        
+ 192.168.0.24     DC:0B:34:C4:DE:50  LG Electronics                  -                  .                        
+ 192.168.0.30     08:00:27:C0:22:01  Oracle VirtualBox virtual NIC   -                  .                        
+ 192.168.0.32     D0:65:CA:F5:03:8C  Huawei Technologies             -                  .                        
+ 192.168.0.26     -                  -                               -                  Floppy.                  
+ 192.168.0.27     80:3F:5D:15:0B:1D  Winstars Technology             -                  Floppy.                  
+ ---------------  -----------------  ------------------------------  -----------------  ------------------
 
 
+####### 9. ESCENARIS DE FALLIDA #######
+
+    Cas 1- Per matenir el format de disseny s'ha limitat la grandaria de mostra de nom de fabricat, per noms molt llargs es poder arribar a perde massa lletres o 
+    paraules com per entendre quin fabricant és.
+    
+    Cas 2- En l'escenari de la última prova de validació veiem com s'ha solucionat el problema de una o poden ser més interfícies que no siguin per connexió directa 
+    com per exemple per wifi, en aquest cas es mostren les IPs però es perden les dades de MAc fabricant i Equip conegut.
+
+    Cas 3- Moltes interfícies
 
 
-####### 10. ESCENARIS DE FALLIDA #######
+####### 10. PUNTS DE MILLORA #######
+
+    - Respecte al Cas 2 dels escenaris de fallida, es podria plantejar detectar que el programa no està retornant Mac d'aquesta IP i per tant ha de ser la IP del 
+      dispositiu on estem executant l'script. En aquest cas cercar-la al sistema i donar-li l'informació tal i com fem en el cas de la última IP que retorna el
+      progrma nmap (que es la ip de la interfíce que estem escanejant).  
+
+    - No s'ha pogut fer gaires proves amb els casos de nom DNS degut a que el router no semblava mantenir cap registre de noms excepte el seu. Podrien haver-hi 
+      algunes discrepancies amb l'output d'aquest paràmetre.
+
+    - Per temes d'organització s'ha decidit tractar cada interfície de manera sequencial, però hagués estat interessant aplicar-hi algún tipus d'opció a nmap per
+    detectar directament els dispositius de les xarxes de totes les interfícies a la vegada.
+
+    - Finalment per donar-li més dinamisme i velocitat al codi, s'ha decidit deixar l'opció de nmap -sn que fa l'analisi a través de ping, però també es podria 
+    haver implementat altre filtre més exhaustiu que en alguns casos hagués trobat dispositius més amagats a la xarxa.
 
 
+####### 11. CONCLUSIONS GENERALS #######
 
-####### 11. PUNTS DE MILLORA #######
+    Una de les idees que ha estat sempre durant el desenvolupament ha sigut l'escalabilitat i la flexibilitat del codi, com s'ha podut veure al codi, s'ha 
+    dividit en una estructuració de les dades en un fitxer en comptes de treballar sobre la maquetació directament. Això permet crear un nou disseny desde 0 
+    agafant les dades i mostrant-les a gust del desenvolupador. 
 
+    També, tot i que és més difícil de modificar, una vegada s'ha entés l'estructura de tractament de dades, es podria incorporar més informació al escaneig 
+    (amb diferents flags del programa nmap) i filtrar-la per seguir tractant-la amb el mateix sistema.
 
+    El lloc principal de treball ha sigut amb el sistema operatiu debian 10(buster). Tot i així després de diverses proves s'han pogut aplicar comprovacions que
+    permeten a usuaris d'altres SO (basats en linux) instal·lar els paquets necessaris per fer-lo funcionar correctament. Aquest script és bastant senzill a 
+    nivell d'implementació però això li dona una oportunitat per ser modificat i millorat per els que cerquin més complexitat, tot i que també permet ser una 
+    bona eina per provar connexions a casa, fins i tot en entorns mitjanament grans (sense tenir en compte casos amb molta seguretat ja que la comanda d'analisi
+    utilitzada no està orientada a escapar de firewalls, etc). 
+    
+    Mai saps qui pot estar connectat a la teva xarxa, però amb aquest script ja pots fer-te una idea! 
+    
 
-####### 12. CONCLUSIONS GENERALS #######
+12. PÀGINES D'INTERÉS 
+
+    Nmap
+    https://linux.die.net/man/1/nmap
+    https://nmap.org/book/vscan.html
+    https://nmap.org/book/scan-methods-ip-protocol-scan.html
+    https://nmap.org/book/nmap-mac-prefixes.html

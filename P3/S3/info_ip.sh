@@ -109,12 +109,20 @@ touch .infowhois.log
 whois "$IP" > .infowhois.log
 
 xarxaNoMasc=$(grep "NetRange:" .infowhois.log | awk '{print $2}')
+if [ -z "$xarxaNoMasc" ]
+then
+    xarxaNoMasc=$(grep "inetnum:" .infowhois.log | awk '{print $2}')
+fi
 xarxaMasc=$(grep "route:" .infowhois.log | awk '{print $2}')
 if [ -z "$xarxaMasc" ]
 then
     xarxaMasc=$(grep "CIDR:" .infowhois.log | cut -d ' ' -f12-)
 fi
 xarxaBroadcast=$(grep "NetRange:" .infowhois.log | awk '{print $4}')
+if [ -z "$xarxaBroadcast" ]
+then
+    xarxaBroadcast=$(grep "inetnum:" .infowhois.log | awk '{print $4}')
+fi
 xarxaNom=$(grep "netname:" .infowhois.log | awk '{print $2}' | head -n 1)
 if [ -z "$xarxaNom" ]
 then
@@ -182,7 +190,7 @@ nmap -O "$IP" >> .infonmap.log
 SOequip=$(grep "OS details" .infonmap.log | cut -d' ' -f3-)
 if [ "$SOequip" == "" ]
 then
-    SOequip="No detectat"
+    SOequip="Desconegut"
 fi
 
 # Cerquem els ports
@@ -202,10 +210,10 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
     echo -e " Sistema operatiu $SO."
     echo -e " Versió del script $scriptVersion compilada el $dataInicial."
     echo -e " Anàlisi iniciada en data $dataCompilacioInici a les $horaCompilacioInici i finalitzada en data $dataCompilacioFi a les $horaCompilacioFi."
-    echo -e " ----------------------------------------------------------------------------------------------------------"
+    echo -e " ---------------------------------------------------------------------------------------------------"
     echo -e ""
     echo -e ""
-    echo -e "---------------------------------------------------------------------------------------------------------"
+    echo -e "--------------------------------------------------------------------------------"
     echo -e "Informació de l'adreça IP"
     echo -e " Equip:        $equipIP"
     echo -e " Xarxa:        $xarxaEquip"
@@ -215,6 +223,10 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
     echo -e " Coordenades:  $coordenades"
     echo -e " S. Operatiu:  $SOequip"
     primera=0
+    if [ "$(wc -l .ports.log | awk '{print $1}')" == 0 ]
+    then
+        echo -e " Ports:        Desconeguts"
+    fi
     while IFS= read -r line; do
         protocolWeb=$(echo "$line" | awk '{print $2}')
         protocolTrans=$(echo "$line" | awk '{print $1}' | cut -d '/' -f2)
@@ -227,7 +239,7 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
             echo -e "               $protocolTrans/$numPort\\t($protocolWeb)"
         fi
     done < .ports.log
-    echo -e "---------------------------------------------------------------------------------------------------------"
+    echo -e "--------------------------------------------------------------------------------"
 } >> log_ip
 
 

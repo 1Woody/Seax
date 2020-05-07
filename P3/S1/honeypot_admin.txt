@@ -19,6 +19,7 @@ INFORMACIÓ SCRIPT
 8. ESCENARIS DE FALLIDA
 9. PUNTS DE MILLORA
 10. CONCLUSIONS GENERALS
+11. PÀGINES D'INTERÉS
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
@@ -845,3 +846,16 @@ equip i la nostra xarxa.
 
 
 
+11. PÀGINES D'INTERÉS 
+
+Tcpdump 
+https://www.tcpdump.org/manpages/tcpdump.1.html
+https://www.comparitech.com/net-admin/tcpdump-cheat-sheet/
+https://danielmiessler.com/study/tcpdump/#port
+http://darenmatthews.com/blog/?p=1185
+
+iproute2
+https://manpages.debian.org/stretch/iproute2/ip.8.en.html
+
+Arrays info
+https://linuxconfig.org/how-to-use-arrays-in-bash-script

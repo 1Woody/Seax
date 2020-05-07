@@ -176,10 +176,11 @@ while IFS= read -r line; do
     fi
 done < .xarxes
 
-# Maquetació de fitxer log
+# Inicialització de variables
 dataCompilacioFi=$(date --rfc-3339=date)
 horaCompilacioFi=$(date | cut -d ' ' -f5)
 
+# Maquetació de fitxer log
 {
         echo -e " ---------------------------------------------------------------------------------------------------"
         echo -e " Detecció dels equips de la xarxa local realitzada per l'usuari $usuari de l'equip $host."
@@ -190,7 +191,7 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
         echo -e " "
         echo -e " "
         echo -e " ---------------------------------------------------------------------------------------------------------"
-        echo -e " S'han detectat $numEquips equips a les $subxarxes"
+        echo -e " S'han detectat $numEquips equips a les subxarxes $subxarxes"
         echo -e " ---------------------------------------------------------------------------------------------------------"
         echo -e " Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS"
         echo -e " ---------------  -----------------  ------------------------------  -----------------  ------------------"
@@ -210,7 +211,7 @@ echo -e " Resultats de l'anàlisi en el fitxer log_ids...        [ok]"
 echo -e " Finalitzat el $dataCompilacioFi a les $horaCompilacioFi               [ok]"
 echo -e " "
 
-####### 8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
+####### 7. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
 rm .xarxes
 rm .scanmap.log
 rm .scanlist.log

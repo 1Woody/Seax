@@ -21,7 +21,7 @@ INFORMACIÓ SCRIPT
 10. ESCENARIS DE FALLIDA
 11. PUNTS DE MILLORA
 12. CONCLUSIONS GENERALS
-
+13. PÀGINES D'INTERÉS
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
 Primer i abans de començar a explicar el funcionament, trobem la capçalera de l'script, allà trobarem dues
@@ -225,8 +225,10 @@ comandes principals: whois i dig.
             Aquestes són les variables que guardaran la informació:
             
             - xarxaNoMasc --> Extreta de la línia de "NetRange" de l'arxiu .infowhois.log.  
+                              (en cas de no trobar-se cap adreça, hauríem de buscar a la línia de "inetnum").
             
             - xarxaBroadcast --> Extreta de la línia de "NetRange" de l'arxiu .infowhois.log. 
+                                 (en cas de no trobar-se cap adreça, hauríem de buscar a la línia de "inetnum").
             
             Aquestes dues variables anteriors conformen el rang de la xarxa de la $IP especificada. 
               
@@ -416,7 +418,8 @@ del programa i faciliten certa informació de com ha evolucionat el procés a l'
             coordenades, sistema operatiu i ports. 
 
             Els ports es printaran mitjançant un bucle que anirà llegint línia per línia de l'arxiu .ports.log, on es troben els ports prèviament afegits. 
-            D'allà arreglarà el format de sortida i printarà directament a l'output del fitxer de sortida. 
+            D'allà arreglarà el format de sortida i printarà directament a l'output del fitxer de sortida. En cas de no haver-hi ports detectats, printaria
+            un "Desconeguts", el mateix amb el sistema operatiu. 
 
         7.4 - Impressió de línies finals
 
@@ -435,13 +438,92 @@ del programa i faciliten certa informació de com ha evolucionat el procés a l'
 
 ####### 9. PROVES DE VALIDACIÓ #######
 
-- Xarxa que reporta 
+- Prova amb l'adreça 147.83.2.135 (IP web upc)
+
+    - En aquest cas podem veure com amb una IP de la pàgina web de la UPC aconseguim obtenir tota la informació que necessitem. Després de fer 
+    diverses proves s'ha pogut veure que és fàcil aconseguir-ne la informació de les Universitaris en general.
+
+ ---------------------------------------------------------------------------------------------------
+ Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 1.0 compilada el 2020-04-30.
+ Anàlisi iniciada en data 2020-05-06 a les 13:02:31 i finalitzada en data 2020-05-06 a les 13:02:54.
+ ---------------------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+Informació de l'adreça IP
+ Equip:        147.83.2.135 (upc.es.)
+ Xarxa:        147.83.0.0/16 [147.83.0.0 - 147.84.255.255] (UPCNET)
+ Entitat:      Universitat Politecnica de Catalunya (ES)
+ Gestor ASN:   AS13041 Consorci de Serveis Universitaris de Catalunya
+ Localització: Barcelona (08034), Catalonia, ES
+ Coordenades:  Latitud 41.3888 i longitud 2.1590, amb zona horària Europe/Madrid
+ S. Operatiu:  Desconegut
+ Ports:        tcp/80   (http)
+               tcp/443  (https)
+--------------------------------------------------------------------------------
+
+- Prova amb l'adreça 37.223.161.184 (IP pública)
+
+    - En aquest cas podem veure un exemple d'una IP pública (de Telefónica, concretament), semblant a la que podríem tenir nosaltres a casa.
+      Podem veure com en aquest cas podem obtenir totes les dades excepte el sistema operatiu i els ports, que curiosament són les extretes amb l'nmap.
+      D'aquí podem deduir que l'nmap no té l'accés a aquest tipus d'informació en aquest tipus d'adreces IP.  
+
+ ---------------------------------------------------------------------------------------------------
+ Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 1.0 compilada el 2020-04-30.
+ Anàlisi iniciada en data 2020-05-07 a les 05:28:22 i finalitzada en data 2020-05-07 a les 05:28:26.
+ ---------------------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+Informació de l'adreça IP
+ Equip:        88.27.212.72 (72.red-88-27-212.staticip.rima-tde.net.)
+ Xarxa:        88.27.0.0/16 [88.27.0.0 - 88.27.255.255] (RIMA)
+ Entitat:      Telefonica de Espana SAU (NCC#2007050901) Red de servicios IP Spain (ES)
+ Gestor ASN:   AS3352 TELEFONICA DE ESPANA
+ Localització: Santander (39001), Cantabria, ES
+ Coordenades:  Latitud 43.4647 i longitud -3.8044, amb zona horària Europe/Madrid
+ S. Operatiu:  Desconegut
+ Ports:        Desconeguts
+--------------------------------------------------------------------------------
+
+- Prova amb l'adreça 10.1.1.108
+
+    - En aquest cas podem veure un exemple d'una IP privada, que pot ser assignada per qualsevol disposi
+
+ ---------------------------------------------------------------------------------------------------
+ Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 1.0 compilada el 2020-04-30.
+ Anàlisi iniciada en data 2020-05-07 a les 05:21:22 i finalitzada en data 2020-05-07 a les 05:21:25.
+ ---------------------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+Informació de l'adreça IP
+ Equip:        10.1.1.108 (DNS desconegut)
+ Xarxa:        10.0.0.0/8 [10.0.0.0 - 10.255.255.255] (IANA)
+ Entitat:      Internet Assigned Numbers Authority (IANA) (US)
+ Gestor ASN:   Desconegut
+ Localització: Desconeguda
+ Coordenades:  Desconegudes
+ S. Operatiu:  Desconegut
+ Ports:        Desconeguts
+--------------------------------------------------------------------------------
 
 ####### 10. ESCENARIS DE FALLIDA #######
 
 
+
 ####### 11. PUNTS DE MILLORA #######
 
+El principal punt de millora podria ser el de buscar 
 
 ####### 12. CONCLUSIONS GENERALS #######
+
+
+13. PÀGINES D'INTERÉS
 
