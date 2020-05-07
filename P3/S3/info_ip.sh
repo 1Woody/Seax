@@ -10,6 +10,7 @@ usagePaquetDig="Has de tenir instalat el paquet de dnsutils, instala-ho amb: apt
 usagePaquetWhois="Has de tenir instalat el paquet de whois, instala-ho amb: apt-get install -y whois"
 usageSuperUser="Has de ser root per executar aquest script"
 usageIP="Sembla que no has escrit la IP correctament, revisa el teu paràmetre"
+usagePaquetCurl="Has de tenir instalat el paquet de curl, instala-ho amb: apt-get install curl"
 
 # Variables entorn
 usuari=$(whoami)
@@ -59,6 +60,12 @@ then
 	echo "$usagePaquetWhois"; exit 1
 fi
 
+# Comprovació del paquet curl
+if [ "$(dpkg -l | grep -c curl)" -eq 0 ]
+then 
+	echo "$usagePaquetCurl"; exit 1
+fi
+
 ####### 3. MAQUETACIÓ DE DADES PART 1 #######
 
 echo -e "                                                                "
@@ -88,10 +95,7 @@ echo -ne " Iniciant l'escanneig de l'adreça $IP...$espaiBlanc"
 
 ####### 4. RECOPILACIÓ DE DADES PART 1 #######
 
-touch .infowhois.log
-
-whois "$IP" > .infowhois.log
-
+# Extracció del nom DNS
 dnsNom=$(dig -x "$IP" +short | head -n 1)
 if [ -z "$dnsNom" ]
 then
@@ -99,6 +103,11 @@ then
 else
     equipIP="$IP ($dnsNom)"
 fi
+
+# Creació i emplenament del fitxer de tractament de xarxes
+touch .infowhois.log
+whois "$IP" > .infowhois.log
+
 xarxaNoMasc=$(grep "NetRange:" .infowhois.log | awk '{print $2}')
 xarxaMasc=$(grep "route:" .infowhois.log | awk '{print $2}')
 if [ -z "$xarxaMasc" ]
@@ -140,7 +149,7 @@ true > .ports.log
 
 ####### 6. RECOPILACIÓ DE DADES PART 2 #######
 
-# Recollim les dades dades principals de la IP
+# Recollim les dades principals de localització de la IP
 curl -s ipinfo.io/"$IP" > .dades.log
 gestorASN=$(grep "org" .dades.log | cut -d '"' -f4)
 if [ -z "$gestorASN" ]
@@ -221,17 +230,16 @@ horaCompilacioFi=$(date | cut -d ' ' -f5)
     echo -e "---------------------------------------------------------------------------------------------------------"
 } >> log_ip
 
-dataCompilacioFi=$(date --rfc-3339=date)
-horaCompilacioFi=$(date | cut -d ' ' -f5)
 
 echo -e "[ok]"
 echo -e " Resultats de l'anàlisi en el fitxer log_ip            [ok]"
 echo -e " Finalitzat el $dataCompilacioFi a les $horaCompilacioFi               [ok]"
 echo -e "                                                                           "
 
-# Neteja de fitxers auxiliars
+####### 8. NETEJA DE FITXERS AUXILIARS #######
 rm .infowhois.log
 rm .ports.log
 rm .infonmap.log
 rm .dades.log
 exit 0;
+

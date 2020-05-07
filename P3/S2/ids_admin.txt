@@ -13,12 +13,13 @@ CODI
 4. MAQUETACIÓ DE DADES PART 1
 5. TRACTAMENT DE DADES 
 6. MAQUETACIÓ DE DADES PART 2
+8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA
 
 INFORMACIÓ SCRIPT
-7. PROVES DE VALIDACIÓ
-8. ESCENARIS DE FALLIDA
-9. PUNTS DE MILLORA
-10. CONCLUSIONS GENERALS
+9. PROVES DE VALIDACIÓ
+10. ESCENARIS DE FALLIDA
+11. PUNTS DE MILLORA
+12. CONCLUSIONS GENERALS
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
@@ -53,13 +54,47 @@ casos com els accents.
     - interfacelist --> Conté una llista de totes les interfíces a les que l'equip es troba connectat (per cable), sense tenir en compte la de loopback
 
 ####### 2. COMPROVACIONS PREVIES #######
+En aquest punt es faran les diferents comprovacions de l'usuari, per tal de que es pugui executar l'script sense problemes. Tant en relació a paquets 
+instal·lats (nmap, iproute2) com a comprovació del tipus d'usuari (superuser).
 
+També es tractaran els diferents problemes que poden sorgir amb la entrada dels arguments pertinents. Tant en el número d'aquests com en la seva 
+correctesa(-h).
 
+2.1 - Comprovació de 0 arguments i help (-h) --> En aquest apartat es comprova que no hi hagi arguments addicionals i es maqueta el help del programa.
+
+                                
+
+    
+
+2.2 - Comprovació del superusuari --> En aquest apartat es comprova que l'usuari que executa l'script sigui "root".
+
+                                    Si "$(whoami)" != "root" --> L'usuari no és root.
+                                    En aquest cas, s'envia el missatge $usageSuperUser per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1)..
+                                    * Comanda: whoami --> Bàsicament exposa per pantalla el nom d'usuari de l'actual usuari.
+
+2.3 - Comprovació del paquet nmap --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet nmap, que s'utilitzarà per extreure informació
+                                      gràcies a la comanda nmap. 
+
+                                    Si "$(dpkg -l | grep -c nmap)" -eq 0 --> Si paquet nmap no istal·lat
+                                    En aquest cas, s'envia el missatge $usagePaquetNmap per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+                                    * Comanda: dpkg -l --> Llista tots els paquets instal·lats al sistema. Gràcies al 'grep -c nmap' busquem a la 
+                                                           llista anterior el paquet amb el nom nmap.
+                                                           I amb el flag -c comptem el nombre d'encerts que ha tingut la instrucció grep.
+
+2.4 - Comprovació del paquet iproute2 --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de iproute2 (del cual la instrucció 
+ip forma part i serà utilitzada posteriorment).
+
+                                    Si "$(dpkg -l | grep -c iproute2)" == 0 --> Paquet iproute2 no instal·lat.
+                                    En aquest cas, s'envia el missatge $usagePaquetip per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+                                    * Comanda: dpkg -l | grep -c iproute2 --> Mateix funcionament que l'anterior apartat pero amb el paquet iproute2.
 
 
 ####### 3. CREACIÓ DE FITXERS NECESSARIS #######
 En aquest apartat tractarem la creació dels fitxers necessaris per la realització del nostre script. Donat que molts dels fitxers utilitzats són temporals s'ha 
-decidit amagar-los de l'usuari(el punt que trobem davant de cada nom de fitxer, ho converteix en ocult) i esborra-los al final. 
+decidit amagar-los l'usuari(el punt que trobem davant de cada nom de fitxer, ho converteix en ocult) i esborra-los al final. 
 
 Tots els fitxers els creem amb la comanda touch, que ens permet crear-los només en cas de que no existeixin ja.
 
@@ -95,31 +130,177 @@ manera individual i es guarden totes les dades al fitxer abans explicat .scanlis
         5.1.1 Comprovació validesa de la xarxa --> S'agafa la ip de la interfíce corresponent i es comprova que no està buida, si ho està saltem a la interfície
         següent: 
         * Comanda: $(ip -4 addr show dev "$1" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1); --> Aquesta comanda recull 
-                                        la IPv4 de la interfície especificada ($1), en cas de que tingui més d'una agafarem la primera IP disponible.
-                                        - ip -4 addr show dev "$1" --> Exposa la interfície de xarxa especificada amb algunes característiques i la seva 
-                                        adreça IP associada.
-                                        - grep inet --> Es filtra i s'agafa la línia on es troba l'string 'inet'
-                                        - awk '{print $2}' --> Es filtra i s'agafa el segon string ($2) de la línia.
-                                        - cut -d '/' -f1 | head -n 1 --> Es divideix l'string per '/' i s'agafa la primera fila.
+        la IPv4 de la interfície especificada ($1), en cas de que tingui més d'una agafarem la primera IP disponible.
+            - ip -4 addr show dev "$1" --> Exposa la interfície de xarxa especificada amb algunes característiques i la seva 
+            adreça IP associada.
+            - grep inet --> Es filtra i s'agafa la línia on es troba l'string 'inet'
+            - awk '{print $2}' --> Es filtra i s'agafa el segon string ($2) de la línia.
+            - cut -d '/' -f1 | head -n 1 --> Es divideix l'string per '/' i s'agafa la primera fila.
 
-            5.1.1.1 
+            5.1.1.1 Emmagatzematge nom de les xarxes més la seva IP --> S'agafa la ip de la xarxa a la que pertany l'interfície i es 
+            guarda al fitxer .xarxes
 
+            5.1.1.2 Execució comanda nmap --> Part més important del programa, s'analitza la xarxa corresponent amb la comanda nmap i es guarda al fitxer
+            .scanmap.log 
+            * Comanda: nmap -sn "$ipXarxa" > .scanmap.log
+                -sn: Amb aquest flag li diem a nmap que no fagi un scaneig cada vegada que trobi un host a la xarxa, i que només tregui els host  que estiguin
+                disponibles que han respós a l'escaneig. Ens permet saber de manera ràpida quin són els host que es troben actius a la xarxa sense extreue massa
+                informació. 
+            Aquesta comanda nmap consisteix en enviar ICMP echo request (tipus de missatges del protocol ICMP), TCP SYN al port 443 (tipus de missatge que s'envia
+            quan volem iniciar una connexió per TCP), TCP ACK al port 80 (tipus de missatge que s'envien quan s'accepta una connexó per TCP), i un ICMP timestamp
+            request (altre tipues de misstage ICMP). Cal destacar que utilitza ports molt comuns (port amb els que treballen les pàguines web, més concretament
+            els protocols http (80) i https (443)). 
 
+            El flag d'aquesta comanda es pot combinar amb altres de tipus -P* (excepte -Pn = No fa ping), tenim diverses opcions que podem incloure:
+            -PS --> Envia un paquet buit de tipus TCP SYN, per defecte ho envia pel port 80, però també podem col·locar-ne. Exemple: -PS22 o -PS22-25,80... 
+            -PA --> El mateix que l'anterior però amb un missatge de tipus TCP ACK
+            -PU --> El mateix que l'anterior però amb un missatge de tipus UDP
+            -PO --> El mateix cas, però enviant un missatge amb el protocol ping IP, que funciona com els anteriors però si no s'especifica cap protocol envia 
+            multiples paquets per ICMP, IGMP i IP-in-IP (diversos protocols de la capa 3).
+
+            Totes aquestes opcions es poden incloure, faràn que el nostre escaneig sigui més lent però també ens ajudaràn a evitar restriccions del firewalls
+            permetent així rebre les respostes de equips que d'altra manera no rebriem res.
+
+            5.1.1.3 Llista neta dels equips (ip i Mac) --> Amb tota la sortida guardada al fitxer .scanmap.log, s'agafen les linies que tenen l'informació útil 
+                                                           i es guarden al fitxer .llistaEquips: 
+                                                           * Comanda: grep -e "scan report for" -e "MAC" .scanmap.log --> agafem les linies que contenen la ip i 
+                                                           el dns ("scan report for") i les que tenen la direcció MAC ("MAC").
+                                                           - e : ens permet exigir diversos partons a la comanda grep. 
+
+            5.1.1.4 Recopilació de Fabricant 
+            per la MAC de la màquina base --> En aquest procés s'agafa la MAC de la interfície que s'està analitzant i es busca a la base de dades de fabricants 
+                                              (fitxer que es troba dintre dels elements del programa nmap "/usr/share/nmap/nmap-mac-prefixes")
+                                              per així incloure aquesta informació al final del fitxer que posteriorment es tractarà (.llistaEquips )
+                                              
+                                              Explicació de comandes complexes:
+                                              * Comanda: ${MACinterface^^} --> Modifica a majúscules la varible MACinterface
+                                              
+                                              * Comanda: echo "$MACinterface" | cut -d ':' -f1,2,3 |sed "s/://g" --> S'agafa la part que és del fabricant (MACs composades
+                                              per 48 bits, 24 per fabircant i 24 per identificador de producte). 
+                                              -  cut -d ':' -f1,2,3 --> tallem per : i agafem els 3 primers elements (com hem dit, els digits que corresponen al fabricant)
+                                              - sed "s/://g" --> Modifica els elements que són : per buits. (S'aplica aquesta modificació degut a que la cerca a 
+                                              la base de dades és troben en aquest format).
+
+            5.1.1.5 Emmagatzematge a la llista neta per posterior tractament --> Amb la informació necessaria afegim la linia "MAC Address: $MACinterface ($Nomfabricant)"
+                                                                                 al final del fitxer de ..llistaEquips com si fos part del output de nmap, la raó
+                                                                                 d' això és que l'última ip que mostra nmap és la de la nostra interfície però no
+                                                                                 true l'informació de la Mac, afegint-li nosaltres podrem tractar totes sense
+                                                                                 distinció fent més sencill el procés.
+
+            # Tractament de dades Scaneig --> En aquest bucle es tracten les linies de dos en dos ja que cada dues lines hi ha una nova ip, l'output és d'aquesta
+            manera linia1 - IP(i també el dns) equip 1 linea2 - Mac (i també el fabricant) equip 1 ... 
+            Per tant, procesarem cada linia depenent de si es de tipus ip o de tipus mac i després de procesar una de cada tipus la ficarem a un fitxer anomenat 
+            .scanlist.log. 
+            També hi ha un comptador implementat per tal d'evitar algunes excepcions, el que permet és tenir en compte que ja has tractat una linia IP i per 
+            tant esperes tractar una de tipus Mac, però si no hi és, es guarda aquesta ip sense informació de la mac i tornes a tractar la linia a la que et 
+            trobes com una nova ip que espera la seva Mac a la següent linia.
+
+            Els paràmetres que s'extreuen són --> IP / MAC / FABRICANT / NOM DEL EQUIP DE CONFIANÇA (en el cas que es trobi dintre del fixter d'equips coneguts) 
+            / DNS
+            i es guarden al fitxer .scanlist.log separats per '|'.
+
+            5.1.1.5.1 Tractament d'ips i DNS --> Entrem en el cas de que siguí una linia de tipus Ip, per saber-ho comptarem si a la linia apareix l'string 
+            "Nmap scan report for".
+               
+                5.1.1.5.1.1 Tractament cas opcional --> Com s'ha explicat, es tracta el cas de que estem esperant una linia de tipus Mac però ens trobem amb un 
+                altre de tipus IP, per tant es guarda la informació que ja teniem de la IP amb buits on hauria d'anar l'informació de la Mac i el seu fabricant.
+
+                5.1.1.5.1,2 Comprovació nom dns --> En aquesta comprovació es revisa si el programa nmap ens ha donat la IP o ha trobat el seu nom DNS, en aquest
+                cas la IP es trobarà entre parèntesis just després del dns.
+                * Dos casos: 1cas --> torbem el dns i per tant guardem a la variable ipcorrecta la ip del dispositiu i a la varibale dns el seu nom dns
+                             2cas --> no es troba dns, guardem a la variable ipcorrecta la ip del dispositiu i a la varibale dns un punt.
+
+            5.1.1.5.2 Tractament de MACs, Fabricants i Equips coneguts --> En cas de que la linia sigui de tipus Mac, guardarem la direcció Mac a la variables mac,
+            ara revisarem si aquesta mac es troba dintre dels dispositius coneguts al fitxer de l'usuari "equips_coneguts", si el trobem guardarem el seu nom 
+            assignat a la varible equipConegut, en cas contrari guardrem un guió. 
+
+            També agafarem el fabricant i finalment unirem tots els paràmetres recollits a la varibale infoEquip per guardar-los al fitxer .scanlist.log. 
+            (i posem el comptador a 0 ja que hem guardat un element)
 
 ####### 6. MAQUETACIÓ DE DADES PART 2 #######
 
 
+####### 8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
 
-####### 7. PROVES DE VALIDACIÓ #######
+        rm .xarxes --> S'elimina el fitxer que guardava la llista de interfícies amb les seves xarxes.
+        rm .scanmap.log --> S'elimina el fitxer que guardava la llista filtarda de dispositius. 
+        rm .scanlist.log --> S'elimina el fitxer que guardava la informació auxiliar de l'output d'nmap.
+        rm .llistaEquips --> S'elimina el fitxer que guardava la informació auxiliar de l'output d'nmap.
+        exit 0; --> Es finalitza el programa. 
+
+####### 9. PROVES DE VALIDACIÓ #######
+
+- Prova amb una interfíce activa:
+    - En aquest cas veiem com funciona correctament amb només una interfíce activa, marcant correctament el nom dels dispositius que es troben al fitxer de
+    equips_coneguts.
+
+  ---------------------------------------------------------------------------------------------------
+ Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip attacker1.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 1.0 compilada el 2020-05-3.
+ Anàlisi iniciada en data 2020-05-06 a les 10:19:22 i finalitzada en data 2020-05-06 a les 10:20:07.
+ ---------------------------------------------------------------------------------------------------
+ 
+ 
+ ---------------------------------------------------------------------------------------------------------
+ S'han detectat 10 equips a les 192.168.0.0/24 [enp0s3]
+ ---------------------------------------------------------------------------------------------------------
+ Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
+ ---------------  -----------------  ------------------------------  -----------------  ------------------
+ 192.168.0.1      B4:A5:EF:A5:9C:C0  Sercomm                         Router             www.adsl.vf.             
+ 192.168.0.11     4C:CC:6A:B3:18:B2  Micro-star Intl                 -                  .                        
+ 192.168.0.12     70:26:05:FA:1B:56  Unknown                         -                  .                        
+ 192.168.0.14     B4:9D:0B:12:2F:B8  BQ                              -                  .                        
+ 192.168.0.15     A0:39:EE:10:40:A7  Unknown                         -                  .                        
+ 192.168.0.17     7C:2E:BD:44:D1:5D  Unknown                         -                  .                        
+ 192.168.0.19     D4:A1:48:6A:A2:27  Huawei Technologies             -                  .                        
+ 192.168.0.24     DC:0B:34:C4:DE:50  LG Electronics                  Dani phone         .                        
+ 192.168.0.32     D0:65:CA:F5:03:8C  Huawei Technologies             -                  .                        
+ 192.168.0.30     08:00:27:B3:4C:0A  Oracle VirtualBox virtual NIC   attacker-1         .                        
+ ---------------  -----------------  ------------------------------  -----------------  ------------------
+
+
+- Prova amb dues interfícies i xarxes diferents:
+
+ ---------------------------------------------------------------------------------------------------
+ Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip attacker1.
+ Sistema operatiu Debian GNU/Linux 10 (buster).
+ Versió del script 1.0 compilada el 2020-05-3.
+ Anàlisi iniciada en data 2020-05-06 a les 10:21:24 i finalitzada en data 2020-05-06 a les 10:22:26.
+ ---------------------------------------------------------------------------------------------------
+ 
+ 
+ ---------------------------------------------------------------------------------------------------------
+ S'han detectat 13 equips a les 192.168.0.0/24 [enp0s3], 10.0.2.0/24 [enp0s8]
+ ---------------------------------------------------------------------------------------------------------
+ Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
+ ---------------  -----------------  ------------------------------  -----------------  ------------------
+ 192.168.0.1      B4:A5:EF:A5:9C:C0  Sercomm                         Router             www.adsl.vf.             
+ 192.168.0.11     4C:CC:6A:B3:18:B2  Micro-star Intl                 -                  .                        
+ 192.168.0.12     70:26:05:FA:1B:56  Unknown                         -                  .                        
+ 192.168.0.15     A0:39:EE:10:40:A7  Unknown                         -                  .                        
+ 192.168.0.17     7C:2E:BD:44:D1:5D  Unknown                         -                  .                        
+ 192.168.0.19     D4:A1:48:6A:A2:27  Huawei Technologies             -                  .                        
+ 192.168.0.24     DC:0B:34:C4:DE:50  LG Electronics                  Dani phone         .                        
+ 192.168.0.32     D0:65:CA:F5:03:8C  Huawei Technologies             -                  .                        
+ 192.168.0.30     08:00:27:B3:4C:0A  Oracle VirtualBox virtual NIC   attacker-1         .                        
+ 10.0.2.5         08:00:27:D6:D7:D3  Oracle VirtualBox virtual NIC   -                  .                        
+ 10.0.2.10        08:00:27:1E:94:47  Oracle VirtualBox virtual NIC   Seax_virtual       .                        
+ 10.0.2.16        08:00:27:D6:D7:D3  Oracle VirtualBox virtual NIC   -                  .                        
+ 10.0.2.6         08:00:27:03:8E:1E  Oracle VirtualBox virtual NIC   -                  .                        
+ ---------------  -----------------  ------------------------------  -----------------  ------------------
+
+- Prova amb interfíces wifi connectades a la vegada a la mateixa xarxa: 
 
 
 
-####### 8. ESCENARIS DE FALLIDA #######
+
+####### 10. ESCENARIS DE FALLIDA #######
 
 
 
-####### 9. PUNTS DE MILLORA #######
+####### 11. PUNTS DE MILLORA #######
 
 
 
-####### 10. CONCLUSIONS GENERALS #######
+####### 12. CONCLUSIONS GENERALS #######

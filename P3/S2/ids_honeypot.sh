@@ -6,7 +6,7 @@
 # Variables Usage
 usageArguments="El nombre de arguments és incorrecte. No has de pasar cap argument (revisar manual de usuari)."
 usageSuperUser="Has de ser root per executar aquest script"
-usagePaquetnmap="Has de tenir instalat el paquet de nmap, instala-ho amb: apt install nmap"
+usagePaquetcpdump="Has de tenir instalat el paquet de nmap, instala-ho amb: apt install nmap"
 usagePaquetip="Has de tenir instalat el paquet de iproute, instala-ho amb: apt install iproute2"
 
 # Variables entorn
@@ -17,8 +17,7 @@ scriptVersion="1.0"
 dataInicial="2020-05-3"
 dataCompilacioInici=$(date --rfc-3339=date)
 horaCompilacioInici=$(date | cut -d ' ' -f5)
-interfacelist=$(ls /sys/class/net/)
-interfacelist=$(echo -e "$interfacelist" | grep ^e)
+interfacelist=$(ls /sys/class/net/ | grep ^e)
 
 ####### 2. COMPROVACIONS PREVIES #######
 
@@ -52,7 +51,7 @@ fi
 # Comprovació del paquet nmap
 if [ "$(dpkg -l | grep -c nmap)" -eq 0 ]
 then 
-	echo "$usagePaquetnmap"; exit 1
+	echo "$usagenmap"; exit 1
 fi
 
 # Comprovació del paquet iproute2
@@ -69,9 +68,9 @@ touch .xarxes
 touch .scanlist.log
 touch equips_coneguts
 touch log_ids
-touch .scanmap.log
 
 true > log_ids
+true > .llistaEquips
 true > .scanlist.log
 true > .xarxes
 
@@ -86,8 +85,7 @@ echo -ne " Detecció d'equips en curs...                          "
 
 ####### 5. TRACTAMENT DE DADES #######
 
-# tractament de totes les interfíces
-for interface in $interfacelist
+for interface in $(ls /sys/class/net/ | grep ^e)
 do
     # Comprovació validesa de la xarxa
     ipInterface=$(ip -4 addr show dev "$interface" | grep inet | awk '{print $2}' | cut -d '/' -f1 | head -n 1)
@@ -101,12 +99,12 @@ do
         nmap -sn "$ipXarxa" > .scanmap.log
 
         # llista neta dels equips (ip i Mac)
-        grep -e "scan report for" -e "MAC" .scanmap.log > .llistaEquips
+        cat .scanmap.log | grep -e "scan report for" -e "MAC" > .llistaEquips
 
         # Recopilació de Fabricant per la MAC de la màquina base 
-        MACinterface="$(ip link show dev "$interface" | grep ether | awk '{print $2}')"
+        MACinterface="$(ip link show dev $interface | grep ether | awk '{print $2}')"
         MACinterface=${MACinterface^^}
-        MACfabricant="$(echo "$MACinterface" | cut -d ':' -f1,2,3 |sed "s/://g")"
+        MACfabricant="$(echo $MACinterface | cut -d ':' -f1,2,3 |sed "s/://g")"
         Nomfabricant=$(grep "$MACfabricant" /usr/share/nmap/nmap-mac-prefixes | cut -d ' ' -f2-)
         
         # Emmagatzematge a la llista neta per posterior tractament
@@ -116,10 +114,10 @@ do
         counter=0
         infoEquip=""
         while IFS= read -r line; do
-            line_type=$(echo "$line" | grep -c "Nmap scan report for")
+            line_type=$(echo $line | grep -c "Nmap scan report for")
             
             # Tractament d'ips i DNS
-            if [ "$line_type" == 1 ] 
+            if [ $line_type == 1 ] 
             then
                 # Tractament cas opcional
                 # (un ordinador connectat per dues interfícies a la mateixa xarxa)
@@ -129,28 +127,28 @@ do
                     echo "$infoEquip" >> .scanlist.log
                 fi
 
-                test_dns="$(echo "$line" | awk '{print $5}')"
+                test_dns="$(echo $line | awk '{print $5}')"
                 # Comprovació nom dns
-                test_dns=$(echo "$test_dns" | cut -d '.' -f1,2,3 | grep -c "$(echo "$ipInterface" | cut -d '.' -f1,2,3)")
-                if [ "$test_dns" != 1 ]
+                test_dns=$(echo "$test_dns" | cut -d '.' -f1,2,3 | grep -c "$(echo $ipInterface | cut -d '.' -f1,2,3)")
+                if [ $test_dns != 1 ]
                 then
-                    ipCorrecta="$(echo "$line" | awk '{print $6}' | cut -d '(' -f2 | cut -d ")" -f1)"
-                    dns="$(echo "$line" | awk '{print $5}')."
+                    ipCorrecta="$(echo $line | awk '{print $6}' | cut -d '(' -f2 | cut -d ")" -f1)"
+                    dns="$(echo $line | awk '{print $5}')."
                 else
-                    ipCorrecta="$(echo "$line" | awk '{print $5}')"
+                    ipCorrecta="$(echo $line | awk '{print $5}')"
                     dns="."
                 fi
                 counter=1
 
             # tractament de MACs, Fabricants i Equips coneguts
             else
-                mac=$(echo "$line" | awk '{print $3}')
-                equipConegut=$(grep "$mac" equips_coneguts | cut -d ' ' -f2-)
+                mac=$(echo $line | awk '{print $3}')
+                equipConegut=$(cat equips_coneguts | grep "$mac" | cut -d ' ' -f2-)
                 if [ "$equipConegut" == "" ]
                 then
                     equipConegut="-"
                 fi
-                fabricant=$(echo "$line" | cut -d '(' -f2 | cut -d ')' -f1)
+                fabricant=$(echo $line | cut -d '(' -f2 | cut -d ')' -f1)
                 infoEquip="$ipCorrecta|$mac|$fabricant|$equipConegut|$dns"
                 echo "$infoEquip" >> .scanlist.log
                 counter=0
@@ -159,7 +157,7 @@ do
     fi
 done
 
-####### 6. MAQUETACIÓ DE DADES PART 2 #######
+####### 6. MAQUETACIÓ DE DADES #######
 
 echo -e "[ok]"
 echo -e " Processant les dades...                               [ok]"
@@ -210,7 +208,7 @@ echo -e " Resultats de l'anàlisi en el fitxer log_ids...        [ok]"
 echo -e " Finalitzat el $dataCompilacioFi a les $horaCompilacioFi               [ok]"
 echo -e " "
 
-####### 8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
+# Neteja fitxers 
 rm .xarxes
 rm .scanmap.log
 rm .scanlist.log

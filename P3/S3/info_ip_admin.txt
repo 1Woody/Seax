@@ -14,12 +14,13 @@ CODI
 5. CREACIÓ DE FITXERS NECESSARIS
 6. RECOPILACIÓ DE DADES PART 2
 7. MAQUETACIÓ DE DADES PART 2
+8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA
 
 INFORMACIÓ SCRIPT
-8. PROVES DE VALIDACIÓ
-9. ESCENARIS DE FALLIDA
-10. PUNTS DE MILLORA
-11. CONCLUSIONS GENERALS
+9. PROVES DE VALIDACIÓ
+10. ESCENARIS DE FALLIDA
+11. PUNTS DE MILLORA
+12. CONCLUSIONS GENERALS
 
 
 ####### 0. INICIALITZACIÓ SCRIPT #######
@@ -44,6 +45,7 @@ A continuació, trobem la inicialització d'algunes de les variables del program
     - usagePaquetWhois --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a whois.
     - usageSuperUser --> Especifica a l'usuari que ha de ser root per poder executar l'script.
     - usageIP --> Especifica a l'usuari que el format de l'argument no és el de una IP.
+    - usagePaquetCurl --> Indica a l'usuari que necessita tenir instal·lat el paquet corresponent a curl.
 
 1.2 - Després trobem les variables de característiques de l'usuari necessàries per l'script
 
@@ -112,37 +114,146 @@ d'aquests com en la seva correctesa (format IP correcte).
                                     programa amb un codi d'error (exit 1).
                                     * Comanda: dpkg -l | grep -c whois --> Mateix funcionament que en l'apartat 2.5 per amb el paquet whois.
 
+2.8 - Comprovació del paquet curl --> En aquest apartat es comprova que l'usuari tingui instal·lat el paquet de curl, necessari per realitzar algunes
+                                      comandes 'curl' en el programa. 
+
+                                    Si "$(dpkg -l | grep -c curl)" == 0 --> Paquet curl no instal·lat.
+                                    En aquest cas, s'envia el missatge $usagePaquetCurl per informar l'usuari. Després d'això es tanca l'execució del 
+                                    programa amb un codi d'error (exit 1).
+                                    * Comanda: dpkg -l | grep -c curl --> Mateix funcionament que en l'apartat 2.5 per amb el paquet curl.
+
+
 
 ####### 3. MAQUETACIÓ DE DADES PART 1 #######
+En aquest apartat tractarem més el format i la impressió inicial de l'output. Veurem que aquestes línies es printen per pantalla al començament de la execució
+del programa i faciliten certa informació de com evoluciona el procés a l'usuari. 
+
+        3.1 - Impressió de línies 
+
+        A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en 
+        una línia diferent. Totes aquestes línies printades es veuen directament per pantalla.
+
+        echo -e "" --> línia en blanc
+        echo -e "Programa de geolocalització i anàlisi automàtic d'una adreça IP." --> Informació per l'usuari
+        echo -e " Versió $scriptVersion compilada el $dataInicial." --> Versió de l'script i data inicial. 
+        echo -e " Iniciant-se el $dataCompilacioInici a les $horaCompilacioInici ...          [ok]" --> Data i hora de la compilació del programa
+        echo -e " El fitxer log_ip sera sobrescrit...                   [ok]" --> Informació per l'usuari
+
+        3.2 - Bucle d'espais en blanc
+
+        espaiBlanc=" "; --> S'inicialitza amb un espai en blanc la variable $espaiBlanc, que és l'encarregada de col·locar els espais en blanc adients 
+        per tal de que l'[ok] de la línia de la IP quedi alineat amb els altres. 
+
+        x=0 --> Assignació de la variable $x a 0, que es compararà amb el número de caràcters que ocupa la variable $IP, per tal d'alinear en format a 
+        tots els [ok]. 
+
+        trobat=0 --> Assignació de la variable $trobat, que funcionarà com a booleà.
+
+        Sempre que $x sigui <= a 17 i $trobat == 0
+
+                Si "${#IP}" == "$x" --> (En el cas de que el número de caràcters de la IP sigui el mateix que el de la variable $x)
+
+                    num=17-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del [ok] a l'output per tal de que 
+                                   estiguin tots alineats. (17 caràcters totals - $x caràcters d'accessos) 
+                    A continuació, li afegirem a la variable $espaiBlanc $num espais en blanc. 
+                    trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els 
+                                 espais en blanc fixats.
+
+        3.1 - Impressió de línia IP
+
+        Per últim, printarem la línia d'output amb la IP que volem analitzar. 
+
+        echo -ne " Iniciant l'escanneig de l'adreça $IP...$espaiBlanc" --> La línia conté les variables $IP i $espaiBlanc, que acabem de calcular.
 
 
-
-echo -e "                                                                "
-echo -e "Programa de geolocalització i anàlisi automàtic d'una adreça IP."
-echo -e " Versió $scriptVersion compilada el $dataInicial."
-echo -e " Iniciant-se el $dataCompilacioInici a les $horaCompilacioInici ...          [ok]"
-echo -e " El fitxer log_ip sera sobrescrit...                   [ok]"
-espaiBlanc=" ";
-x=0;
-trobat=0;
-while (( $x <= 17 )) && (( $trobat == 0))
-do
-    # Tractament de l'espai assignat a la IP
-    if [ "${#IP}" == "$x" ]
-    then
-        num=17-$x;
-        for ((y=0; y<num; y++))
-        do
-            espaiBlanc=" $espaiBlanc";
-        done
-        trobat=1;
-    else
-        ((x+=1))
-    fi
-done
-echo -ne " Iniciant l'escanneig de l'adreça $IP...$espaiBlanc"
 
 ####### 4. RECOPILACIÓ DE DADES PART 1 #######
+En aquest apartat s'assignen valors a diferents variables que apareixeran al fitxer de sortida quan finalitzi el programa. S'utilitzaran dos tipus de 
+comandes principals: whois i dig. 
+
+        4.1 - Extracció del nom DNS
+
+            Per aconseguir el nom DNS d'una IP, utilitzem l'eina 'dig', que ens ofereix el paquet de dnsutils. 
+            La comanda dig serveix per extreure informació dels servidors DNS d'un host en concret. 
+
+            * Comanda: dnsNom=$(dig -x "$IP" +short | head -n 1) 
+
+                - dig -x "$IP" +short --> Realitzem la comanda dig a la variable $IP, que és la que volem analitzar. D'aquí aconseguim certa Informació
+                                          sobre el DNS, que filtrem mitjançant els flags -x i +short. 
+
+                                          -x --> Permet fer una resolució inversa. Bàsicament permet extreure el nom de domini (DNS) a partir d'una 
+                                                 certa IP, quan normalment amb la instrucció dig sense flags s'extreu les IPs a partir dels noms (just 
+                                                 el contrari).
+
+                                          +short --> Permet resumir l'output i filtrar només els noms DNS, sense cap altre informació adjacent. 
+
+                - head -n 1 --> Permet agafar només la primera línia del resultat que aconseguim amb la comanda (el primer DNS que apareix). 
+                                En cas d'haver més d'un, escolliríem un d'ells. Els noms de domini apareixen amb un ordre aleatori. Per tant, 
+                                podem aconseguir dos DNS diferents (els dos correctes) si executem la comanda dues vegades consecutives.  
+
+            El resultat de l'anterior comanda el guardem a la variable $dnsNom.
+            A continuació realitzem una comprovació i assignem un valor a la variable equipIP, que contindrà la IP analitzada i el seu DNS, en cas 
+            d'haver-lo trobat. 
+
+                Si -z "$dnsNom" --> Si el nom DNS que hem extret està buit (no hem trobat cap DNS)
+                    equipIP="$IP (DNS desconegut)" --> equipIP és la IP i el DNS és desconegut
+                Sino
+                    equipIP="$IP ($dnsNom)" --> equipIP és la IP i el seu DNS trobat prèviament
+                    
+            La variable equipIP forma la línia de 'Equip' que apareixerà al fitxer de sortida. 
+
+        4.2 - Creació i emplenament del fitxer de tractament de xarxes
+
+            touch .infowhois.log --> Creació del fitxer on es tractarà la xarxa de la IP especificada.
+
+            whois "$IP" > .infowhois.log --> Redireccionament del resultat de la comanda whois "$IP" al fitxer .infowhois.log
+
+            * Comanda: whois "$IP" --> Aquesta comanda permet extraure informació sobre una IP específica, en aquest cas $IP. 
+                                       Funciona mitjançant bases de dades que agafen informació dels diferents usuaris registrats a Internet. 
+                                       En el nostre cas ens servirà per agafar alguns punts importants d'informació, com són la IP, la IP de la seva 
+                                       xarxa, la IP de broadcast, el nom de la network, l'entitat de l'equip i el país. 
+                                       
+            El sistema per recollir dades del fitxer .infowhois.log utilitza les eines de grep, d'awk, de cut i de head. 
+
+                    - grep "string" fitxer-exemple --> Recull la línia en la que es troba l'string "string" al fitxer exemple. En cas de trobar-se en 
+                                                       varies línies s'agafarian totes. 
+                    - awk '{print $x}' --> Agafa la columna número x de la línia a la que s'aplica. 
+                    - cut -d 'separador' -fx- --> Separa la línia en columnes separades per 'separador' i agafa tota la línia des de la columna x fins al 
+                                                  final. 
+                    - head -n 1 --> Permet agafar la primera coincidència que troba, sense revisar si hi ha més. 
+
+            Aquestes són les variables que guardaran la informació:
+            
+            - xarxaNoMasc --> Extreta de la línia de "NetRange" de l'arxiu .infowhois.log.  
+            
+            - xarxaBroadcast --> Extreta de la línia de "NetRange" de l'arxiu .infowhois.log. 
+            
+            Aquestes dues variables anteriors conformen el rang de la xarxa de la $IP especificada. 
+              
+            - xarxaMasc -->  Aquesta variable conté l'adreça de la xarxa amb la seva corresponent màscara.
+                             Extreta de la línia de "route" de l'arxiu .infowhois.log.
+                             (en cas de no trobar-se cap adreça, hauríem de buscar a la línia de "CIDR").
+            
+            - xarxaNom --> Aquesta variable conté el nom de la xarxa.
+                           Extreta de la línia de "netname" de l'arxiu .infowhois.log.
+                           (en cas de no trobar-se cap adreça, hauríem de buscar a la línia de "OrgId").
+            
+            - xarxaEquip --> És una combinació de les anteriors. Forma la línia de 'Xarxa' que apareixerà al fitxer de sortida. 
+            
+            - entitatEquip --> Aquesta variable conté el nom de l'entitat de l'equip
+                               Extreta de la línia de "descr" de l'arxiu .infowhois.log.
+                               (en cas de no trobar-se cap entitat, hauríem de buscar a la línia de "Organization").
+                               
+            - paisEquip --> Aquesta variable conté l'abreviatura del país de l'equip. 
+                            Extreta de la línia de "country" de l'arxiu .infowhois.log. 
+                            (en cas de no trobar-se cap pais, hauríem de buscar a la línia de "Country").    
+                               
+            Aquestes dues variables anteriors formen la línia de 'Entitat' que apareixerà al fitxer de sortida. 
+                
+        4.3 - Impressió de línies de confirmació 
+
+            En aquest moment printem l'[ok] per confirmar que ja hem escanejat l'adreça IP i printem l'inici de la localització de l'adreça. 
+
 
 
 ####### 5. CREACIÓ DE FITXERS NECESSARIS #######
@@ -153,31 +264,184 @@ de dades).
 
             - touch log_ip --> Creació del fitxer de sortida on es situarà tota la informació aconseguida una vegada finalitzada l'execució del programa.
             - touch .dades.log --> Creació del fitxer on es tractaran algunes dades de geolocalització de la IP seleccionada per l'usuari. 
-            - touch .infonmap.log --> Creació del fitxer on 
-            - touch .ports.log -->
+            - touch .infonmap.log --> Creació del fitxer on es tractaran els ports i el sistema operatiu obtinguts.
+            - touch .ports.log --> Creació del fitxer on es tractaran els ports obtinguts del fitxer .infonmap.
 
         5.2 - Comprovacions fitxers buits
 
-            - true > log_ip -->
-            - true > .dades.log -->
-            - true > .infonmap.log -->
-            - true > .ports.log -->
+            - true > log_ip
+            - true > .dades.log
+            - true > .infonmap.log
+            - true > .ports.log
+
+            Aquestes quatre línies serveixen per assegurar-nos de que els fitxers que acabem de crear es troben buits. 
 
 
 ####### 6. RECOPILACIÓ DE DADES PART 2 #######
+En aquest apartat s'assignen valors a diferents variables que apareixeran al fitxer de sortida quan finalitzi el programa. S'utilitzaran dos tipus de 
+comandes principals: curl i nmap.
 
+    6.1 Recollida de dades principals de localització de la IP
+
+        Per aconseguir la localització d'una adreça IP, utilitzem l'eina 'curl', que ens ofereix el paquet de curl. 
+        La comanda curl serveix per extreure informació d'una adreça en concret. 
+
+            * Comanda: curl -s ipinfo.io/"$IP" > .dades.log
+
+                - curl -s ipinfo.io/"$IP" --> Realitzem la comanda curl a la variable $IP, que és la que volem analitzar. D'aquí aconseguim certa informació
+                                              sobre la localització, que filtrem mitjançant les opcions -s i ipinfo.io/
+
+                                                    -s --> Flag que serveix per ocultar el procés, i que no aparegui per pantalla. 
+
+                                                    ipinfo.io/"IP" --> ipinfo.io és un software que ens permet obtenir informació codificada amb JSON 
+                                                    (entendible per nosaltres) de k'adreça IP especificada.
+                                          
+                - > .dades.log -->  Redirecció de l'output generat per la instrucció al arxiu .dades.log
+
+        Com en l'apartat 4.2, les eines que s'utilitzaran per filtrar la informació seran el grep i el cut
+
+        Aquestes són les variables que guardaran la informació:
+
+                - gestorASN --> Aquesta variable conté el gestor ASN.
+                                Extreta de la línia de "org" de l'arxiu .dades.log.
+                                (en cas de no trobar-se cap gestor, hauríem de buscar assignar la variable com a "Desconegut").
+                                Forma la línia de 'Gestor ASN' que apareixerà al fitxer de sortida.
+                
+                A continuació apareixeran algunes variables que conformaran la variable final de $localitzacio.
+                
+                - ciutat --> Aquesta variable conté la ciutat. 
+                             Extreta de la línia de "city" de l'arxiu .dades.log.
+                             (en cas de no trobar-se cap ciutat, hauríem de buscar assignar la variable $localitzacio com a "Desconeguda").
+                
+                - CP --> Aquesta variable conté el codi postal. 
+                             Extreta de la línia de "postal" de l'arxiu .dades.log.
+
+                - provincia --> Aquesta variable conté la provincia. 
+                                Extreta de la línia de "region" de l'arxiu .dades.log.            
+
+                - pais --> Aquesta variable conté el pais. 
+                           Extreta de la línia de "country" de l'arxiu .dades.log.   
+
+                - localitzacio --> Conté les quatre variables anteriors. 
+                                   Forma la línia 'Localització' que apareixerà al fitxer de sortida.
+
+                A continuació apareixeran algunes variables que conformaran la variable final de $coordenades.
+                
+                - latitud --> Aquesta variable conté la latitud.
+                              Extreta de la línia de "loc" de l'arxiu .dades.log.
+                              (en cas de no trobar-se cap latitud, hauríem de buscar assignar la variable $coordenades com a "Desconegudes").
+
+                - longitud --> Aquesta variable conté la longitud.
+                               Extreta de la línia de "loc" de l'arxiu .dades.log.
+
+                - zonaHoraria --> Aquesta variable conté la zona horària.
+                                  Extreta de la línia de "timezone" de l'arxiu .dades.log.
+
+                - coordenades --> Conté les tres variables anteriors.
+                                  Forma la línia 'Coordenades' que apareixerà al fitxer de sortida.
+
+    6.2 Anàlisi nmap --> Es fa servir la comanda nmap per analitzar la IP demanada, d'aquesta s'extreuran els seus ports oberts i el seu sistema Operatiu. Tot 
+    l'output es guardarà a un fitxer anomenat .infonmap.log
+    
+        * Comanda: nmap -O "$IP" >> .infonmap.log --> Utilitzada per scanejar la IP demanada i recopilar els ports oberts / filtrats o sense filtrar que te 
+                                                      aquest host.
+    
+        - O: Aquest flag permet la detecció del sistema operatiu del host.
+    
+        Aquesta comanda ens permet analitzar des de tots els dispositus que es troben el rang d'una xarxa fins a host individuals com és aquest cas, l'objectiu 
+        principal aquí és analitzar tots els ports disponibles al host per conéixer quins d'aquests són accessibles (ja sigui perqué estàn oberts, sense 
+        filtrar,etc). 
+    
+        Per aconseguir-ho utilitzem la comanda per defecte (amb l'afegit de la cerca del sistema operatiu) que cerca els ports de manera aleatoria, per millorar 
+        l'eficiencia, ja que molts ports es troben en posicions molt elevades.
+
+        Altres opcions que podem utilitzar són: 
+
+            - A: Millor alternativa (molt exhaustiva) que ens permet activar la deteció de versions, i aquesta farà un anàlisi molt més exhaustiu dels ports 
+            de la IP seleccionada, però també amb un aument de temps elevat (s'ha decidit no implentar-ho per evitar llargs temps d'espera, es podría modificar 
+            fent, "nmap -A IP"). 
+
+            - p ports: Es pot analitzar ports concrets o rangs de ports.
+
+            - F : Scan limitat de ports que redueix la cerca a 100, guanyant en velocitat.
+
+            - r : Evitar la randomització de l'anàlisi de ports.
+
+            --top-ports n : Escaneja els n ports o rang de ports més populars a la base de dades de nmap. 
+        
+        Totes aquestes opcions es poden incloure, faràn que el nostre escaneig sigui més lento més però també ens poden ajudar a evitar restriccions que ens 
+        donen una resposta millor, o fer un escaneig més directe donat que conéixem certa informació del host.
+
+    6.3  Cerquem SO --> Amb l'output de la comanda nmap guardat al fitxer .infonmap.log es cerca la informacó del sistema operatiu amb la comanda: 
+    
+        * Comanda: grep "OS details" .infonmap.log | cut -d' ' -f3-) --> Agafa el paràmetre que es troba just després de les paraules "OS details" i el guarda 
+        a la variable SOequip.
+
+        En cas de no trobar el SO, guardarem a la varibale "No detectat". 
+
+    6.4. Cerquem els ports --> Amb l'output de la comanda nmap guardat al fitxer .infonmap.log es cerca la informacó dels ports amb la comanda:
+
+        * Comanda: grep -e "tcp" -e "udp" .infonmap.log | awk '{print $1, $3}' > .ports.log --> cerca totes les linies que continguin les paraules "tcp" i 
+        "udp", després s'agafa el primer i tercer paràmetre, que fan referncia al port i si es udp o tcp o els dos, i el protocol per el que esta assignat 
+        (http, tftp, etc).
+        
+        L'informació dels port es guarda al fitxer .ports.log
+    
 
 ####### 7. MAQUETACIÓ DE DADES PART 2 #######
+En aquest apartat tractarem més el format i la impressió final de l'output. Veurem que aquestes línies es printen per pantalla al final de la execució
+del programa i faciliten certa informació de com ha evolucionat el procés a l'usuari. També omplirem el fitxer de sortida final (log_ip).  
+
+        7.1 - Impressió de línies
+
+            Impressió per pantalla de dues línies d'informació per l'usuari. 
+
+        7.2 - Inicialització de variables
+
+            dataCompilacioFi=$(date --rfc-3339=date) --> Recollim la data actual.
+            horaCompilacioFi=$(date | cut -d ' ' -f5) --> Recollim la hora actual.  
+
+            Aquestes declaracions utilitzen la comanda date, que conté la informació necessària relacionada amb el temps actual. 
+
+        7.3 - Fitxer de sortida
+
+            El fitxer de sortida es genera mitjançant un conjunt d'instruccions d'echo. 
+
+            En la primera part del fitxer trobarem una capçalera, on apareixerà informació sobre el programa i algunes característiques de l'entorn, com 
+            són l'usuari que executa l'script, el nom del seu equip, el sistema operatiu, la versió de l'script, la data de la última modificació, la 
+            data i hora de l'inici de la compilació i la data i hora del final de l'execució. 
+
+            Després, apareixerà certa informació sobre l'adreça IP objectiu, que hem aconseguit durant l'execució de l'script. Aquesta informació estarà 
+            ordenada en variables, estarà separada línia per línia i serà la següent: equip de la IP, xarxa, entitat de l'equip, gestor ASN, localitzacio, 
+            coordenades, sistema operatiu i ports. 
+
+            Els ports es printaran mitjançant un bucle que anirà llegint línia per línia de l'arxiu .ports.log, on es troben els ports prèviament afegits. 
+            D'allà arreglarà el format de sortida i printarà directament a l'output del fitxer de sortida. 
+
+        7.4 - Impressió de línies finals
+
+            Per últim, es printaran per pantalla les dues línies finals de l'output, que contindran informació sobre el fitxer de sortida de la informació 
+            i la data i hora del final de la execució del programa. 
 
 
-####### 8. PROVES DE VALIDACIÓ #######
+
+####### 8. NETEJA DE FITXERS AUXILIARS I FI DEL PROGRAMA #######
+
+        rm .infowhois.log --> S'elimina l'arxiu que tractava la informació extreta de la comanda whois. 
+        rm .ports.log --> S'elimina l'arxiu que tractava la informació dels ports. 
+        rm .infonmap.log --> S'elimina l'arxiu que tractava els sistemes operatius i els ports. 
+        rm .dades.log --> S'elimina l'arxiu que tractava les diferents dades extretes del curl.
+        exit 0; --> Es finalitza el programa. 
+
+####### 9. PROVES DE VALIDACIÓ #######
+
+- Xarxa que reporta 
+
+####### 10. ESCENARIS DE FALLIDA #######
 
 
-####### 9. ESCENARIS DE FALLIDA #######
+####### 11. PUNTS DE MILLORA #######
 
 
-####### 10. PUNTS DE MILLORA #######
-
-
-####### 11. CONCLUSIONS GENERALS #######
+####### 12. CONCLUSIONS GENERALS #######
 

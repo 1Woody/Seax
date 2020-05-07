@@ -500,6 +500,7 @@ printant per pantalla, a la vista de l'usuari.
                                                                              l'atacant).
             x=7 --> Inicialització de la variable $x, que es compararà amb el número de caràcters que ocupa la variable $ipAcces, per tal d'alinear en format a 
                     totes les diferents IP's. S'inicialitza amb el valor 7 perquè és el mínim que pot tenir una IP (X.X.X.X)
+
             trobat=0 --> Inicialització de la variable $trobat, que funcionarà com a booleà. 
 
             6.3.1 Tractament de l'espai assignat a les adreces IP
@@ -510,7 +511,9 @@ printant per pantalla, a la vista de l'usuari.
 
                     num=15-$x; --> Inicialització de la variable $num. Conté els espais exactes que aniran abans de la IP a l'output per tal de que estiguin 
                                    totes alineades. (15 línies totals - $x línies d'IP)
+
                     A continuació, li afegirem a la variable $espaiBlancIP $num espais en blanc. 
+
                     trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els espais 
                                  en blanc fixats.
                     
@@ -521,8 +524,10 @@ printant per pantalla, a la vista de l'usuari.
 
             espaiBlancAccessos="   "; --> S'inicialitza amb tres espais en blanc la variable $espaiBlancAccessos, que és l'encarregada de col·locar els espais 
                                           en blanc adients per tal de que els accessos sempre quedin alineats amb el format de l'output.
+
             x=0 --> Assignació de la variable $x a 0, que es compararà amb el número de caràcters que ocupa la variable $numAccessos, per tal d'alinear en 
                     format a tots els números d'accessos. 
+
             trobat=0 --> Assignació de la variable $trobat, que funcionarà com a booleà. 
 
             6.3.2 - Tractament de l'espai assignat al número d'accessos 
@@ -534,7 +539,9 @@ printant per pantalla, a la vista de l'usuari.
 
                     num=11-$x; --> Assignació de la variable $num. Conté els espais exactes que aniran abans del número d'accessos a l'output per tal 
                                    de que estiguin totes alineades. (11 caràcters totals - $x caràcters d'accessos) 
+
                     A continuació, li afegirem a la variable $espaiBlancAccessos $num espais en blanc. 
+
                     trobat=1 --> Una vegada afegits els espais, el booleà $trobat es posa a 1 per tal de que no es torni a entrar al bucle i quedin els 
                                  espais en blanc fixats.
                     
@@ -551,6 +558,7 @@ printant per pantalla, a la vista de l'usuari.
         A continuació apareixen unes quantes comandes (echo -e ""), amb les que printarem el contingut situat entre les cometes. Cada comanda echo es troba en 
         una línia diferent. Totes aquestes línies printades seran redirigides directament al fitxer log_honeypot, gràcies a estar entre { } i finalment enviades 
         (>> log_honeypot).
+
         Totes són línies bàsiques d'output, sense major complicacions. Aquestes línies estaran sobre el conjunt de tots els atacs de totes les IP que siguin 
         registrats, que tractarem a continuació. 
 
@@ -558,6 +566,7 @@ printant per pantalla, a la vista de l'usuari.
 
         En aquest punt apareix la segona zona d'actualitzacions del fitxer. Es tractaran absolutament tots els atacs monitoritzats i es printaran per pantalla 
         per separat, independentment de tenir IP repetides (si fos el cas).
+
         Per cada atac monitoritzat (trobat a l'array $arrayFullAtacs) es realitzaran les següents accions:
         
             6.5.1 - Tractament de l'espai assignat a les adreces IP
