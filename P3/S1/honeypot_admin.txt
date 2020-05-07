@@ -222,7 +222,7 @@ seleccionat al iniciar l'script.
     guardar el pid (identificador de procés) de l'últim procés executat, permetent parar el procés quan sigui necessari (comanda kill, veure a l'apartat 6).
     Part comú de la instrucció tcpdump:
     
-    *Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" --> Inicialitza el programa amb els paràmetres decidits pels flags següents:
+    * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" --> Inicialitza el programa amb els paràmetres decidits pels flags següents:
         -l --> Permet que la sortida del tcpdump sigui llegible(o enviable) en temps real, permeten així guardar la sortida al fitxer atacs.log
         -q --> Redueix la informació que es mostra de cada captura (less verbose) 
         -nni --> conjunt de dos flags: 
@@ -238,9 +238,9 @@ seleccionat al iniciar l'script.
     capçalera tcp, i si és un flag de tipus SYN tindrà un valor de 00000010, que en decimal equival a 2. Per tant, ens queda el següent filtre per tcp:
     * Comanda: tcpdump -l -q -nni "$interfaceActual" dst "$myIP" and "$filter_tcp" --> Captura paquets de la interfície seleccionada, de tipus SYN i que 
                passen pel port seleccionat.
-        - filter_tcp="tcp[13]=2 and port $3"
-        - filter_tcp: tcp[13]=2  --> flag iniciat des de 0 per tant 0-13=14è byte
-        - port $3 --> Especificat als arguments d'entrada.
+               - filter_tcp="tcp[13]=2 and port $3"
+               - filter_tcp: tcp[13]=2  --> flag iniciat des de 0 per tant 0-13=14è byte
+               - port $3 --> Especificat als arguments d'entrada.
 
     
     4.3 - Cas UDP --> Amb el protocol UDP seleccionat, es capturen tots el paquets que tenen com a destí la IP de la interfície seleccionada, donat que el 
@@ -287,7 +287,7 @@ seleccionat al iniciar l'script.
     tcpdumpgood --> Variable que guarda la comprovació de que la sortida d'errors(al fitxer log_honeypot) tingui la informació que ens diu que funciona 
     correctament, per això fem la seguent comprovació:
     
-    *Comanda: grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot
+    * Comanda: grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" -e "listening on $1" log_honeypot
         - grep -c -e "tcpdump: verbose output suppressed, use -v or -vv for full protocol decode" --> comprova que el fitxer log_honeypot tingui la 
                                                                                                       frase seleccionada (frase que trobarem sempre que 
                                                                                                       funcioni bé ja que a cap de les comandes tcpdump 
@@ -637,7 +637,7 @@ Evolució dels accessos
  --------------- --------------- -----
 
 
-- Proves amb diferents sistemes Operatius (Ubuntu, Mint, Windows, WSL, Debian 9 ...)
+- Proves amb diferents sistemes Operatius (Ubuntu, Mint, Windows, WSL, Debian 10 ...)
 
 Prova amb Sistema Operatiu Linux Mint:
 
