@@ -392,7 +392,8 @@ del programa i faciliten certa informació de com ha evolucionat el procés a l'
     Cas 2- En l'escenari de la última prova de validació veiem com s'ha solucionat el problema de una o poden ser més interfícies que no siguin per connexió directa 
     com per exemple per wifi, en aquest cas es mostren les IPs però es perden les dades de MAc fabricant i Equip conegut.
 
-    Cas 3- Moltes interfícies
+    Cas 3- Amb una gran quantitas d'interfícies a analitzar, potser sería poc útil si el temps d'anàlisis de l'intrucció nmap fos molt alt. (Encara que 
+    l'orientació no és aquesta.) 
 
 
 ####### 10. PUNTS DE MILLORA #######

@@ -109,14 +109,14 @@ CREADORS: Daniel Benavente Garcia
 
     superusuari@pc:~# ./ids.sh 
 
-    Programa de cerca automàtica d'equips a la xarxa actual.
-     Versió 1.0 compilada el 2020-05-3.
-     Iniciant-se el 2020-05-07 a les 12:27:31 ...          [ok]
-     El fitxer log_ids sera sobrescrit...                  [ok]
-     Detecció d'equips en curs...                          [ok]
-     Processant les dades...                               [ok]
-     Resultats de l'anàlisi en el fitxer log_ids...        [ok]
-     Finalitzat el 2020-05-07 a les 12:28:37               [ok]
+    Programa de cerca automàtica d'equips a la xarxa actual.        --> Informació
+     Versió 1.0 compilada el 2020-05-3.                             --> Versió de l'script i data d'última compilació
+     Iniciant-se el 2020-05-06 a les 12:27:31 ...          [ok]     --> Data i hora de la execució
+     El fitxer log_ids sera sobrescrit...                  [ok]     --> Informació
+     Detecció d'equips en curs...                          [ok]     --> Informació
+     Processant les dades...                               [ok]     --> Informació
+     Resultats de l'anàlisi en el fitxer log_ids...        [ok]     --> Informació
+     Finalitzat el 2020-05-06 a les 12:28:37               [ok]     --> Data i hora del fi de l'execució
 
 
     3. FITXER LOG_IDS
@@ -124,19 +124,19 @@ CREADORS: Daniel Benavente Garcia
     superusuari@pc:~# cat log_ids 
 
     ---------------------------------------------------------------------------------------------------
-    Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip mipc.
-    Sistema operatiu Debian GNU/Linux 10 (buster).
-    Versió del script 1.0 compilada el 2020-05-3.
-    Anàlisi iniciada en data 2020-05-06 a les 10:05:22 i finalitzada en data 2020-05-06 a les 10:06:01.
+    Detecció dels equips de la xarxa local realitzada per l'usuari root de l'equip mipc.                    --> Informació d'IP, usuari i nom de l'equip
+    Sistema operatiu Debian GNU/Linux 10 (buster).                                                          --> Sistema operatiu de l'usuari
+    Versió del script 1.0 compilada el 2020-05-3.                                                           --> Versió de l'script i data d'última compilació
+    Anàlisi iniciada en data 2020-05-06 a les 10:05:22 i finalitzada en data 2020-05-06 a les 10:06:01.     --> Data i hora de l'inici i el fi de l'execució
     ---------------------------------------------------------------------------------------------------
     
     
     ---------------------------------------------------------------------------------------------------------
-    S'han detectat 10 equips a les subxarxes 192.168.0.0/24 [enp0s3]
+    S'han detectat 10 equips a les subxarxes 192.168.0.0/24 [enp0s3]                                            --> Número d'equips i subxarxes amb les seves interfícies
     ---------------------------------------------------------------------------------------------------------
     Adreça IP        Adreça MAC         Fabricant MAC                   Equip conegut      Nom DNS
-    ---------------  -----------------  ------------------------------  -----------------  ------------------
-    192.168.0.1      B4:A5:EF:A5:9C:C0  Sercomm                         Router             www.adsl.vf.             
+    ---------------  -----------------  ------------------------------  -----------------  ------------------ 
+    192.168.0.1      B4:A5:EF:A5:9C:C0  Sercomm                         Router             www.adsl.vf.         --> Adreça IP, MAC, fabricant MAC, equip conegut i nom DNS    
     192.168.0.11     4C:CC:6A:B3:18:B2  Micro-star Intl                 -                  .                        
     192.168.0.12     70:26:05:FA:1B:56  Unknown                         -                  .                        
     192.168.0.14     B4:9D:0B:12:2F:B8  BQ                              Sister Phone       .                        
@@ -147,10 +147,6 @@ CREADORS: Daniel Benavente Garcia
     192.168.0.32     D0:65:CA:F5:03:8C  Huawei Technologies             -                  .                        
     192.168.0.30     08:00:27:B3:4C:0A  Oracle VirtualBox virtual NIC   mipc               .                        
     ---------------  -----------------  ------------------------------  -----------------  ------------------
-
-
-
-    - Explicació UI
 
 
 5 - Preguntes freqüents

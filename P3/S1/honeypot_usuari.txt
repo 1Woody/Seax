@@ -202,7 +202,7 @@ Prem [q] per sortir.
         - Tot i que abans hem explicat que és possible aplicar-ho a la empresa, no es recomanable plantejar-ho per un gran sistema o una empresa mitjana o gran, 
         la idea principal d'aquest programa és la de conéixer millor les funcionalitats d'un honeypot i poder testejar les connexions.  
 
-    6. És compatible el meu Sistema Operatiu ?
+    6. És compatible amb el meu Sistema Operatiu ?
 
         - Com a norma general, si tens un Sistema Operatiu basat en linux sense grans modificacions (mateixa estructura de dades) i es compleixen els prerequisits
         si que funcionarà, en tot cas és pot provar ja que el programa ens avisarà de qualsevol error que es trobi a l'execució. 

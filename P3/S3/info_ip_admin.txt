@@ -533,7 +533,13 @@ sempre es podria millorar alguns segons amb la implementació d'altres mètodes 
 
 ####### 12. CONCLUSIONS GENERALS #######
 
+És un script senzill i fàcil d'entendre, la seva estructura és bastant rígida ja que s'ha volgut donar resposta a totes les peticions i han quedat moltes
+comprovacions. Com a conseqüencia també ha quedat un script robust que no es rendeix a la primera, i degut a la seva senzillesa juntament amb una maquetació 
+de tipus llista, no ha de ser massa difícl incloure nous camps d'informació. 
 
+El que està clar és que és un script senzill que podria ser el primer script programat per una persona principiant en aquests temes. Encara que és senzill, 
+es poden aprendre moltes coses gràcies a las quatres comandes més utilitzades: whois, dig, nmap i curl. Aquestes són comandes molt potents en les que es podria 
+aprofundir encara més per realitzar altres proves. 
 
 13. PÀGINES D'INTERÉS
 

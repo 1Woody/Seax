@@ -52,34 +52,47 @@ CREADORS: Daniel Benavente Garcia
     - Exemples d'execució
 
         root@seax:~# ./info_ip.sh 88.27.212.72
+                                                                
+        Programa de geolocalització i anàlisi automàtic d'una adreça IP.    --> Informació
+        Versió 1.0 compilada el 2020-04-30.                                 --> Versió de l'script i data d'última compilació
+        Iniciant-se el 2020-05-06 a les 08:44:09 ...          [ok]          --> Data i hora de la execució 
+        El fitxer log_ip sera sobrescrit...                   [ok]          --> Informació
+        Iniciant l'escanneig de l'adreça 88.27.212.72...      [ok]          --> Informació
+        Iniciant la localització de l'adreça...               [ok]          --> Informació
+        Processant les dades...                               [ok]          --> Informació
+        Resultats de l'anàlisi en el fitxer log_ip            [ok]          --> Informació
+        Finalitzat el 2020-05-06 a les 08:44:14               [ok]          --> Data i hora del fi de l'execució
+        
 
         Fitxer log_ip:
 
         ---------------------------------------------------------------------------------------------------
-        Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.
-        Sistema operatiu Debian GNU/Linux 10 (buster).
-        Versió del script 1.0 compilada el 2020-04-30.
-        Anàlisi iniciada en data 2020-05-07 a les 06:27:24 i finalitzada en data 2020-05-07 a les 06:27:28.
+        Cerca i anàlisi d'una adreça IP realitzada per l'usuari root de l'equip seax.                           --> Informació d'IP, usuari i nom de l'equip
+        Sistema operatiu Debian GNU/Linux 10 (buster).                                                          --> Sistema operatiu de l'usuari
+        Versió del script 1.0 compilada el 2020-04-30.                                                          --> Versió de l'script i data d'última compilació
+        Anàlisi iniciada en data 2020-05-06 a les 09:27:24 i finalitzada en data 2020-05-06 a les 09:27:28.     --> Data i hora de l'inici i el fi de l'execució
         ---------------------------------------------------------------------------------------------------
 
 
         --------------------------------------------------------------------------------
         Informació de l'adreça IP
-        Equip:        88.27.212.72 (72.red-88-27-212.staticip.rima-tde.net.)
-        Xarxa:        88.27.0.0/16 [88.27.0.0 - 88.27.255.255] (RIMA)
-        Entitat:      Telefonica de Espana SAU (NCC#2007050901) Red de servicios IP Spain (ES)
-        Gestor ASN:   AS3352 TELEFONICA DE ESPANA
-        Localització: Santander (39001), Cantabria, ES
-        Coordenades:  Latitud 43.4647 i longitud -3.8044, amb zona horària Europe/Madrid
-        S. Operatiu:  Desconegut
-        Ports:        Desconeguts
+        Equip:        88.27.212.72 (72.red-88-27-212.staticip.rima-tde.net.)                                    --> IP i Domain Name Service (DNS)
+        Xarxa:        88.27.0.0/16 [88.27.0.0 - 88.27.255.255] (RIMA)                                           --> Xarxa amb màscara, rang d'adreces i nom de la Network
+        Entitat:      Telefonica de Espana SAU (NCC#2007050901) Red de servicios IP Spain (ES)                  --> Nom de la entitat
+        Gestor ASN:   AS3352 TELEFONICA DE ESPANA                                                               --> Nom del gestor ASN
+        Localització: Santander (39001), Cantabria, ES                                                          --> Ciutat, codi postal, provincia i pais
+        Coordenades:  Latitud 43.4647 i longitud -3.8044, amb zona horària Europe/Madrid                        --> Dades de latitud, longitud i zona horària
+        S. Operatiu:  Desconegut                                                                                --> Sistema operatiu 
+        Ports:        Desconeguts                                                                               --> Ports Actius
         --------------------------------------------------------------------------------
+
 
 4. Preguntes freqüents
 
     1 - Puc afegir qualsevol IP en l'execució?
 
-        - Sí, sempre que sigui una IP vàlida s'analitzarà i s'estreurà tota la informació possible. 
+        - Sí, sempre que sigui una IP vàlida s'analitzarà i s'extreurà tota la informació possible. Tot i que si s'utilitzen IP de xarxes locals 
+        no es rebrà massa informació rellevant.
 
     2 - Puc executar-ho si no sóc usuari root ? 
 
