@@ -1,0 +1,404 @@
+Informe pràctica 4 - Benavente Daniel - Palacios Javier
+
+- Fitxers involucrats:
+	p4_Benavente_Daniel_Palacios_Javier.txt
+
+	- Descripció: Aquesta primera sessió de la pràctica, consisteix en crear un dns master i un de slave amb l'objectiu de resoldre
+	tant noms de domini com direccions inverses (ip a domini). El domini tractat a aquesta sessió és seax.edu, el qual es divideixi en
+	diferents subxarxes on els dispusitius de les quals, han de poder ser resolts tan de forma directa com inversa pels dns creats.
+	A més a més, els servidors dns han de poder resoldre peticions externes al domini i permetre només peticions recursives
+	dintre de les xarxes privades.
+
+	ÍNDEX
+
+	1. MODIFICAIONS PREVIES VIRTUALBOX
+	2. CONFIGURACIONS PREVIES DE LES MÀQUINES
+	3. CONFIGURACIÓ DNS
+	4. PROVES DE VALIDACIÓ
+
+************************************
+
+COSAS RARA RECORDAR (DOCU)
+- Nombres grandes no funcionan, _ no funciona
+
+************************************
+
+1. MODIFICAIONS PREVIES VIRTUALBOX:
+	Primer creem dues maquines virtuals anomenades DNS1 i DNS2 amb el sistema operatiu debian 10 (sense interfície gràfica), per a cada màquina farem el següent:
+
+	DNS1:
+		Anirem a la configuració de la màquina, i a l'apartat de Xarxa activem (si no hi està ja) un Adaptador de xarxa en mode Xarxa interna i un segon adaptador de xarxa en mode Adaptador Pont. Dels paràmetres Avanaçats per el primer adaptador modificarem la direcció MAc per "08:00:27:10:01:03" i li posarem el nom de "xarxa-dmz" al nom de la nostra xarxa, en canvi, per el segon no ens fara falta modificar res.
+		Resum configuració:
+			Nom màquina: DNS1
+			SO: Debian 10 (Buster / sense intefície gràfica)
+			Adaptador 1: Adaptador de xarxa de tipus interna
+									 MAC: 08:00:27:10:01:03
+			Adaptador 2: Adaptador de xarxa de tipus Adaptador Pont
+
+	DN2:
+	Per aquesta segona màquina seguirem el mateix procès que la primera amb la diferència de la Mac que assignarem al primer Adaptador(xarxa interna) serà "08:00:27:10:01:04".
+		Resum configuració:
+			Nom màquina: DNS2
+			SO: Debian 10 (Buster / sense intefície gràfica)
+			Adaptador 1: Adaptador de xarxa de tipus interna
+									 MAC: 08:00:27:10:01:04
+			Adaptador 2: Adaptador de xarxa de tipus Adaptador Pont
+
+	*IMPORTANT: En aquest procès i per evitar possibles errors, s'han configurat IP's fixes de la xarxa a la que es troba connectada les màquines DNS1 i DNS2 (tot i que pot funcionar amb la IP donada per el servidor DHCP que hi hagi configurat a la nostra xarxa).
+
+2. CONFIGURACIONS PREVIES DE LES MÀQUINES:
+
+Amb tota la configuració prèvia de VirutalBox finalitzada, encenem les màquines i tornem a entrar com a root per configurar les direccions IP estàtiques de les nostres interfícies al fitxer (/etc/network/interfaces):
+
+MÀQUINA DNS1
+
+Començarem modificant l'interfíce de la xarxa interna, amb el nom en aquest cas "enp0s3", seguint els següents paràmetres:
+
+	Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s3 inet static", després, com voldrem configurar la xarxa 10.10.1.0/28, els paràmetres seràn:
+
+	address 10.10.1.3 --> adreça fixa del nostre servidor Master
+	netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+	network 10.10.1.0 --> Identificador de xarxa
+	dns-nameservers 10.10.1.3 --> Ip del Servidor DNS (en aquest cas s'està refernciant a ell mateix).
+	gateway 10.10.1.1 --> Ip del router de la xarxa.
+
+	Per la segona interfíce (de manera opcional) també s'ha configurat una Ip fixa amb els següents paràmetres:
+
+	address 192.168.1.120 --> Adreça disponible de la nostra xarxa (amb connexió a internet)
+	netmask 255.255.255.0 --> Màscara de xarxa que fa referència a /24
+	network 192.168.1.0 --> Identificador de xarxa
+
+	Finalment el fixter de intefícies (/etc/network/interfaces) de la màquina DNS1 ha de quedar així:
+
+	# This file describes the network interfaces available on your system
+	# and how to activate them. For more information, see interfaces(5).
+
+	source /etc/network/interfaces.d/*
+
+	# The loopback network interface
+	auto lo
+	iface lo inet loopback
+
+	******REVISAR******
+
+	iface enp0s3 inet static
+	address 10.10.1.3
+	netmask 255.255.255.240
+	network 10.10.1.0
+	dns-nameservers 10.10.1.3
+	gateway 10.10.1.1
+
+	auto enp0s8
+	iface enp0s8 inet static
+	address 192.168.1.120
+	netmask 255.255.255.0
+	network 192.168.1.0
+
+
+	També modificarem el fitxer (/etc/resolv.conf) per incloure el servidor DNS (a ell mateix en aquest cas)
+	Només farà falta que apareixi aquesta línia:
+
+	nameserver 10.10.1.3
+
+
+MÀQUINA DNS2
+
+	A aquesta màquina farem exactament el mateix que a l'anterior amb la diferència a les IPs de les dues interfícies.
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+#allow-hotplug enp0s3
+#iface enp0s3 inet dhcp
+
+auto enp0s3
+iface enp0s3 inet static
+address 10.10.1.4
+netmask 255.255.255.240
+network 10.10.1.0
+dns-nameservers 10.10.1.4
+gateway 10.10.1.1
+
+
+auto enp0s8
+iface enp0s8 inet static
+address 192.168.1.123
+netmask 255.255.255.0
+network 192.168.1.0
+dns-nameservers 10.10.1.4
+
+- Modifiquem el fitxer /etc/resolv.conf:
+
+nameserver 10.10.1.4
+
+-- INSTALACIÓN DE PAQUETES --
+
+	Una vegada tenim la configuració de VirutalBox completada, encenem les màquines amb l'usuari root i les actualitzem amb les comandes:
+		#apt-get update
+		#apt-get upgrade
+
+	Amb tot actualitzat, instal·larem els paquets que necessitarem per la configuració del nostre DNS amb la comanda:
+		- Paquet dnsutils --> Aquest paquet ens instala tot el necessàri per poder fer comandes com el dig o nslookup.
+			#apt-get install dnsutils
+
+		- Paquets bind9 --> Ens instala un servei de dns el qual, genera una carpeta a /etc/bind on tenim tots els fitxers de configuració sobre el nostre dns (fitxers de zona per exemple).
+			#apt-get install bind9
+
+		- Operacions bàsiques de bind9:
+			-	service bind9 stop --> para el servei
+			- service bind9 start --> inicia el servei
+			- service bind9 restart --> reinicia el servei
+			- service bind9 reload --> actualitza els fitxers de zona en cas de haver-hi canvis
+
+
+	Una vegada instal·lat els paquets necessàris:
+
+  - Ja podrem començar a configurar el nostre servei DNS.
+
+
+
+3. CONFIGURACIÓ DNS
+
+Creació del DNS Master (dns1):
+
+-> El servidor DNS master és aquell al que se li fan les peticions de resolució en primera instància. Aquest servidor és el que conté la informació completa de les zones del domini i al primer que pregunta qualsevol dels dispositius que vulgui resoldre algun nom o adreça ip. En altres paraules, és el servidor dns principal del domini.
+
+  - Obrim la màquina anomenada DNS1
+
+  - Accedim a /etc/bind i modifiquem l'arxiu named.conf.local per crear les zones:
+
+		//
+		// Do any local configuration here
+		//
+
+		// Consider adding the 1918 zones here, if they are not used in your
+		// organization
+		//include "/etc/bind/zones.rfc1918";
+
+
+		zone "seax.edu" IN {
+		type master;
+		file "/etc/bind/db.seax.edu";
+		allow-transfer { 10.10.1.4; }; //Allow Transfer of zone from the master
+		also-notify { 10.10.1.4; };
+		};
+
+		//FALTA la cerca inversa
+		zone "10.10.in-addr.arpa" IN {
+		type master;
+		file "/etc/bind/db.10.10";
+		allow-transfer { 10.10.1.4; }; //Allow Transfer of zone from the master
+		also-notify { 10.10.1.4; };
+		};
+
+
+		Com podem veure, tenim dos zones:
+
+			- seax.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. Com es pot veure, permitim la comunicació amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com avisar-li dels canvis amb el "also-notify".
+			Els dispusitius d'aquesta zona es declaren al fitxer "db.seax.edu"
+
+			- 10.10.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Com es pot veure, permitim la comunicació amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com avisar-li dels canvis amb el "also-notify".
+ 			Els dispusitius d'aquesta zona es declaren al fitxer db.10.10
+
+  - Copiem el contingut del fitxer db.local al fitxer db.seax.edu com a base i l'editem per afegir els dispositius que pertanyen a la zona:
+
+    #cp db.local db.seax.edu
+		#nano db.seax.edu
+
+			;
+			; BIND data file for local loopback interface
+			;
+			$TTL	604800
+			@	IN	SOA	seax.edu. root.seax.edu. (
+						     10		; Serial
+						 604800		; Refresh
+						  86400		; Retry
+						2419200		; Expire
+						 604800 )	; Negative Cache TTL
+			;
+			@		IN	NS	dns.seax.edu.
+			dns		IN	A	10.10.1.3
+			raccessDmz	IN	A	10.10.1.1
+			raccessAdmin	IN	A	10.10.2.1
+			raccessVpn	IN	A	10.10.6.1
+			rusuarisDmz	IN	A	10.10.1.2
+			ruBackbone	IN	A	10.10.3.1
+			ruUsuaris	IN	A	10.10.4.1
+			rsAdmin		IN	A	10.10.2.2
+			rsBackbone	IN	A	10.10.3.2
+			rsServers	IN	A	10.10.5.1
+			dns2		IN	A	10.10.1.4
+			dhcpServers	IN	A	10.10.5.2
+			dns1		IN	CNAME	dns.seax.edu.
+			;troncal
+			;monitores
+
+
+			!!!EXPLICAR PARAMETROS SOA!!!
+
+			Com podem veure tenim RR de diferents tipus:
+				- NS(nameserver): on hem posat dns.seax.edu
+				- A (address): on afegim tots els dispositius de la nostra xarxa amb un nom per identificar-los i la seva adreça ip.
+				- CNAME (canonical name): hem creat un alias pel nom canònic "dns.seax.edu" anomenat dns1. D'aquesta manera podrem ressoldre el mateix fent dig "dns1.seax.edu" que fent "dig dns.seax.edu".
+				Aquest fitxer és el que ens permet obtenir les ip's de dispositius del domini a partir del seu nom.
+
+
+  - Copiem el contingut del fitxer db.local al fitxer db.10.10 com a base i l'editem:
+    #cp db.local db.10.10
+		#nano db.10.10
+
+			;
+			; BIND data file for local loopback interface
+			;
+			$TTL	604800
+			@	IN	SOA	seax.edu. root.seax.edu. (
+						      5		; Serial
+						 604800		; Refresh
+						  86400		; Retry
+						2419200		; Expire
+						 604800 )	; Negative Cache TTL
+			;
+			@	IN	NS	dns.seax.edu.
+			3.1	IN	PTR	dns.seax.edu.
+			1.1	IN	PTR	raccessDmz.seax.edu.
+			2.1	IN	PTR	rusuarisDmz.seax.edu.
+			4.1	IN	PTR	dns2.seax.edu.
+			1.2	IN	PTR	raccessAdmin.seax.edu.
+			2.2	IN	PTR	rsAdmin.seax.edu.
+			2.3	IN	PTR	rsBackbone.seax.edu.
+			1.4	IN	PTR	ruUsuaris.seax.edu.
+			2.5	IN	PTR	dhcpServers.seax.edu.
+			1.5	IN	PTR	rsServers.seax.edu.
+			1.6	IN	PTR	raccessVpn.seax.edu.
+			1.3	IN	PTR	ruBackbone.seax.edu.
+			1.4	IN	PTR	ruUsuaris.seax.edu.
+			;troncal
+			;monitores
+
+
+			!!!EXPLICAR PARAMETROS SOA!!!
+
+			Com podem veure tenim RR de diferents tipus:
+				- NS(nameserver): on hem posat dns.seax.edu
+				-PTR (address): on afegim tots els dispositius de la nostra xarxa amb els 16 bits de menys pes de la seva adreça ip per identificar-los i el seu nom.
+				Els RR de tipus PTR no són res més que un punter al digits posats a la zona en qüestió. Per exemple, en aquest cas "zone 10.10.in-addr.arpa". Per tant, per que funcioni la ressolució, quan declarem un dispositiu al fitxer db.10.10 en aquest cas, cal inidicar els 16 primers digits de la ip que li correspon així com el nom.
+
+	- Modifiquem el fitxer de configuració /etc/bind/name.conf.options per tal de limitar les peticions recursives a dispositius que pertanyen la les nostres xarxes del domini:
+
+
+		acl "trusted" {
+		 10.10.1.0/28;
+		 10.10.2.0/28;
+		 10.10.3.0/30;
+		 10.10.4.0/28;
+		 10.10.5.0/28;
+		 10.10.6.0/28;
+		};
+
+		options {
+		 directory "/var/cache/bind";
+
+		 //Activem la recursivitat
+		 recursion yes;
+		 //recursivitat només per xarxes de confiança
+		 allow-recursion { trusted; };
+		 //allow-query { any; };
+		 // If there is a firewall between you and nameservers you want
+		 // to talk to, you may need to fix the firewall to allow multiple
+		 // ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+		 // If your ISP provided one or more IP addresses for stable
+		 // nameservers, you probably want to use them as forwarders.
+		 // Uncomment the following block, and insert the addresses replacing
+		 // the all-0's placeholder.
+
+		 //forwarders {
+		 // 	0.0.0.0;
+		 //	8.8.8.8;
+		 //	8.8.4.4;
+		 //};
+
+		 //========================================================================
+		 // If BIND logs error messages about the root key being expired,
+		 // you will need to update your keys.  See https://www.isc.org/bind-keys
+		 //========================================================================
+		 dnssec-validation auto;
+
+		 listen-on-v6 { any; };
+		};
+
+		Com podem veure, tenim una llista d'accés amb el conjunt d'adreces de xarxa que pertanyen a les nostres xarxes internes. Aquesta llista d'accés l'anomenem "trusted" o zona de confiança. Una vegada creada, a l'apartat options, hem declarat que permetem la recursivitat amb la línia "recursion yes" tot i què realment la limitació de la recursivitat és fa amb a línia "allow-recursion { trusted; };", ja que indica que només permet la recursivitat per adreces que estiguin dintre de les xarxes declarades a la llista d'accés trusted.
+
+  - Obrim en mode edició el fitxer /etc/resolv.conf
+    #nano /etc/resolv.conf
+
+    Editem el nameserver per la ip del servidor dns master: 10.10.1.3
+    Guardem i sortim
+  - Reiniciem el servei bind9:
+
+    #service bind9 restart
+
+
+		NOTA: Cal comentar, que cada vegada que es faci una modificació al fitxer db.seax.edu o al db.10.10 és necessari incrementar el valor del "serial" de forma aleatòria.
+		Això ens permet que quan fem un "service bind9 reload" s'actualitzin únicament els fitxers relacionats amb les zones a més de notificar al slave dels canvis i fer-li la transferència d'aquests canvis.
+
+
+Creació del DNS Slave (dns2):
+
+ -> El servidor dns slave pràcticament és un a còpia del servidor master per en cas de fallada d'aquest, no provocar una caiguda del servei de dns de la xarxa. Aquest Servidor, cada vegada que el master ha fet un canvi als fitxers de zona, rep un avís i una transferència dels canvis. Per tant, el servidor slave en cas de caiguda del master, podrà resoldre tants noms o ip's com va rebre a la última actualització.
+ En altres paraules, és un servidor dns de suport o còpia pel master.
+
+- Obrim la màquina anomenada DNS1
+
+- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local:
+
+	//AÑADIR CONTENIDO DEL FICHERO
+
+- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local:
+# nano /etc/bind/named.conf.local
+
+Editem el fitxer afegint dues noves zones:
+
+
+4. PROVES DE VALIDACIÓ
+	- Explicar lo importante del dig, como funciona la salida, etc
+
+
+XARXES INCLOSES
+10.10.1.0/28
+10.10.2.0/28
+10.10.3.0/30
+10.10.4.0/28
+10.10.5.0/28
+10.10.6.0/28
+
+
+
+COSAS POR HACER
+- Añadir los cambios en el fichero options del master al slave
+- comentar el fichero options (slave)
+- Comentar el slave
+. comentar paràmetros SOA
+- pruebas de validación
+- Respondre consultes que no pertanyin als dominis --> ok
+- Verificar Recursividad solo para la privada --> ok
+- Adjuntar los ficheros de bind, interfaces y resolv
+- Cambiar nombre de interfícies
+
+
+
+DUDAS
+Nombre de zona tiene que ser el nombre de dominio  (“seax.edu”)
+Cambiar el nombre a la interfície
+Dns1 es solo alias o nombre del NS
+Como resuelvo dominios de otra zona
+Inversa tiene que devolver el CN o el alias
+Solo 1 zona directa?
+Mantener solo un fihcero de zona, o hay subdominios (admin.seax.edu)
