@@ -199,6 +199,7 @@ COSAS RARA RECORDAR (DOCU)
 
   - Accedim a /etc/bind i modifiquem l'arxiu named.conf.local per crear les zones:
 
+	---------------------------------------------------------------------------
 		//
 		// Do any local configuration here
 		//
@@ -222,24 +223,28 @@ COSAS RARA RECORDAR (DOCU)
 		allow-transfer { 10.10.1.4; }; //Allow Transfer of zone from the master
 		also-notify { 10.10.1.4; };
 		};
+	---------------------------------------------------------------------------
 
 
 		Com podem veure, tenim dos zones:
 
 			- seax.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. Com es pot veure, permitim la 
-			  comunicació amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com avisar-li dels canvis amb el "also-notify".
+			  comunicació afegit el paràmetre "allow-transfer" amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com 
+				avisar-li dels canvis amb el "also-notify".
 			  Els dispusitius d'aquesta zona es declaren al fitxer "db.seax.edu"
 
 			- 10.10.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Com es pot veure, permitim la 
-			  comunicació amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com avisar-li dels canvis amb el "also-notify".
- 			  Els dispusitius d'aquesta zona es declaren al fitxer db.10.10
+			  comunicació afegit el paràmetre "allow-transfer" amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com 
+				avisar-li dels canvis amb el "also-notify".
+ 			  Els dispusitius d'aquesta zona es declaren al fitxer "db.10.10"
 
-  - Copiem el contingut del fitxer db.local al fitxer db.seax.edu com a base i l'editem per afegir els dispositius que pertanyen a la 
-	  zona:
+  - Copiem el contingut del fitxer "db.local" al fitxer "db.seax.edu" com a base i l'editem per afegir els dispositius que pertanyen 
+	  a la zona:
 
     # cp db.local db.seax.edu
 		# nano db.seax.edu
 
+--------------------------------------------------------
 			;
 			; BIND data file for local loopback interface
 			;
@@ -267,22 +272,36 @@ COSAS RARA RECORDAR (DOCU)
 			dns1		IN	CNAME	dns.seax.edu.
 			;troncal
 			;monitores
-
+--------------------------------------------------------
 
 			!!!EXPLICAR PARAMETROS SOA!!!
+			A la capçalera del fitxer trobem títol on nosaltres col·locarem el nom del nostre fitxer SOA (Domini escollit a la configuració
+			anterior i el nom "root.seax.edu"  **** JAVI **** )
+			
+			Els paràmetres els deixarem per defecte, cadascún d'aquest fa referència a: 
 
-			Com podem veure tenim RR de diferents tipus:
+			- Serial --> 
+			- Refresh --> 
+			- Retry --> 
+			- Expire --> 
+			- Negative Cache TTL --> 
+
+
+			Com podem veure tenim RR (Resource Records) de diferents tipus:
 				- NS(nameserver): on hem posat dns.seax.edu
 				- A (address): on afegim tots els dispositius de la nostra xarxa amb un nom per identificar-los i la seva adreça ip.
 				- CNAME (canonical name): hem creat un alias pel nom canònic "dns.seax.edu" anomenat dns1. D'aquesta manera podrem ressoldre 
 				  el mateix fent dig "dns1.seax.edu" que fent "dig dns.seax.edu".
 				Aquest fitxer és el que ens permet obtenir les ip's de dispositius del domini a partir del seu nom.
 
+			**** FALTA EXPLICAR MÁS RR ****
+
 
   - Copiem el contingut del fitxer db.local al fitxer db.10.10 com a base i l'editem:
     # cp db.local db.10.10
 		# nano db.10.10
 
+--------------------------------------------------------
 			;
 			; BIND data file for local loopback interface
 			;
@@ -310,7 +329,7 @@ COSAS RARA RECORDAR (DOCU)
 			1.4	IN	PTR	ruUsuaris.seax.edu.
 			;troncal
 			;monitores
-
+--------------------------------------------------------
 
 			!!!EXPLICAR PARAMETROS SOA!!!
 
@@ -325,7 +344,7 @@ COSAS RARA RECORDAR (DOCU)
 	- Modifiquem el fitxer de configuració /etc/bind/name.conf.options per tal de limitar les peticions recursives a dispositius que 
 	  pertanyen la les nostres xarxes del domini:
 
-
+-----------------------------------------------------------------------------------
 		acl "trusted" {
 		 10.10.1.0/28;
 		 10.10.2.0/28;
@@ -366,12 +385,13 @@ COSAS RARA RECORDAR (DOCU)
 
 		 listen-on-v6 { any; };
 		};
+-----------------------------------------------------------------------------------
 
 		Com podem veure, tenim una llista d'accés amb el conjunt d'adreces de xarxa que pertanyen a les nostres xarxes internes. Aquesta 
 		llista d'accés l'anomenem "trusted" o zona de confiança. Una vegada creada, a l'apartat options, hem declarat que permetem la 
 		recursivitat amb la línia "recursion yes" tot i què realment la limitació de la recursivitat és fa amb a línia 
 		"allow-recursion { trusted; };", ja que indica que només permet la recursivitat per adreces que estiguin dintre de les xarxes 
-		declarades a la llista d'accés trusted.
+		declarades a la llista d'accés "trusted".
 
   - Obrim en mode edició el fitxer /etc/resolv.conf
    
@@ -384,7 +404,7 @@ COSAS RARA RECORDAR (DOCU)
 
     # service bind9 restart
 
-		NOTA: Cal comentar, que cada vegada que es faci una modificació al fitxer db.seax.edu o al db.10.10 és necessari incrementar el 
+		IMPORTANT: Cal comentar, que cada vegada que es faci una modificació al fitxer db.seax.edu o al db.10.10 és necessari incrementar el 
 		valor del "serial" de forma aleatòria.
 		Això ens permet que quan fem un "service bind9 reload" s'actualitzin únicament els fitxers relacionats amb les zones a més de 
 		notificar al slave dels canvis i fer-li la transferència d'aquests canvis.
@@ -400,14 +420,61 @@ COSAS RARA RECORDAR (DOCU)
 
 	- Obrim la màquina anomenada DNS1
 
-	- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local:
+	- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local per crear les zones:
+-----------------------------------------------------------------------------------
+		//
+		// Do any local configuration here
+		//
 
-		//AÑADIR CONTENIDO DEL FICHERO
+		// Consider adding the 1918 zones here, if they are not used in your
+		// organization
+		//include "/etc/bind/zones.rfc1918";
 
-	- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local:
-	# nano /etc/bind/named.conf.local
 
-	Editem el fitxer afegint dues noves zones:
+		zone "seax.edu" IN {
+			type slave;
+			file "/var/cache/bind/db.seax.edu";
+			masters {10.10.1.3;};
+		};
+
+		//FALTA la cerca inversa
+		zone "10.10.in-addr.arpa" IN {
+			type slave;
+			file "/var/cache/bind/db.seax.edu";
+			masters {10.10.1.3;};
+		};
+-----------------------------------------------------------------------------------
+
+		Com ja hem vist al cas del master, crearem exactament les mateixes zones, però amb diverses modificacións: 
+		
+		Priemr modificarem el tipus perqué les dues zones siguin "slave", també guardarem els fitxers de zona a la direcció 
+		"/var/cache/bind/db.seax.edu" per el cas de la zona principal, i a "/var/cache/bind/db.seax.edu" per al fitxer de la zona inversa.
+		
+		Finalment, col·locarem el master (o masters) del qual el nostre servidor slave serà esclau i d'on agafarà els fitxers, això ho 
+		farem amb: 
+
+		masters {10.10.1.3;}; --> En aquest paràmetre posarem separats per ";" tots els masters amb els que treballa el nostre servidor
+															escalu, en el nostre cas només té un master a la direcció 10.10.1.3 .
+
+		
+	Una vegada acabem la configuració del fitxer "/etc/bind/named.conf.local" no fara falta crear cap arxiu de zona, sino que el nostre
+	servidor esclau s'ocupara d'agafar automàticament els fitxers del servidor master i fins i tot de revisar de manera periódica si ha 
+	hagut canvis en aquests i ha d'actualitzar-los. 
+	
+	*** FALTA HABLAR DEL SERIAL ? ***
+
+	Per finalitzar i desar els canvis farem un: 
+
+	# service bind9 restart
+
+	Amb el nostres servidors MASTER i ESCLAU actius i funcionant, podrem anar a la ruta "/var/cache/bind" i hauriem de trobar els 
+	fitxers de configuració de zona del nostre servidor master. 
+	
+	Fent la comanda ls al directori vurem els fitxers de zona entre altres: 
+	- db.10.10	
+	- db.seax.edu
+
+
 
 
 
