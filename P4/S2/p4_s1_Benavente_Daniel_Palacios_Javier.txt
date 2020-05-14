@@ -1,0 +1,29 @@
+Informe pràctica 4 - Benavente Daniel - Palacios Javier
+
+- Fitxers involucrats:
+	p4_Benavente_Daniel_Palacios_Javier.txt
+
+	- Descripció: 
+
+ÍNDEX
+
+	1. MODIFICAIONS PREVIES VIRTUALBOX
+	2. CONFIGURACIONS PREVIES DE LES MÀQUINES
+		 2.1. INSTAL·LACIÓ DE PAQUETS
+	3. CONFIGURACIÓ DNS
+		 3.1. CREACIÓ DEL DNS MASTER (dns1)
+		 3.2. CREACIÓ DEL DNS SLAVE (dns2)
+	4. PROVES DE VALIDACIÓ
+		 4.1. PROVES DE VALIDACIÓ DNS MASTER (dns1)
+		 4.2. PROVES DE VALIDACIÓ DNS SLAVE (dns2)
+
+
+PASOS PREVIOS 
+
+	- Instalamos isc-dhcp-server
+	- Configurar fichero de dhcp en (/etc/dhcp/dhcp...)
+
+
+
+####### 1. MODIFICAIONS PREVIES VIRTUALBOX #######
+
