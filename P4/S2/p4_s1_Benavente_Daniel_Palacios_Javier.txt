@@ -3,27 +3,524 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 - Fitxers involucrats:
 	p4_Benavente_Daniel_Palacios_Javier.txt
 
-	- Descripció: 
+	- Descripció: En aquesta part de la pràctica veurem la creació d'un dhcp per donar servei a diferents subxarxes. Aquest dhcp tindrà 2 interfícies de xarxa
+	per poder donar servei a les dues subxarxes degut que encara no disposem de routers.
+	A més de tenir 2 pools d'adreces per donar servei a les dues subxarxes també hem configurat ip's reservades exclusivament per certes màquines.
+	A més a més, el servidor està configurat per controlar el temps màxim el qual otorga una ip a una màquina, el màxim, dns...
 
 ÍNDEX
 
-	1. MODIFICAIONS PREVIES VIRTUALBOX
-	2. CONFIGURACIONS PREVIES DE LES MÀQUINES
-		 2.1. INSTAL·LACIÓ DE PAQUETS
-	3. CONFIGURACIÓ DNS
-		 3.1. CREACIÓ DEL DNS MASTER (dns1)
-		 3.2. CREACIÓ DEL DNS SLAVE (dns2)
-	4. PROVES DE VALIDACIÓ
-		 4.1. PROVES DE VALIDACIÓ DNS MASTER (dns1)
-		 4.2. PROVES DE VALIDACIÓ DNS SLAVE (dns2)
+	1. EL PROTOCOL DHCP
+	2. MODIFICAIONS PREVIES VIRTUALBOX
+	3. CONFIGURACIONS PREVIES DE LES MÀQUINES
+		 1. PASOS PREVIS
+		 3.1. INSTAL·LACIÓ DE PAQUETS
+	3. CONFIGURACIÓ SERVIDOR DHCP
+	4. CONFIGURACÓ DE CLIENTS
+			4.1 DEMANAR UNA IP DES D'UN CLIENT
+	5. PROVES DE VALIDACIÓ
+		 5.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE
+		 5.2. PROVES DE VALIDACIÓ IP RESERVA
 
 
-PASOS PREVIOS 
+####### 1. EL PROTOCOL DHCP #######
 
-	- Instalamos isc-dhcp-server
-	- Configurar fichero de dhcp en (/etc/dhcp/dhcp...)
+Procés que es du a terme quan un usuari demana una ip
+
+	1. Client cerca servidors dhcp --> DHCP DISCOVER
+	2. Servidor dhcp respon --> DHCP OFFER
+	3. Servidor client pot rebutjar o acceptar la peticó, en cas d'acceptar --> DHCP REQUEST
+	4. En cas de que la ip demanada sigui encara disponible el servidor respon amb un ACK
+
+	NOTA el procés 3 i 4 es fan constantment per verificar la comunicació.
 
 
 
-####### 1. MODIFICAIONS PREVIES VIRTUALBOX #######
+		 ####### 1. MODIFICAIONS PREVIES VIRTUALBOX #######
+
+PASOS PREVIS
+- Creem 1 servidor dhcp que tindrà 3 adaptadors de xarxa amb les següents instrefícies:
+
+	- Iniciem la màquina DHCP
+	- Instalem el paquet isc-dhcp-server
+		#apt-get install isc-dhcp-server
+	- Configurem el fitxer /etc/network/interfaces
+
+			#nano /etc/network interfaces
+
+			# This file describes the network interfaces available on your system
+			# and how to activate them. For more information, see interfaces(5).
+
+			source /etc/network/interfaces.d/*
+
+			# The loopback network interface
+			auto lo
+			iface lo inet loopback
+
+			# The primary network interface
+			auto enp0s3
+			iface enp0s3 inet static
+				broadcast 192.168.0.255
+				network 192.168.0.0
+				netmask 255.255.255.0
+				address 192.168.0.47
+				gateway 192.168.0.1
+
+			auto enp0s8
+			iface enp0s8 inet static
+				broadcast 10.10.5.255
+				network	10.10.5.0
+				netmask 255.255.255.240
+				address 10.10.5.2
+				gateway 10.10.5.1
+
+			auto enp0s9
+			iface enp0s9 inet static
+				broadcast 10.10.4.255
+				network 10.10.4.0
+				netmask 255.255.255.240
+				address 10.10.4.3
+				gateway 10.10.4.1
+
+
+			* Com podem veure, tenim configurades 3 interfícies de xarxa:
+			- enp0s3: xarxa en adaptador pont amb ip estàtica 192.168.0.47 (per tenir accés a internet).
+			- enp0s8: interfície en xarxa interna que dòna servei dhcp a la subxarxa 10.10.5.0 amb ip estàtica 10.10.5.2
+			- enp0s9: interfície en xarxa interna que dòna servei dhcp a la subxarxa 10.10.4.0 amb ip estàtica 10.10.4.3
+
+####### 3. CONFIGURACIÓ DEL SERVIDOR DHCP #######
+
+	- Configurem el fitxer /etc/dhcp/default/isc-dhcp-server per especificar les interfícies que donen servei dhcp
+			# Defaults for isc-dhcp-server (sourced by /etc/init.d/isc-dhcp-server)
+
+			# Path to dhcpd's config file (default: /etc/dhcp/dhcpd.conf).
+			#DHCPDv4_CONF=/etc/dhcp/dhcpd.conf
+			#DHCPDv6_CONF=/etc/dhcp/dhcpd6.conf
+
+			# Path to dhcpd's PID file (default: /var/run/dhcpd.pid).
+			#DHCPDv4_PID=/var/run/dhcpd.pid
+			#DHCPDv6_PID=/var/run/dhcpd6.pid
+
+			# Additional options to start dhcpd with.
+			#	Don't use options -cf or -pf here; use DHCPD_CONF/ DHCPD_PID instead
+			#OPTIONS=""
+
+			# On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
+			#	Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+			INTERFACESv4="enp0s8 enp0s9"
+			INTERFACESv6=""
+
+
+			* Com podem veure, tenim declarades les interfícies enp0s8 i la enp0s9 explicades abans
+
+ - Configurem el fitxer /etc/dhcp/dhcpd.conf
+
+	 	Afegim les pools per les dues subxarxes:
+
+		subnet 10.10.5.0 netmask 255.255.255.240 {
+		  option routers 10.10.5.1;
+		  option subnet-mask 255.255.255.240;
+		  #option broadcast-address 10.10.5.255;
+		  default-lease-time 800;
+		  max-lease-time 10000;
+		  option domain-name "seax.edu";
+		  option domain-name-servers 10.10.1.3;
+		  range 10.10.5.3 10.10.5.11;
+		}
+
+		subnet 10.10.4.0 netmask 255.255.255.240 {
+		  option routers 10.10.4.1;
+		  range 10.10.4.6 10.10.4.11;
+		}
+
+		Com podem veure la configuració de la subnet 10.10.5.0 té una configuració més completa que no pas la 10.10.4.0.
+		Veiem pas per pas cada línia de la més completa:
+			- option routers 10.10.5.1; --> indica el router que de la subxarxa del client
+			- option subnet-mask 255.255.255.240; --> indica la màscara de subxarxa del client
+			- option broadcast-address 10.10.5.255; --> indica la l'adreça de broadcast del client
+			- default-lease-time 800; --> temps en segons al qual expira l'assignaió de la adreça ip obtinguda
+			- max-lease-time 10000; --> temps màxim en segons al qual expira l'assignaió de la adreça ip obtinguda
+			- option domain-name "seax.edu"; --> domini en el qual s'actualitza el dns
+			- option domain-name-servers 10.10.1.3; --> definició de la ip del dns que dòna suport a la subxarxa.
+			- range 10.10.5.3 10.10.5.11; --> Rang d'ip's que s'assignen dinàmicament per màquines de la subxarxa 10.10.5.0
+
+		Altres paràmetres al fitxer:
+
+		option domain-name "seax.edu"; --> el domini pel servidor dhcp
+
+		option domain-name-servers 10.10.1.3, 10.10.1.4; --> els servidors dns del servidor dhcp
+
+		default-lease-time 600; --> temps per defecte que un usuari pot mantenir una ip assignada abans de renovar.
+		max-lease-time 7200; --> temps màxim que un usuari pot mantenir una ip assignada abans de renovar.
+		min-lease-time 500; --> temps mínim que un usuari pot mantenir una ip assignada abans de renovar.
+		authoritative; --> Indiquem que aquest dhcp serà l'oficial per el nostre domini.
+
+
+####### 4. CONFIGURACIÓ DE CLIENTS #######
+
+	Tenim 2 clients, "cliente 1" i "cliente 2", on cliente 1 pertany a la subxarxa 10.10.5.0/28 i cliente 2 a la 10.10.5.0/28.
+	- cliente 1 té configurat un únic adaptador de xarxa configurat amb la xarxa interna "dhcp".
+	- cliente 2 té configurat un únic adaptador de xarxa configurat amb la xarxa interna "usuaris".
+  - Hem configurat ambdós clients amb el fitxer /etc/network/interfaces següent:
+
+		# This file describes the network interfaces available on your system
+		# and how to activate them. For more information, see interfaces(5).
+
+		source /etc/network/interfaces.d/*
+
+		# The loopback network interface
+		auto lo
+		iface lo inet loopback
+
+		# The primary network interface
+		auto enp0s3
+		iface enp0s3 inet dhcp
+
+
+	Bàsicament tenim configurada la interfície de xarxa enp0s3 en mode dhcp per rebre les ip dinàmiques del nostre dhcp.
+
+	#### 4.1. DEMANAR UNA IP DES D'UN CLIENT ####
+
+		Hem d'utilitzar les comanda dhclient. Ara veurem una sèrie de possibles peticions bàsiques que podem fer com a clients:
+
+		# dhclient --> fas una petició d'ip dinàmica al servidor dhcp.
+		# dhclient -r --> alliberes la teva ip asignada pel dhcp.
+		# dhclient -s --> és per especificar un servidor dhcp específic.
+
+		Donat que es troba configurat al fitxer d'interfície, quan encenem la màquina, aquest procés s'executarà automàticament. Si ho volem
+		provar, podem executar la comanda: 
+		
+		# ifdown enp0s3 --> Per desactivar l'interfície, aquí el nostre ordinador executarà la petició RELEASE(avisa al servidor DHCP de que 
+												deixem d'utilitzar la ip).
+
+		# ifup enp0s3 --> Per tornar a activar l'interfície, aquí el nostre ordinador executarà el procés per aconseguir una IP.
+
+
+	#### DEMANAR UN LEASE TIME DETERMINAT #### 
+	-- falta --
+
+
+
+####### 5. PROVES DE VALIDACIÓ #######
+
+	En aquest apartat farem les proves corresponents per comprovar el bon funcionament del nostre servidor dhcp. Les proves estàn
+	fetes amb els dos clients explicats anteriorment.
+
+	L'eina utilitzada per aquestes proves ha sigut TCPDUMP (eina per capturar paquets de la xarxa), en cas de que el volguem utilitzar 
+	farem la comanda següent:
+
+	# sudo apt install tcpdump
+
+	Concretament per aquestes proves s'ha utilitzat la comanda:
+
+	# tcpdump -i interface port 67 or port 68 -e -l -n -vv --> Captura tots els missatges per la interfície seleccionada que pasen 
+		per els port 67 o 68 (ports per defecte del protocol dhcp).
+		-i --> Escollir quina interfície es monitoritza.
+		interface --> Canviarem aquest nom per el nom de la interfície corresponent que volem analitzar.
+		-e --> Mostra la capçalera de cada paquet.
+		-l --> Permet capturar en temps real i escriure-ho en un fitxer.
+		-n --> Evita la conversió de IPs o ports coneguts a noms.
+		-vv --> amplia la informació que es mostra del paquets.
+
+
+	#### 5.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE ####
+
+		En aquetes captures de paquets podem veure el procés anteriorment explicat que ha segueix un client per aconseguir una IP, queden 
+		marcats els 4 missatges (Discover, Offer, Request, ACK). 
+
+		En aquest exemple el client a la xarxa 10.10.4.0 vol demanar una Ip al nostre dchp situat dintre de la seva xarxa. El aspectes 
+		més importants que es poden vuere analitzant els paquets són: 
+		- Les respostes del nostre client des de 0.0.0.0 cap al broadcast de la xarxa (255.255.255.255)
+		- El missatge Offer i l'ACK, on el servidor respon amb tota la informació de la xarxa: La ip que li ofereix, la mascara de subxarxa
+			i la gateway d'aquesta, el Lease-time que tindrà la ip (temps de validesa d'aquesta ip) i finalment el Domain name i els Domain 
+			Name servers de la xarxa (que es troben configurats dintre del servidor dhcp).
+
+	
+		CAPTURA TCPDUMP 
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		14:32:46.060574 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc1472058, secs 8, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Discover
+					Requested-IP Option 50, length 4: 10.10.4.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+
+		14:32:47.061842 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.4.3.67 > 10.10.4.7.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xc1472058, secs 8, Flags [none] (0x0000)
+				Your-IP 10.10.4.7
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Offer
+					Server-ID Option 54, length 4: 10.10.4.3
+					Lease-Time Option 51, length 4: 600
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.4.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+
+		14:32:47.062573 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc1472058, secs 8, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Request
+					Server-ID Option 54, length 4: 10.10.4.3
+					Requested-IP Option 50, length 4: 10.10.4.7
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+
+		14:32:47.065751 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.4.3.67 > 10.10.4.7.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xc1472058, secs 8, Flags [none] (0x0000)
+				Your-IP 10.10.4.7
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: ACK
+					Server-ID Option 54, length 4: 10.10.4.3
+					Lease-Time Option 51, length 4: 600
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.4.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+		
+		Mateixes captures per el cas del segon client configurat, en aquest cas el nostre client es troba a la xarxa 10.10.5.0. 
+
+		Un aspecte important que podem veure en aquestes captures és el valor de lease-time, aquí ens reporten un valor de 800. Això és 
+		degut al configuració previa de la subxarxa al servidor DHCP (a diferència de la anterior que ha agafant el valor per defecte). 
+
+
+		CAPTURA TCPDUMP 
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		14:29:17.160244 08:00:27:44:87:02 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:44:87:02, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:44:87:02
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Discover
+					Requested-IP Option 50, length 4: 10.10.5.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:44:87:02:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+
+		14:29:18.161126 08:00:27:aa:34:f0 > 08:00:27:44:87:02, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.5.2.67 > 10.10.5.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+				Your-IP 10.10.5.5
+				Client-Ethernet-Address 08:00:27:44:87:02
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Offer
+					Server-ID Option 54, length 4: 10.10.5.2
+					Lease-Time Option 51, length 4: 800
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.5.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 4: 10.10.1.3
+
+		14:29:18.161597 08:00:27:44:87:02 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:44:87:02, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:44:87:02
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Request
+					Server-ID Option 54, length 4: 10.10.5.2
+					Requested-IP Option 50, length 4: 10.10.5.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:44:87:02:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+
+		14:29:18.165169 08:00:27:aa:34:f0 > 08:00:27:44:87:02, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.5.2.67 > 10.10.5.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+				Your-IP 10.10.5.5
+				Client-Ethernet-Address 08:00:27:44:87:02
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: ACK
+					Server-ID Option 54, length 4: 10.10.5.2
+					Lease-Time Option 51, length 4: 800
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.5.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 4: 10.10.1.3
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	#### 5.2. PROVES DE VALIDACIÓ IP RESERVA ####
+
+		En aquetes captures de paquets podem veure el mateix procés que abans amb la diferència que ara no estem agafant una ip del 
+		pool d'Ips configurat al nostre servidor DHCP, sino que aquest és un host amb una IP reservada (en base a la seva direcció MAC).
+
+		Els aspectes a diferènciar en aquesta prova és la misstge OFFER i ACK, on quede reflexat el hostname que s'ha aplicat a la 
+		configuració DHCP, i ens mostra que ha sigut reconegut per la seva MAC, per tant se li ofereix la ip reservada (10.10.4.5)
+
+		Una vegada ha acabat tot el procés per rebre la IP (primers 4 misstges), arribem a la segona part de la prova, on s'ha fet un 
+		release (lliberació) de la ip per part del client i s'ha tornat a demanar una IP, assegurant-nos així que seguim tenint la 
+		mateixa Ip que s'havia oferit.
+
+
+		PROVES TCPDUMP:
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		14:37:56.398019 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xe418d1d, secs 3, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Discover
+					Requested-IP Option 50, length 4: 10.10.4.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+
+		14:37:56.398134 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.4.3.67 > 10.10.4.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xe418d1d, secs 3, Flags [none] (0x0000)
+				Your-IP 10.10.4.5
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Offer
+					Server-ID Option 54, length 4: 10.10.4.3
+					Lease-Time Option 51, length 4: 600
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.4.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+					Hostname Option 12, length 8: "convidat"
+
+		14:37:56.398868 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xe418d1d, secs 3, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Request
+					Server-ID Option 54, length 4: 10.10.4.3
+					Requested-IP Option 50, length 4: 10.10.4.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+
+		14:37:56.399266 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.4.3.67 > 10.10.4.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xe418d1d, secs 3, Flags [none] (0x0000)
+				Your-IP 10.10.4.5
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: ACK
+					Server-ID Option 54, length 4: 10.10.4.3
+					Lease-Time Option 51, length 4: 600
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.4.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+					Hostname Option 12, length 8: "convidat"
+
+
+		---- PART RELEASE ---- 
+		14:38:00.295316 08:00:27:c8:03:14 > 08:00:27:53:16:cc, ethertype IPv4 (0x0800), length 342: (tos 0x0, ttl 64, id 14743, offset 0, flags [DF], proto UDP (17), length 328)
+				10.10.4.5.68 > 10.10.4.3.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc97e2e11, Flags [none] (0x0000)
+				Client-IP 10.10.4.5
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Release
+					Server-ID Option 54, length 4: 10.10.4.3
+					Hostname Option 12, length 4: "seax"
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+		
+		14:38:06.937098 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Discover
+					Requested-IP Option 50, length 4: 10.10.4.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+	
+		14:38:06.937209 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.4.3.67 > 10.10.4.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
+				Your-IP 10.10.4.5
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Offer
+					Server-ID Option 54, length 4: 10.10.4.3
+					Lease-Time Option 51, length 4: 600
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.4.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+					Hostname Option 12, length 8: "convidat"
+	
+		14:38:06.938283 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Request
+					Server-ID Option 54, length 4: 10.10.4.3
+					Requested-IP Option 50, length 4: 10.10.4.5
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+						Subnet-Mask, BR, Time-Zone, Default-Gateway
+						Domain-Name, Domain-Name-Server, Option 119, Hostname
+						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+						NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+	
+		14:38:06.938372 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				10.10.4.3.67 > 10.10.4.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
+				Your-IP 10.10.4.5
+				Client-Ethernet-Address 08:00:27:c8:03:14
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: ACK
+					Server-ID Option 54, length 4: 10.10.4.3
+					Lease-Time Option 51, length 4: 600
+					Subnet-Mask Option 1, length 4: 255.255.255.240
+					Default-Gateway Option 3, length 4: 10.10.4.1
+					Domain-Name Option 15, length 8: "seax.edu"
+					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+					Hostname Option 12, length 8: "convidat"
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+- dhcp-lease-list
+
 

@@ -1,0 +1,56 @@
+14:29:17.160244 08:00:27:44:87:02 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+    0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:44:87:02, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+	  Client-Ethernet-Address 08:00:27:44:87:02
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message Option 53, length 1: Discover
+	    Requested-IP Option 50, length 4: 10.10.5.5
+	    Hostname Option 12, length 4: "seax"
+	    Parameter-Request Option 55, length 13: 
+	      Subnet-Mask, BR, Time-Zone, Default-Gateway
+	      Domain-Name, Domain-Name-Server, Option 119, Hostname
+	      Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+	      NTP
+	    Client-ID Option 61, length 19: hardware-type 255, 27:44:87:02:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+14:29:18.161126 08:00:27:aa:34:f0 > 08:00:27:44:87:02, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+    10.10.5.2.67 > 10.10.5.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+	  Your-IP 10.10.5.5
+	  Client-Ethernet-Address 08:00:27:44:87:02
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message Option 53, length 1: Offer
+	    Server-ID Option 54, length 4: 10.10.5.2
+	    Lease-Time Option 51, length 4: 800
+	    Subnet-Mask Option 1, length 4: 255.255.255.240
+	    Default-Gateway Option 3, length 4: 10.10.5.1
+	    Domain-Name Option 15, length 8: "seax.edu"
+	    Domain-Name-Server Option 6, length 4: 10.10.1.3
+14:29:18.161597 08:00:27:44:87:02 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+    0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:44:87:02, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+	  Client-Ethernet-Address 08:00:27:44:87:02
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message Option 53, length 1: Request
+	    Server-ID Option 54, length 4: 10.10.5.2
+	    Requested-IP Option 50, length 4: 10.10.5.5
+	    Hostname Option 12, length 4: "seax"
+	    Parameter-Request Option 55, length 13: 
+	      Subnet-Mask, BR, Time-Zone, Default-Gateway
+	      Domain-Name, Domain-Name-Server, Option 119, Hostname
+	      Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+	      NTP
+	    Client-ID Option 61, length 19: hardware-type 255, 27:44:87:02:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
+14:29:18.165169 08:00:27:aa:34:f0 > 08:00:27:44:87:02, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+    10.10.5.2.67 > 10.10.5.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
+	  Your-IP 10.10.5.5
+	  Client-Ethernet-Address 08:00:27:44:87:02
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message Option 53, length 1: ACK
+	    Server-ID Option 54, length 4: 10.10.5.2
+	    Lease-Time Option 51, length 4: 800
+	    Subnet-Mask Option 1, length 4: 255.255.255.240
+	    Default-Gateway Option 3, length 4: 10.10.5.1
+	    Domain-Name Option 15, length 8: "seax.edu"
+	    Domain-Name-Server Option 6, length 4: 10.10.1.3
+
