@@ -17,14 +17,15 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 	4. CONFIGURACIÓ SERVIDOR DHCP
 	5. CONFIGURACÓ DE CLIENTS
 			5.1 DEMANAR UNA IP DES D'UN CLIENT
-	6. PROVES DE VALIDACIÓ
-		 6.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE
-		 6.2. PROVES DE VALIDACIÓ IP RESERVA
+	6. MILLORES DE SEGURETAT
+	7. PROVES DE VALIDACIÓ
+		 7.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE
+		 7.2. PROVES DE VALIDACIÓ IP RESERVA
 
 
 ####### 1. EL PROTOCOL DHCP #######
 
-Procés que es du a terme quan un usuari demana una ip
+	Procés que es du a terme quan un usuari demana una ip
 
 	1. Client cerca servidors dhcp --> DHCP DISCOVER
 	2. Servidor dhcp respon --> DHCP OFFER
@@ -33,18 +34,18 @@ Procés que es du a terme quan un usuari demana una ip
 
 	NOTA el procés 3 i 4 es fan constantment per verificar la comunicació.
 
-
+	-- falta ampliar --
 
 ####### 2. MODIFICAIONS PREVIES VIRTUALBOX #######
--- Revisar nombres y IP y Direcciones MAC
 
 	Primer creem una maquina virtual anomenada Servidor_DHCP amb el sistema operatiu debian 10 (sense interfície gràfica) i farem el següent:
 
 	Servidor_DHCP:
 		Anirem a la configuració de la màquina, i a l'apartat de Xarxa activem (si no hi està ja) un Adaptador de xarxa en en mode Adaptador Pont
 		un segon adaptador de xarxa en mode Xarxa interna i un tercer també en mode xarxa interna. Dels paràmetres Avanaçats per el primer adaptador 
-		no ens fara falta modificar res, en canvi, per el segon modificarem la direcció MAC per "---------" i li posarem el nom de "dhcp" al nom 
-		de la nostra xarxa, per al tercer farem el mateix que a l'anterior però el nom de la xarxa que col·locarem serà "xarxa-usuaris".
+		no ens fara falta modificar res, en canvi, per el segon modificarem la direcció MAC per "08:00:27:10:05:02" i li posarem "dhcp" al nom 
+		de la nostra xarxa, per al tercer farem el mateix que a l'anterior però amb la MAC "08:00:27:10:05:03" i el nom de la xarxa que col·locarem 
+		serà "xarxa-usuaris".
 
 		Amb aquestes dues intefícies amb xarxa interna, podrem provar el nostre servidor en dues xarxes internes diferents "dhcp" i "xarxa-usuaris" 
 		(ja que es trobarà com a únic servidor DHCP per aquestes).
@@ -53,11 +54,13 @@ Procés que es du a terme quan un usuari demana una ip
 			Nom màquina: Servidor_DHCP
 			SO: Debian 10 (Buster / sense intefície gràfica)
 			Adaptador 1: Adaptador de xarxa de tipus Adaptador Pont
+
 			Adaptador 2: Adaptador de xarxa de tipus interna
-						 MAC: "------"
+						 MAC: " 08:00:27:10:05:02"
 						 Xarxa: dhcp
+
 			Adaptador 3: Adaptador de xarxa de tipus interna
-						 MAC: "------"
+						 MAC: "08:00:27:10:05:03"
 						 Xarxa: xarxa-usuaris
 
 ####### 3. CONFIGURACIONS PREVIES DE LES MÀQUINES #######
@@ -209,7 +212,7 @@ Procés que es du a terme quan un usuari demana una ip
 		authoritative; --> Indiquem que aquest dhcp serà l'oficial per el nostre domini.
 
 
-####### 4. CONFIGURACIÓ DE CLIENTS #######
+####### 5. CONFIGURACIÓ DE CLIENTS #######
 
 	Tenim 2 clients, "cliente 1" i "cliente 2", on cliente 1 pertany a la subxarxa 10.10.5.0/28 i cliente 2 a la 10.10.5.0/28.
 	- cliente 1 té configurat un únic adaptador de xarxa configurat amb la xarxa interna "dhcp".
@@ -232,7 +235,7 @@ Procés que es du a terme quan un usuari demana una ip
 
 	Bàsicament tenim configurada la interfície de xarxa enp0s3 en mode dhcp per rebre les ip dinàmiques del nostre dhcp.
 
-	#### 4.1. DEMANAR UNA IP DES D'UN CLIENT ####
+	#### 5.1. DEMANAR UNA IP DES D'UN CLIENT ####
 
 		Hem d'utilitzar les comanda dhclient. Ara veurem una sèrie de possibles peticions bàsiques que podem fer com a clients:
 
@@ -250,11 +253,14 @@ Procés que es du a terme quan un usuari demana una ip
 
 
 	#### DEMANAR UN LEASE TIME DETERMINAT #### 
-	-- falta --
+	-- falta --  dhcp-lease-list
+	
 
+####### 6. MILLORES DE SEGURETAT #######
 
+	Explicar aquí...
 
-####### 5. PROVES DE VALIDACIÓ #######
+####### 7. PROVES DE VALIDACIÓ #######
 
 	En aquest apartat farem les proves corresponents per comprovar el bon funcionament del nostre servidor dhcp. Les proves estàn
 	fetes amb els dos clients explicats anteriorment.
@@ -276,7 +282,7 @@ Procés que es du a terme quan un usuari demana una ip
 		-vv --> amplia la informació que es mostra del paquets.
 
 
-	#### 5.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE ####
+	#### 7.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE ####
 
 		En aquetes captures de paquets podem veure el procés anteriorment explicat que ha segueix un client per aconseguir una IP, queden 
 		marcats els 4 missatges (Discover, Offer, Request, ACK). 
@@ -420,7 +426,7 @@ Procés que es du a terme quan un usuari demana una ip
 					Domain-Name-Server Option 6, length 4: 10.10.1.3
 		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	#### 5.2. PROVES DE VALIDACIÓ IP RESERVA ####
+	#### 7.2. PROVES DE VALIDACIÓ IP RESERVA ####
 
 		En aquetes captures de paquets podem veure el mateix procés que abans amb la diferència que ara no estem agafant una ip del 
 		pool d'Ips configurat al nostre servidor DHCP, sino que aquest és un host amb una IP reservada (en base a la seva direcció MAC).
@@ -570,10 +576,4 @@ Procés que es du a terme quan un usuari demana una ip
 					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
 					Hostname Option 12, length 8: "convidat"
 		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-- dhcp-lease-list
-
 
