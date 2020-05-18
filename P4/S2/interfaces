@@ -9,12 +9,7 @@ iface lo inet loopback
 
 # The primary network interface
 auto enp0s3
-iface enp0s3 inet static
-	broadcast 192.168.0.255
-	network 192.168.0.0
-	netmask 255.255.255.0
-	address 192.168.0.47
-	gateway 192.168.0.1
+iface enp0s3 inet dhcp
 
 #auto enp0s8
 iface enp0s8 inet static

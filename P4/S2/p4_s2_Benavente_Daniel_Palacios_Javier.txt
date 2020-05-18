@@ -13,14 +13,13 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 	1. EL PROTOCOL DHCP
 	2. MODIFICAIONS PREVIES VIRTUALBOX
 	3. CONFIGURACIONS PREVIES DE LES MÀQUINES
-		 1. PASOS PREVIS
 		 3.1. INSTAL·LACIÓ DE PAQUETS
-	3. CONFIGURACIÓ SERVIDOR DHCP
-	4. CONFIGURACÓ DE CLIENTS
-			4.1 DEMANAR UNA IP DES D'UN CLIENT
-	5. PROVES DE VALIDACIÓ
-		 5.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE
-		 5.2. PROVES DE VALIDACIÓ IP RESERVA
+	4. CONFIGURACIÓ SERVIDOR DHCP
+	5. CONFIGURACÓ DE CLIENTS
+			5.1 DEMANAR UNA IP DES D'UN CLIENT
+	6. PROVES DE VALIDACIÓ
+		 6.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE
+		 6.2. PROVES DE VALIDACIÓ IP RESERVA
 
 
 ####### 1. EL PROTOCOL DHCP #######
@@ -36,59 +35,113 @@ Procés que es du a terme quan un usuari demana una ip
 
 
 
-		 ####### 1. MODIFICAIONS PREVIES VIRTUALBOX #######
+####### 2. MODIFICAIONS PREVIES VIRTUALBOX #######
+-- Revisar nombres y IP y Direcciones MAC
 
-PASOS PREVIS
-- Creem 1 servidor dhcp que tindrà 3 adaptadors de xarxa amb les següents instrefícies:
+	Primer creem una maquina virtual anomenada Servidor_DHCP amb el sistema operatiu debian 10 (sense interfície gràfica) i farem el següent:
 
-	- Iniciem la màquina DHCP
-	- Instalem el paquet isc-dhcp-server
+	Servidor_DHCP:
+		Anirem a la configuració de la màquina, i a l'apartat de Xarxa activem (si no hi està ja) un Adaptador de xarxa en en mode Adaptador Pont
+		un segon adaptador de xarxa en mode Xarxa interna i un tercer també en mode xarxa interna. Dels paràmetres Avanaçats per el primer adaptador 
+		no ens fara falta modificar res, en canvi, per el segon modificarem la direcció MAC per "---------" i li posarem el nom de "dhcp" al nom 
+		de la nostra xarxa, per al tercer farem el mateix que a l'anterior però el nom de la xarxa que col·locarem serà "xarxa-usuaris".
+
+		Amb aquestes dues intefícies amb xarxa interna, podrem provar el nostre servidor en dues xarxes internes diferents "dhcp" i "xarxa-usuaris" 
+		(ja que es trobarà com a únic servidor DHCP per aquestes).
+
+		Resum configuració:
+			Nom màquina: Servidor_DHCP
+			SO: Debian 10 (Buster / sense intefície gràfica)
+			Adaptador 1: Adaptador de xarxa de tipus Adaptador Pont
+			Adaptador 2: Adaptador de xarxa de tipus interna
+						 MAC: "------"
+						 Xarxa: dhcp
+			Adaptador 3: Adaptador de xarxa de tipus interna
+						 MAC: "------"
+						 Xarxa: xarxa-usuaris
+
+####### 3. CONFIGURACIONS PREVIES DE LES MÀQUINES #######
+
+	Amb tota la configuració prèvia de VirutalBox finalitzada, encenem la màquina i tornem a entrar com a root per configurar la
+	direcció IP estàtica de la nostra interfície al fitxer (/etc/network/interfaces):
+
+	MÀQUINA Servidor_DHCP:
+
+		Per la primera interfíce, s'ha deixat la configuració en mode dhcp (per tant no farà falta que modifiquem res).
+		
+		Per la segona, començarem modificant l'interfíce de la xarxa interna, amb el nom en aquest cas "enp0s8", seguint els següents paràmetres:
+
+			Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s8 inet static", després, com voldrem configurar la xarxa
+			10.10.1.5/28, els paràmetres seràn:
+
+			address 10.10.5.2 --> adreça fixa del nostre servidor DHCP
+			netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+			network 10.10.5.0 --> Identificador de xarxa
+			gateway 10.10.5.1 --> Ip del router de la xarxa.
+
+		Per la tercera interfíce, amb el nom en aquest cas "enp0s9", també s'ha configurat una Ip fixa amb els següents paràmetres:
+			
+			Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s9 inet static", després, com voldrem configurar la xarxa
+			10.10.4.0/28, els paràmetres seràn:
+
+			address 10.10.4.3 --> adreça fixa del nostre servidor DHCP
+			netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+			network 10.10.4.0 --> Identificador de xarxa
+			gateway 10.10.4.1 --> Ip del router de la xarxa.
+			
+		Finalment el fixter de intefícies (/etc/network/interfaces) de la màquina Servidor_DHCP ha de quedar així:
+		-------------------------------------------------------------------------
+		# This file describes the network interfaces available on your system
+		# and how to activate them. For more information, see interfaces(5).
+
+		source /etc/network/interfaces.d/*
+
+		# The loopback network interface
+		auto lo
+		iface lo inet loopback
+
+		# The primary network interface
+		auto enp0s3
+		iface enp0s3 inet static
+			broadcast 192.168.0.255
+			network 192.168.0.0
+			netmask 255.255.255.0
+			address 192.168.0.47
+			gateway 192.168.0.1
+
+		auto enp0s8
+		iface enp0s8 inet static
+			broadcast 10.10.5.255
+			network	10.10.5.0
+			netmask 255.255.255.240
+			address 10.10.5.2
+			gateway 10.10.5.1
+
+		auto enp0s9 
+		iface enp0s9 inet static 
+			broadcast 10.10.4.255
+			network 10.10.4.0
+			netmask 255.255.255.240
+			address 10.10.4.3
+			gateway 10.10.4.1
+
+		-------------------------------------------------------------------------
+
+		Amb tot modificat farem la comanda (# service networking restart) per aplicar tots els canvis.
+
+	#### 3.1. INSTAL·LACIÓ DE PAQUETS ####
+
+		Una vegada tenim la configuració de xarxa completada, les actualitzem amb les comandes:
+			#apt-get update
+			#apt-get upgrade
+
+		Amb tot actualitzat, instal·larem els paquets que necessitarem per la configuració del nostre DNS amb la comanda:
+
 		#apt-get install isc-dhcp-server
-	- Configurem el fitxer /etc/network/interfaces
-
-			#nano /etc/network interfaces
-
-			# This file describes the network interfaces available on your system
-			# and how to activate them. For more information, see interfaces(5).
-
-			source /etc/network/interfaces.d/*
-
-			# The loopback network interface
-			auto lo
-			iface lo inet loopback
-
-			# The primary network interface
-			auto enp0s3
-			iface enp0s3 inet static
-				broadcast 192.168.0.255
-				network 192.168.0.0
-				netmask 255.255.255.0
-				address 192.168.0.47
-				gateway 192.168.0.1
-
-			auto enp0s8
-			iface enp0s8 inet static
-				broadcast 10.10.5.255
-				network	10.10.5.0
-				netmask 255.255.255.240
-				address 10.10.5.2
-				gateway 10.10.5.1
-
-			auto enp0s9
-			iface enp0s9 inet static
-				broadcast 10.10.4.255
-				network 10.10.4.0
-				netmask 255.255.255.240
-				address 10.10.4.3
-				gateway 10.10.4.1
+		Paquet isc-dhcp-server --> "falta explicar"
 
 
-			* Com podem veure, tenim configurades 3 interfícies de xarxa:
-			- enp0s3: xarxa en adaptador pont amb ip estàtica 192.168.0.47 (per tenir accés a internet).
-			- enp0s8: interfície en xarxa interna que dòna servei dhcp a la subxarxa 10.10.5.0 amb ip estàtica 10.10.5.2
-			- enp0s9: interfície en xarxa interna que dòna servei dhcp a la subxarxa 10.10.4.0 amb ip estàtica 10.10.4.3
-
-####### 3. CONFIGURACIÓ DEL SERVIDOR DHCP #######
+####### 4. CONFIGURACIÓ DEL SERVIDOR DHCP #######
 
 	- Configurem el fitxer /etc/dhcp/default/isc-dhcp-server per especificar les interfícies que donen servei dhcp
 			# Defaults for isc-dhcp-server (sourced by /etc/init.d/isc-dhcp-server)
