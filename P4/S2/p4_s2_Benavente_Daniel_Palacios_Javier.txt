@@ -138,10 +138,12 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			#apt-get update
 			#apt-get upgrade
 
-		Amb tot actualitzat, instal·larem els paquets que necessitarem per la configuració del nostre DNS amb la comanda:
+		Amb tot actualitzat, instal·larem els paquets que necessitarem per la configuració del nostre servidor DHCP amb la comanda:
 
 		#apt-get install isc-dhcp-server
-		Paquet isc-dhcp-server --> "falta explicar"
+		Paquet isc-dhcp-server --> Aquest paquet ens instal·la el dhcp server a la màquina on una vegada fet veure que s’ha creat un 
+								   directori /etc/dhcp on tindrem tots els fitxers de configuració relacionats amb el nostre servidor 
+								   dhcp.
 
 
 ####### 4. CONFIGURACIÓ DEL SERVIDOR DHCP #######
