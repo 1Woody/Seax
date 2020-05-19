@@ -42,12 +42,12 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 	Servidor_DHCP:
 		Anirem a la configuració de la màquina, i a l'apartat de Xarxa activem (si no hi està ja) un Adaptador de xarxa en en mode Adaptador Pont
-		un segon adaptador de xarxa en mode Xarxa interna i un tercer també en mode xarxa interna. Dels paràmetres Avanaçats per el primer adaptador 
-		no ens fara falta modificar res, en canvi, per el segon modificarem la direcció MAC per "08:00:27:10:05:02" i li posarem "dhcp" al nom 
-		de la nostra xarxa, per al tercer farem el mateix que a l'anterior però amb la MAC "08:00:27:10:05:03" i el nom de la xarxa que col·locarem 
+		un segon adaptador de xarxa en mode Xarxa interna i un tercer també en mode xarxa interna. Dels paràmetres Avanaçats per el primer adaptador
+		no ens fara falta modificar res, en canvi, per el segon modificarem la direcció MAC per "08:00:27:10:05:02" i li posarem "dhcp" al nom
+		de la nostra xarxa, per al tercer farem el mateix que a l'anterior però amb la MAC "08:00:27:10:05:03" i el nom de la xarxa que col·locarem
 		serà "xarxa-usuaris".
 
-		Amb aquestes dues intefícies amb xarxa interna, podrem provar el nostre servidor en dues xarxes internes diferents "dhcp" i "xarxa-usuaris" 
+		Amb aquestes dues intefícies amb xarxa interna, podrem provar el nostre servidor en dues xarxes internes diferents "dhcp" i "xarxa-usuaris"
 		(ja que es trobarà com a únic servidor DHCP per aquestes).
 
 		Resum configuració:
@@ -71,7 +71,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 	MÀQUINA Servidor_DHCP:
 
 		Per la primera interfíce, s'ha deixat la configuració en mode dhcp (per tant no farà falta que modifiquem res).
-		
+
 		Per la segona, començarem modificant l'interfíce de la xarxa interna, amb el nom en aquest cas "enp0s8", seguint els següents paràmetres:
 
 			Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s8 inet static", després, com voldrem configurar la xarxa
@@ -83,7 +83,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			gateway 10.10.5.1 --> Ip del router de la xarxa.
 
 		Per la tercera interfíce, amb el nom en aquest cas "enp0s9", també s'ha configurat una Ip fixa amb els següents paràmetres:
-			
+
 			Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s9 inet static", després, com voldrem configurar la xarxa
 			10.10.4.0/28, els paràmetres seràn:
 
@@ -91,7 +91,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
 			network 10.10.4.0 --> Identificador de xarxa
 			gateway 10.10.4.1 --> Ip del router de la xarxa.
-			
+
 		Finalment el fixter de intefícies (/etc/network/interfaces) de la màquina Servidor_DHCP ha de quedar així:
 		-------------------------------------------------------------------------
 		# This file describes the network interfaces available on your system
@@ -120,8 +120,8 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			address 10.10.5.2
 			gateway 10.10.5.1
 
-		auto enp0s9 
-		iface enp0s9 inet static 
+		auto enp0s9
+		iface enp0s9 inet static
 			broadcast 10.10.4.255
 			network 10.10.4.0
 			netmask 255.255.255.240
@@ -141,8 +141,8 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		Amb tot actualitzat, instal·larem els paquets que necessitarem per la configuració del nostre servidor DHCP amb la comanda:
 
 		#apt-get install isc-dhcp-server
-		Paquet isc-dhcp-server --> Aquest paquet ens instal·la el dhcp server a la màquina on una vegada fet veure que s’ha creat un 
-								   directori /etc/dhcp on tindrem tots els fitxers de configuració relacionats amb el nostre servidor 
+		Paquet isc-dhcp-server --> Aquest paquet ens instal·la el dhcp server a la màquina on una vegada fet veure que s’ha creat un
+								   directori /etc/dhcp on tindrem tots els fitxers de configuració relacionats amb el nostre servidor
 								   dhcp.
 
 
@@ -246,35 +246,55 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		# dhclient -s --> és per especificar un servidor dhcp específic.
 
 		Donat que es troba configurat al fitxer d'interfície, quan encenem la màquina, aquest procés s'executarà automàticament. Si ho volem
-		provar, podem executar la comanda: 
-		
-		# ifdown enp0s3 --> Per desactivar l'interfície, aquí el nostre ordinador executarà la petició RELEASE(avisa al servidor DHCP de que 
+		provar, podem executar la comanda:
+
+		# ifdown enp0s3 --> Per desactivar l'interfície, aquí el nostre ordinador executarà la petició RELEASE(avisa al servidor DHCP de que
 												deixem d'utilitzar la ip).
 
 		# ifup enp0s3 --> Per tornar a activar l'interfície, aquí el nostre ordinador executarà el procés per aconseguir una IP.
 
 
-	#### DEMANAR UN LEASE TIME DETERMINAT #### 
+	#### DEMANAR UN LEASE TIME DETERMINAT ####
 	-- falta --  dhcp-lease-list
-	
+
 
 ####### 6. MILLORES DE SEGURETAT #######
 
-	Explicar aquí...
+	LEASE-TIME
+
+		El lease time és un concepte molt important dintre de la configuració del nostre servidor DHCP, ja que marcarà la freqüència de
+		missatges que es generaràn a la xarxa. En aquest paràmatre es marca el temps que un client podrà mantenir la seva adreça, i
+		depenent d'on com estigui estructurada la xarxa es valoraràn uns temps o uns altres:
+
+		A NIVELL CONNEXIÓ
+			- Màquines connectades per ethernet --> Per aquests tipus de dispositius, és més eficient i raonable considerar
+		posar un llarg període com a max-lease-time. Per exemple, podríem assignar els temps en dies, ja que no té sentit que per una estació de treball per exemple,
+		assignem minuts de duració o unes poques hores, ja que això incrementaria el tràfic entre clients i dhcp.
+
+			- Màquines connectades per WIFI -->  En el cas del wifi, s'ha de tenir en compte que es rebràn clients de manera més dinàmica
+			i que poden abandonar la xarxa en un breu periòde de temps. Per tant, s'hauràn de valorar lease-times més baixos per aprofitat
+			el pool d'ips del que disposem. Temps per sota de 24h són els més freqüents.
+
+		EL NOSTRE CAS
+			-- falta ampliar --
+
+	CREACIÓ DE CLASES DE CLIENTS
+	-- falta ampliar --
+
 
 ####### 7. PROVES DE VALIDACIÓ #######
 
 	En aquest apartat farem les proves corresponents per comprovar el bon funcionament del nostre servidor dhcp. Les proves estàn
 	fetes amb els dos clients explicats anteriorment.
 
-	L'eina utilitzada per aquestes proves ha sigut TCPDUMP (eina per capturar paquets de la xarxa), en cas de que el volguem utilitzar 
+	L'eina utilitzada per aquestes proves ha sigut TCPDUMP (eina per capturar paquets de la xarxa), en cas de que el volguem utilitzar
 	farem la comanda següent:
 
 	# sudo apt install tcpdump
 
 	Concretament per aquestes proves s'ha utilitzat la comanda:
 
-	# tcpdump -i interface port 67 or port 68 -e -l -n -vv --> Captura tots els missatges per la interfície seleccionada que pasen 
+	# tcpdump -i interface port 67 or port 68 -e -l -n -vv --> Captura tots els missatges per la interfície seleccionada que pasen
 		per els port 67 o 68 (ports per defecte del protocol dhcp).
 		-i --> Escollir quina interfície es monitoritza.
 		interface --> Canviarem aquest nom per el nom de la interfície corresponent que volem analitzar.
@@ -286,18 +306,18 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 	#### 7.1. PROVES DE VALIDACIÓ POOL EN CADA INTERFÍCIE ####
 
-		En aquetes captures de paquets podem veure el procés anteriorment explicat que ha segueix un client per aconseguir una IP, queden 
-		marcats els 4 missatges (Discover, Offer, Request, ACK). 
+		En aquetes captures de paquets podem veure el procés anteriorment explicat que ha segueix un client per aconseguir una IP, queden
+		marcats els 4 missatges (Discover, Offer, Request, ACK).
 
-		En aquest exemple el client a la xarxa 10.10.4.0 vol demanar una Ip al nostre dchp situat dintre de la seva xarxa. El aspectes 
-		més importants que es poden vuere analitzant els paquets són: 
+		En aquest exemple el client a la xarxa 10.10.4.0 vol demanar una Ip al nostre dchp situat dintre de la seva xarxa. El aspectes
+		més importants que es poden vuere analitzant els paquets són:
 		- Les respostes del nostre client des de 0.0.0.0 cap al broadcast de la xarxa (255.255.255.255)
 		- El missatge Offer i l'ACK, on el servidor respon amb tota la informació de la xarxa: La ip que li ofereix, la mascara de subxarxa
-			i la gateway d'aquesta, el Lease-time que tindrà la ip (temps de validesa d'aquesta ip) i finalment el Domain name i els Domain 
+			i la gateway d'aquesta, el Lease-time que tindrà la ip (temps de validesa d'aquesta ip) i finalment el Domain name i els Domain
 			Name servers de la xarxa (que es troben configurats dintre del servidor dhcp).
 
-	
-		CAPTURA TCPDUMP 
+
+		CAPTURA TCPDUMP
 		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		14:32:46.060574 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
 				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc1472058, secs 8, Flags [none] (0x0000)
@@ -307,7 +327,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					DHCP-Message Option 53, length 1: Discover
 					Requested-IP Option 50, length 4: 10.10.4.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
@@ -337,7 +357,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Server-ID Option 54, length 4: 10.10.4.3
 					Requested-IP Option 50, length 4: 10.10.4.7
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
@@ -359,14 +379,14 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
 		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-		
-		Mateixes captures per el cas del segon client configurat, en aquest cas el nostre client es troba a la xarxa 10.10.5.0. 
 
-		Un aspecte important que podem veure en aquestes captures és el valor de lease-time, aquí ens reporten un valor de 800. Això és 
-		degut al configuració previa de la subxarxa al servidor DHCP (a diferència de la anterior que ha agafant el valor per defecte). 
+		Mateixes captures per el cas del segon client configurat, en aquest cas el nostre client es troba a la xarxa 10.10.5.0.
+
+		Un aspecte important que podem veure en aquestes captures és el valor de lease-time, aquí ens reporten un valor de 800. Això és
+		degut al configuració previa de la subxarxa al servidor DHCP (a diferència de la anterior que ha agafant el valor per defecte).
 
 
-		CAPTURA TCPDUMP 
+		CAPTURA TCPDUMP
 		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		14:29:17.160244 08:00:27:44:87:02 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
 				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:44:87:02, length 300, xid 0xa81a535f, secs 6, Flags [none] (0x0000)
@@ -376,7 +396,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					DHCP-Message Option 53, length 1: Discover
 					Requested-IP Option 50, length 4: 10.10.5.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
@@ -406,7 +426,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Server-ID Option 54, length 4: 10.10.5.2
 					Requested-IP Option 50, length 4: 10.10.5.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
@@ -430,14 +450,14 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 	#### 7.2. PROVES DE VALIDACIÓ IP RESERVA ####
 
-		En aquetes captures de paquets podem veure el mateix procés que abans amb la diferència que ara no estem agafant una ip del 
+		En aquetes captures de paquets podem veure el mateix procés que abans amb la diferència que ara no estem agafant una ip del
 		pool d'Ips configurat al nostre servidor DHCP, sino que aquest és un host amb una IP reservada (en base a la seva direcció MAC).
 
-		Els aspectes a diferènciar en aquesta prova és la misstge OFFER i ACK, on quede reflexat el hostname que s'ha aplicat a la 
+		Els aspectes a diferènciar en aquesta prova és la misstge OFFER i ACK, on quede reflexat el hostname que s'ha aplicat a la
 		configuració DHCP, i ens mostra que ha sigut reconegut per la seva MAC, per tant se li ofereix la ip reservada (10.10.4.5)
 
-		Una vegada ha acabat tot el procés per rebre la IP (primers 4 misstges), arribem a la segona part de la prova, on s'ha fet un 
-		release (lliberació) de la ip per part del client i s'ha tornat a demanar una IP, assegurant-nos així que seguim tenint la 
+		Una vegada ha acabat tot el procés per rebre la IP (primers 4 misstges), arribem a la segona part de la prova, on s'ha fet un
+		release (lliberació) de la ip per part del client i s'ha tornat a demanar una IP, assegurant-nos així que seguim tenint la
 		mateixa Ip que s'havia oferit.
 
 
@@ -451,7 +471,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					DHCP-Message Option 53, length 1: Discover
 					Requested-IP Option 50, length 4: 10.10.4.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
@@ -482,7 +502,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Server-ID Option 54, length 4: 10.10.4.3
 					Requested-IP Option 50, length 4: 10.10.4.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
@@ -505,7 +525,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Hostname Option 12, length 8: "convidat"
 
 
-		---- PART RELEASE ---- 
+		---- PART RELEASE ----
 		14:38:00.295316 08:00:27:c8:03:14 > 08:00:27:53:16:cc, ethertype IPv4 (0x0800), length 342: (tos 0x0, ttl 64, id 14743, offset 0, flags [DF], proto UDP (17), length 328)
 				10.10.4.5.68 > 10.10.4.3.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc97e2e11, Flags [none] (0x0000)
 				Client-IP 10.10.4.5
@@ -516,7 +536,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Server-ID Option 54, length 4: 10.10.4.3
 					Hostname Option 12, length 4: "seax"
 					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
-		
+
 		14:38:06.937098 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
 				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
 				Client-Ethernet-Address 08:00:27:c8:03:14
@@ -525,13 +545,13 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					DHCP-Message Option 53, length 1: Discover
 					Requested-IP Option 50, length 4: 10.10.4.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
 						NTP
 					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
-	
+
 		14:38:06.937209 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
 				10.10.4.3.67 > 10.10.4.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
 				Your-IP 10.10.4.5
@@ -546,7 +566,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Domain-Name Option 15, length 8: "seax.edu"
 					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
 					Hostname Option 12, length 8: "convidat"
-	
+
 		14:38:06.938283 08:00:27:c8:03:14 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
 				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:c8:03:14, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
 				Client-Ethernet-Address 08:00:27:c8:03:14
@@ -556,13 +576,13 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Server-ID Option 54, length 4: 10.10.4.3
 					Requested-IP Option 50, length 4: 10.10.4.5
 					Hostname Option 12, length 4: "seax"
-					Parameter-Request Option 55, length 13: 
+					Parameter-Request Option 55, length 13:
 						Subnet-Mask, BR, Time-Zone, Default-Gateway
 						Domain-Name, Domain-Name-Server, Option 119, Hostname
 						Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
 						NTP
 					Client-ID Option 61, length 19: hardware-type 255, 27:c8:03:14:00:01:00:01:26:50:47:87:08:00:27:af:ff:8e
-	
+
 		14:38:06.938372 08:00:27:53:16:cc > 08:00:27:c8:03:14, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
 				10.10.4.3.67 > 10.10.4.5.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, xid 0xc3c6727b, secs 4, Flags [none] (0x0000)
 				Your-IP 10.10.4.5
@@ -578,4 +598,3 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
 					Hostname Option 12, length 8: "convidat"
 		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
