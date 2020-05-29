@@ -1,0 +1,73 @@
+Informe pràctica 4 - Benavente Daniel - Palacios Javier
+
+- Fitxers involucrats:
+	p4_Benavente_Daniel_Palacios_Javier.txt
+
+	- Descripció: En aquesta part de la pràctica veurem la creació d'un dhcp per donar servei a diferents subxarxes. Aquest dhcp tindrà 2 interfícies de xarxa
+	per poder donar servei a les dues subxarxes degut que encara no disposem de routers.
+	A més de tenir 2 pools d'adreces per donar servei a les dues subxarxes també hem configurat ip's reservades exclusivament per certes màquines.
+	A més a més, el servidor està configurat per controlar el temps màxim el qual otorga una ip a una màquina, el màxim, dns...
+
+ÍNDEX
+
+	1. PRIMER PUNTO
+
+
+####### 1. PRIMER PUNTO #######
+
+
+APUNTES PREVIOS
+
+ROUTER SREVIDORES 
+	interface servidors
+		backbone --> usuaris
+		backbone --> dmz
+		admin --> xarxa troncal 
+		admin --> xarxa vpn
+
+	interface admin
+		usuaris
+		dmz
+		troncal
+		vpn
+
+	interface backbone
+
+
+------------------
+	xarxa backbone --> xarxa usuaris
+	xarxa backbone --> xarxa dmz
+	xarxa admin --> xarxa troncal 
+	xarxa admin --> xarxa vpn
+ 
+ROUTER USUARIS
+
+ROUTER 
+
+--> configurado los interfaces 
+--> añadimos las rutas 
+
+ACTIVAR FORWARDING
+
+--> modificamos el fichero y le asignamos al variable 1: 
+/etc/sysctl.conf:
+net.ipv4.ip_forward = 1
+
+--> reiniciamos con la comanda:
+
+# sysctl -p /etc/sysctl.conf
+
+o 
+
+# /etc/init.d/procps.sh restart
+
+
+DUDAS
+
+Como redireccionamos a internet
+porque cada ruter tiene su propio nat
+como hacer la redireciona a la troncal si es dinamica
+falla enp0s10 
+escenario pensado es correcto
+
+xarxa acces tiene que tener dos caminos?
