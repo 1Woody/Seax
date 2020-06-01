@@ -148,7 +148,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 ####### 4. CONFIGURACIÓ DEL SERVIDOR DHCP #######
 
-	- Configurem el fitxer /etc/dhcp/default/isc-dhcp-server per especificar les interfícies que donen servei dhcp
+	- Configurem el fitxer /etc/default/isc-dhcp-server per especificar les interfícies que donen servei dhcp
 			# Defaults for isc-dhcp-server (sourced by /etc/init.d/isc-dhcp-server)
 
 			# Path to dhcpd's config file (default: /etc/dhcp/dhcpd.conf).
