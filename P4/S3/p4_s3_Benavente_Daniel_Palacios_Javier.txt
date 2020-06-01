@@ -73,7 +73,7 @@ escenario pensado es correcto
 xarxa acces tiene que tener dos caminos?
 
 
-####### 1. CONFIGURACION DE DHCP CON ROUTERS #######
+####### 2. CONFIGURACION DE DHCP CON ROUTERS #######
 
 Asignamos solo la interficie a la red de servidores
 
@@ -82,7 +82,7 @@ MAC: 08:00:27:10:05:02
 
 https://bytelearning.blogspot.com/2016/08/como-crear-un-dhcp-relay-en-linux.html
 
-DHCP RELAY EN LOS ROUTERS
+DHCP RELAY EN LOS ROUTERS (admin i usuaris)
 
 3 PASOS (por router)
 Ip del server dhcp server
@@ -94,10 +94,17 @@ Fichero de conf:  /etc/default/isc-dhcp-relay
 
 CONFIGURACIÓN SERVER DHCP 
 
-Creación de todas las pools para todas las redes.
-
+- Modificado el fichero de configración del isc-dhcp-server, para asingar solo la interfaz enp0s3 al servidor dhcp
+- Creación de todas las pools para todas las redes.
+- Cambiado los rangos para encajar con lo que necesitamos
+- Añadido un usuario para cada subred que tendra una ip reservada (x.y.z.11) para cada una de las redes cuando ese tenga la mac ..
 
 COSAS POR HACER
 Como crear dos rangos en una misma pool
 Añadir un host reservado con la Ip x.y.z.11 para cada una de las redes de nuestro sistema.
+
+
+CONLUSIÓN LUNES FASE 2
+--> Hemos instalado el realy en los routers usuaris i  servidor
+--> Hemos hecho funcional dhcp para toda la red, añadiendo la ip reservada de la maquina monitor
 
