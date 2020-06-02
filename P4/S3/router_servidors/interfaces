@@ -1,0 +1,57 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+#allow-hotplug enp0s3
+#iface enp0s3 inet dhcp
+
+
+#admin
+auto enp0s3
+iface enp0s3 inet static
+address 10.10.2.2
+netmask 255.255.255.240
+network 10.10.2.0
+gateway 10.10.2.1
+broadcast 10.10.2.15
+dns-nameservers 10.10.1.3 10.10.1.4
+
+#backbone
+auto enp0s8
+iface enp0s8 inet static
+address 10.10.3.2
+broadcast 10.10.3.3
+netmask 255.255.255.252
+network 10.10.3.0
+dns-nameservers 10.10.1.3 10.10.1.4
+
+#servers
+auto enp0s9
+iface enp0s9 inet static
+address 10.10.5.1
+netmask 255.255.255.240
+network 10.10.5.0
+broadcast 10.10.5.15
+dns-nameservers 10.10.1.3 10.10.1.4
+
+#----ROUTES----
+
+#hacia usuaris
+post-up route add -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.3.1
+pre-down route del -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.3.1
+#hacia dmz
+post-up route add -net 10.10.1.0 netmask 255.255.255.240 gw 10.10.3.1
+pre-down route del -net 10.10.1.0 netmask 255.255.255.240 gw 10.10.3.1
+
+#vpn
+#post-up route add -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+#pre-down route del -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+
+
+

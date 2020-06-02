@@ -9,20 +9,925 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 	A més a més, el servidor està configurat per controlar el temps màxim el qual otorga una ip a una màquina, el màxim, dns...
 
 ÍNDEX
+	
+	1. FASE 1 CONFIGURACIÓ DEL ROUTERS DEL ENTORN
+	2. FASE 2 CONFIGURACIÓ DHCP AL ENTORN
+	3. FASE 3(Part1) CONFIGURACIÓ DE NAT (Sòrtida de xarxa interna a internet)
+	4. FASE 4 CONFIGURAR EL DNS i SERVIDOR SSH A LA XARXA ACTUAL 
+	5. FASE 3(Part2) CONFIGURACIÓ DE NAT (Des de fóra de la xarxa interna es puguin comunicar amb nosaltres)
+	6. FASE 6 TALLAFOCS
+	7. FASE 7 Script honeypot
 
-	1. PRIMER PUNTO
+
+FALTA
+-- EXPLICAR BIEN COMO SE HA TRIANGULARIZADO LA RED
+-- explicaciones routas, tener en cuenta a las redes, no solo pensar en routers
+
+acess - server - usuari - acces ???
 
 
-####### 1. CONFIGURACION DE ROUTER #######
+-- COMENTAR EN EL DHCP LOS MAX LEASE TIME POR DEFECTO ETC
 
+
+####### FASE 1 CONFIGURACIÓ DEL ROUTERS DEL ENTORN #######
+
+PASOS
+- Configuració prèvia de virtualbox
+- Configuracion de las maquinas
+- Preparacion router servidores
+- Preparacion router usuarios
+- Preparacion router acceso
+- Pruebas validacón
+
+
+
+ROUTER SREVIDORS
+
+	1. Obrim VirtualBox i creem una nova màquina anomenada ROUTER_SERVIDORS.
+
+	2. Obrim la configuració de la màquina i l'apartat de xarxa afegirem(sino està ja), una xarxa
+	amb mode NAT, per a poder instal·lar els paquets corresponents. 
+		Encenem la màquina i entrem amb el nostre usuari root:
+		
+		Primer actualitzarem la màquina amb:
+		
+		#apt-get update
+		#apt-get upgrade
+
+		Ara ens asegurarem de tenir instal·lat el paquet iproute2 amb la comanda: 
+
+		# dpkg -l | grep iproute2
+
+		Si no ho tenim, l'instal·larem, ja que serà la nostra eina principal durant tot el procès de
+		configuració.
+
+		# apt install iproute2
+
+		Una vegada tenim tot comprovat, apagarem la màquina i tornarem a la configuració de xarxa de 
+		virutalbox per seguir els pasos del següent punt.
+
+	3. Obrim la configuració de la màquina i a l'apartat de xarxa afegim 3 adaptadors de xarxa
+		* Adaptador 1:
+			- Configurat amb xarxa interna "xarxa-admin"
+			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "080027100202".
+		* Adaptador 2: 
+			- Configurat amb xarxa interna "xarxa-backbone"
+			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "080027100302".
+		* Adaptador 3: 
+			- Configurat amb xarxa interna "xarxa-servidors"
+			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "080027100501".
+			- Una vegada configurades els 3 adaptadors fem click a "Acceptar".
+
+	4. Arrenquem la màquina per configurar-la
+		* Configurem el fitxer de configuració /etc/networks/interfaces:
+			# nano /etc/networks/interfaces
+
+	
+			# This file describes the network interfaces available on your system
+			# and how to activate them. For more information, see interfaces(5).
+
+			source /etc/network/interfaces.d/*
+
+			# The loopback network interface
+			auto lo
+			iface lo inet loopback
+
+			# The primary network interface
+			#allow-hotplug enp0s3
+			#iface enp0s3 inet dhcp
+
+
+			#admin
+			auto enp0s3
+			iface enp0s3 inet static
+			address 10.10.2.2
+			netmask 255.255.255.240
+			network 10.10.2.0
+			gateway 10.10.2.1
+			broadcast 10.10.2.15
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#backbone
+			auto enp0s8
+			iface enp0s8 inet static
+			address 10.10.3.2
+			broadcast 10.10.3.3
+			netmask 255.255.255.252
+			network 10.10.3.0
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#servers
+			auto enp0s9
+			iface enp0s9 inet static
+			address 10.10.5.1
+			netmask 255.255.255.240
+			network 10.10.5.0
+			broadcast 10.10.5.15
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#----ROUTES----
+
+			#hacia usuaris
+			post-up route add -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.3.1
+			pre-down route del -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.3.1
+			#hacia dmz
+			post-up route add -net 10.10.1.0 netmask 255.255.255.240 gw 10.10.3.1
+			pre-down route del -net 10.10.1.0 netmask 255.255.255.240 gw 10.10.3.1
+			#vpn
+			#post-up route add -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+			#pre-down route del -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+
+
+			- INTERFÍCIE ADMIN (enp0s3)
+			
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s3 inet static", després, 
+				com voldrem configurar la xarxa 10.10.2.0/28, els paràmetres seràn:
+
+				address 10.10.2.2 --> adreça fixa per la interfície per a la xarxa admin
+				netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+				network 10.10.2.0 --> Identificador de xarxa
+				gateway 10.10.2.1 --> Ip del router per defecte per aquesta xarxa.
+				broadcast 10.10.2.15 --> Ip de broadcast
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+
+			- INTERFÍCIE BACKBONE (enp0s8)
+		
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s8 inet static", després, com voldrem configurar la xarxa
+				10.10.3.0/30, els paràmetres seràn:
+
+				address 10.10.3.2 --> adreça fixa per la interfície per a la xarxa backbone
+				broadcast 10.10.3.3 --> adreça ip de broadcast
+				netmask 255.255.255.252 --> Màscara de xarxa que fa referència a /30
+				network 10.10.3.0 --> Identificador de xarxa
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+
+			- INTERFÍCIE SERVIDORS (enp0s9)
+			
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s9 inet static", després, com voldrem configurar la xarxa
+				10.10.5.0/28, els paràmetres seràn:
+
+				address 10.10.5.1 --> adreça fixa per la interfície per a la xarxa servidors
+				broadcast 10.10.5.15 --> adreça ip de broadcast
+				netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+				network 10.10.5.0 --> Identificador de xarxa
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+
+			- Actualitzem els adaptadors de xarxa:
+
+				# service networking restart					
+
+			- RUTES
+			
+				1. Des de la màquina, fem "route -n" per veure les rutes que tenim ja configurades.
+
+					Kernel IP routing table
+					Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+					0.0.0.0         10.10.2.1       0.0.0.0         UG    0      0        0 enp0s3
+					10.10.2.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s3
+					10.10.3.0       0.0.0.0         255.255.255.252 U     0      0        0 enp0s8
+					10.10.5.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s9
+
+					Com es pot veure tenim configurades aquelles que nosaltres veiem físicament gràcies
+					a les interfícies del router:
+						0.0.0.0 --> ruta per defecte on l'indiquem que vagi al router d'accés
+						10.10.2.0 --> xarxa admin (interfície 10.10.2.2)
+						10.10.3.0 --> xarxa backbone (interfície 10.10.3.2)
+						10.10.5.0 --> xarxa servidors (0.0.0.0 que fa referència a la interfície 10.10.5.1)
+
+
+				2. Configuració de rutes per arribar a la xarxa DMZ i a la xarxa d'usuaris
+					#hacia usuaris
+					post-up route add -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.3.1
+					pre-down route del -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.3.1
+					#hacia dmz
+					post-up route add -net 10.10.1.0 netmask 255.255.255.240 gw 10.10.3.1
+					pre-down route del -net 10.10.1.0 netmask 255.255.255.240 gw 10.10.3.1
+					#vpn
+					#post-up route add -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+					#pre-down route del -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+
+					Com podem veure, les úniques que hem de configurar són aquells casos on des de
+					router servidors arriba una petició per anar a xarxa usuaris (10.10.4.0).
+					En aquest cas, redirigim la petició al router 10.10.3.1 (router usuaris)
+					passant per la xarxa backbone.
+					L'altre cas és per anar cap a la xarxa dmz (10.10.1.0). En aquest cas,
+					redirigim la petició cap al router 10.10.3.1 (router usuaris) passant per
+					la xarxa backbone.
+
+				3. Ara torna revisar la taula d'enrutament amb "route -n":
+
+				Kernel IP routing table
+				Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+				0.0.0.0         10.10.2.1       0.0.0.0         UG    0      0        0 enp0s3
+				10.10.1.0       10.10.3.1       255.255.255.240 UG    0      0        0 enp0s8
+				10.10.2.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s3
+				10.10.3.0       0.0.0.0         255.255.255.252 U     0      0        0 enp0s8
+				10.10.4.0       10.10.3.1       255.255.255.240 UG    0      0        0 enp0s8
+				10.10.5.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s9
+
+				Com es pot veure ja tenim totes les rutes establertes de forma permanent, és a dir,
+				cada vegada que arranquem la màquina estaran configurades.
+
+
+ROUTER USUARIS
+	En aquesta màquina seguriem els 2 primers punts que el ROUTER SERVIDORS, per tant crearem una màquina
+	anomenada ROUTER USUARIS i seguirem els pasos per actualitzar i revisar que tenim els 
+	paquets necessaris.
+	
+	Ara anirem a la configuració per afegir els nous adaptadors de xarxa amb les seves xarxes corresponents: 
+	
+	Obrim la configuració de la màquina i a l'apartat de xarxa afegim 3 adaptadors de xarxa
+		* Adaptador 1:
+			- Configurat amb xarxa interna "xarxa-usuaris"
+			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "080027100401".
+		* Adaptador 2: 
+			- Configurat amb xarxa interna "xarxa-backbone"
+			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "080027100301".
+		* Adaptador 3: 
+			- Configurat amb xarxa interna "xarxa-dmz"
+			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "080027100102".
+			- Una vegada configurades els 3 adaptadors fem click a "Acceptar".
+
+
+	4. Arrenquem la màquina per configurar-la
+		* Configurem el fitxer de configuració /etc/networks/interfaces:
+			# nano /etc/networks/interfaces
+			
+			# This file describes the network interfaces available on your system
+			# and how to activate them. For more information, see interfaces(5).
+
+			source /etc/network/interfaces.d/*
+
+			# The loopback network interface
+			auto lo
+			iface lo inet loopback
+
+			# The primary network interface
+			#allow-hotplug enp0s3
+			#iface enp0s3 inet dhcp
+
+
+			#usuaris
+			auto enp0s3
+			iface enp0s3 inet static
+			address 10.10.4.1
+			netmask 255.255.255.240
+			network 10.10.4.0
+			broadcast 10.10.4.15
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#backbone
+			auto enp0s8
+			iface enp0s8 inet static
+			address 10.10.3.1
+			broadcast 10.10.3.3
+			netmask 255.255.255.252
+			network 10.10.3.0
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#dmz
+			auto enp0s9
+			iface enp0s9 inet static
+			address 10.10.1.2
+			netmask 255.255.255.240
+			network 10.10.1.0
+			broadcast 10.10.1.15
+			gateway 10.10.1.1
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#----ROUTES----
+
+			#hacia servidors
+			post-up route add -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.3.2
+			pre-down route del -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.3.2
+			#hacia admin
+			#post-up route add -net 10.10.2.0 netmask 255.255.255.240 gw 10.10.3.1
+			#pre-down route del -net 10.10.2.0 netmask 255.255.255.240 gw 10.10.3.1
+
+			#vpn
+			#post-up route add -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+			#pre-down route del -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+
+			- INTERFÍCIE USUARIS (enp0s3)
+			
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s3 inet static", després, 
+				com voldrem configurar la xarxa 10.10.4.0/28, els paràmetres seràn:
+
+				address 10.10.4.1 --> adreça fixa per la interfície per a la xarxa usuaris
+				netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+				network 10.10.4.0 --> Identificador de xarxa
+				broadcast 10.10.4.15 --> Ip de broadcast
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+
+			
+			- INTERFÍCIE BACKBONE (enp0s8)
+		
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s8 inet static", després, com voldrem configurar la xarxa
+				10.10.3.0/30, els paràmetres seràn:
+
+				address 10.10.3.2 --> adreça fixa per la interfície per a la xarxa backbone
+				netmask 255.255.255.252 --> Màscara de xarxa que fa referència a /30
+				broadcast 10.10.3.3 --> adreça ip de broadcast
+				network 10.10.3.0 --> Identificador de xarxa
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+			
+			- INTERFÍCIE DMZ (enp0s9)
+		
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s9 inet static", després, com voldrem configurar la xarxa
+				10.10.1.0/28, els paràmetres seràn:
+
+				address 10.10.1.2 --> adreça fixa per la interfície per a la xarxa backbone
+				netmask 255.255.255.252 --> Màscara de xarxa que fa referència a /28
+				network 10.10.1.0 --> Identificador de xarxa
+				broadcast 10.10.1.15--> adreça ip de broadcast
+				gateway 10.10.1.1 --> Ip del router per defecte per aquesta xarxa.
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+				
+				
+			- Actualitzem els adaptadors de xarxa:
+
+				# service networking restart					
+
+			- RUTES
+			
+				1. Des de la màquina, fem "route -n" per veure les rutes que tenim ja configurades.
+
+					Kernel IP routing table
+					Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+					0.0.0.0         10.10.1.1       0.0.0.0         UG    0      0        0 enp0s9
+					10.10.1.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s9
+					10.10.3.0       0.0.0.0         255.255.255.252 U     0      0        0 enp0s8
+					10.10.4.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s3
+
+					Com es pot veure tenim configurades aquelles que nosaltres veiem físicament gràcies
+					a les interfícies del router:
+						0.0.0.0 --> ruta per defecte on l'indiquem que vagi al router d'accés
+						10.10.1.0 --> xarxa dmz (interfície 10.10.1.1)
+						10.10.3.0 --> xarxa backbone (interfície 10.10.3.1)
+						10.10.4.0 --> xarxa servidors (0.0.0.0 que fa referència a la interfície 10.10.4.1)
+					
+				2. Configuració de rutes per arribar a la xarxa servidors
+
+					#hacia servidors
+					post-up route add -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.3.2
+					pre-down route del -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.3.2
+
+					En aquest cas, només haurem de configurar el cas on ens arriba una petició per
+					anar a la xarxa servidors (10.10.5.0).
+
+					En aquest cas, redirigim la petició al router 10.10.3.2 (router servidors)
+					passant per la xarxa backbone.
+
+				3. Ara torna revisar la taula d'enrutament amb "route -n":
+
+					Kernel IP routing table
+					Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+					0.0.0.0         10.10.1.1       0.0.0.0         UG    0      0        0 enp0s9
+					10.10.1.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s9
+					10.10.3.0       0.0.0.0         255.255.255.252 U     0      0        0 enp0s8
+					10.10.4.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s3
+
+					Com es pot veure ja tenim totes les rutes establertes de forma permanent, és a dir,
+					cada vegada que arranquem la màquina estaran configurades.
+			
+
+ROUTER ACCES
+	En aquesta màquina seguriem els 2 primers punts que el ROUTER SERVIDORS, per tant crearem una màquina
+	anomenada ROUTER ACCES i seguirem els pasos per actualitzar i revisar que tenim els 
+	paquets necessaris.
+	
+	Ara anirem a la configuració per afegir els nous adaptadors de xarxa amb les seves xarxes corresponents: 
+	
+	Ob3. rim la configuració de la màquina i a l'apartat de xarxa afegim 3 adaptadors de xarxa
+		* Adaptador 1:
+			- Configurat amb xaadaptador pont
+- Al mateixeiapartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "08080027000001
+		* Adaptador 2: 
+			- Configurat amb xarxa interna "xaxarxa-admin			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "08080027100201
+		* Adaptador 3: 
+			- Configurat amb xarxa interna "xaxarxa-dmz			- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+			la següent: "08080027100101
+			- Una vegada configurades els 3 adaptadors fem click a "Acceptar".
+
+
+	4. Arrenquem la màquina per configurar-la
+		* Configurem el fitxer de configuració /etc/networks/interfaces:
+			# nano /etc/networks/interfaces
+
+	
+				# This file describes the network interfaces available on your system
+			# and how to activate them. For more information, see interfaces(5).
+
+			source /etc/network/interfaces.d/*
+
+			# The loopback network interface
+			auto lo
+			iface lo inet loopback
+
+			# The primary network interface
+			#allow-hotplug enp0s3
+			#iface enp0s3 inet dhcp
+
+
+			#troncal
+			auto enp0s3
+			iface enp0s3 inet dhcp
+
+			#admin
+			auto enp0s8
+			iface enp0s8 inet static
+			address 10.10.2.1
+			broadcast 10.10.2.15
+			netmask 255.255.255.240
+			network 10.10.2.0
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#dmz
+			auto enp0s9
+			iface enp0s9 inet static
+			address 10.10.1.1
+			netmask 255.255.255.240
+			network 10.10.1.0
+			broadcast 10.10.1.15
+			dns-nameservers 10.10.1.3 10.10.1.4
+
+			#----ROUTES----
+
+			#hacia usuaris
+			post-up route add -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.1.2
+			pre-down route del -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.1.2
+			#hacia servidors
+			post-up route add -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.2.2
+			pre-down route del -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.2.2
+
+			#hacia backbone
+			post-up route add -net 10.10.3.0 netmask 255.255.255.252 gw 10.10.1.2
+			pre-down route del -net 10.10.3.0 netmask 255.255.255.252 gw 10.10.1.2
+			#post-up route add -net 10.10.3.0 netmask 255.255.255.252 gw 10.10.2.2
+			#pre-down route del -net 10.10.3.0 netmask 255.255.255.252 gw 10.10.2.2
+
+			#vpn
+			#post-up route add -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+			#pre-down route del -net 10.10.6.0 netmask 255.255.255.240 gw 10.10.2.2
+
+			- INTERFÍCIE TRONCAL (enp0s3)
+				Per aquesta interfície serà en dhcp "iface enp0s3 inet dhcp", ja que el que volem és
+				a partir d'aquesta poder tenir comunicació amb l'exterior.
+
+			- INTERFÍCIE ADMIN (enp0s8)
+			
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s8 inet static", després, 
+				com voldrem configurar la xarxa 10.10.2.0/28, els paràmetres seràn:
+
+				address 10.10.2.1 --> adreça fixa per la interfície per a la xarxa admin
+				netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+				network 10.10.2.0 --> Identificador de xarxa
+				broadcast 10.10.2.15 --> Ip de broadcast
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+
+			- INTERFÍCIE DMZ (enp0s9)
+		
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s8 inet static", després, com voldrem configurar la xarxa
+				10.10.3.0/28, els paràmetres seràn:
+
+				address 10.10.1.1 --> adreça fixa per la interfície per a la xarxa DMZ
+				broadcast 10.10.1.15 --> adreça ip de broadcast
+				netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+				network 10.10.1.0 --> Identificador de xarxa
+				dns-nameservers 10.10.1.3 10.10.1.4 --> Servidors dns
+
+			- Actualitzem els adaptadors de xarxa:
+
+				# service networking restart					
+
+			- RUTES
+			
+				1. Des de la màquina, fem "route -n" per veure les rutes que tenim ja configurades.
+				
+					Kernel IP routing table
+					Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+					0.0.0.0         192.168.1.1     0.0.0.0         UG    0      0        0 enp0s3
+					10.10.1.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s9
+					10.10.2.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s8
+					192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 enp0s3
+
+					Com es pot veure tenim configurades aquelles que nosaltres veiem físicament gràcies
+					a les interfícies del router:
+						0.0.0.0 --> ruta per defecte on l'indiquem que vagi al router que en aquest cas tinc
+						a casa meva
+						10.10.2.0 --> xarxa admin (interfície 10.10.2.1)
+						10.10.1.0 --> xarxa DMZ (interfície 10.10.1.1)
+						192.168.1.0 --> Si volem a anar cap a internet anem per la ruta per defecte
+
+
+				2. Configuració de rutes per arribar a la xarxa servidors, backbone i a la xarxa d'usuaris
+					#hacia usuaris
+					post-up route add -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.1.2
+					pre-down route del -net 10.10.4.0 netmask 255.255.255.240 gw 10.10.1.2
+					#hacia servidors
+					post-up route add -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.2.2
+					pre-down route del -net 10.10.5.0 netmask 255.255.255.240 gw 10.10.2.2
+
+					#hacia backbone
+					post-up route add -net 10.10.3.0 netmask 255.255.255.252 gw 10.10.1.2
+					pre-down route del -net 10.10.3.0 netmask 255.255.255.252 gw 10.10.1.2
+
+					Com podem veure, les úniques que hem de configurar són aquells casos on des de
+					router acces arriba una petició per anar a xarxa usuaris (10.10.4.0).
+					En aquest cas, redirigim la petició al router 10.10.1.2 (router usuaris)
+					passant per la xarxa dmz.
+					L'altre cas és per anar cap a la xarxa dmz (10.10.3.0). En aquest cas,
+					redirigim la petició cap al router 10.10.1.2 (router usuaris) passant per
+					la xarxa dmz.
+					I per últim el cas per anar a xarxa servidors (10.10.5.0). En aquest cas,
+					redirigim la petició cap al router 10.10.2.2 (router servidors) passant per
+					la xarxa admin.
+
+				3. Ara tornem a revisar la taula d'enrutament amb "route -n":
+
+					Kernel IP routing table
+					Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+					0.0.0.0         192.168.1.1     0.0.0.0         UG    0      0        0 enp0s3
+					10.10.1.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s9
+					10.10.2.0       0.0.0.0         255.255.255.240 U     0      0        0 enp0s8
+					10.10.3.0       10.10.1.2       255.255.255.252 UG    0      0        0 enp0s9
+					10.10.4.0       10.10.1.2       255.255.255.240 UG    0      0        0 enp0s9
+					10.10.5.0       10.10.2.2       255.255.255.240 UG    0      0        0 enp0s8
+					192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 enp0s3
+
+				Com es pot veure ja tenim totes les rutes establertes de forma permanent, és a dir,
+				cada vegada que arranquem la màquina estaran configurades.
+
+
+NOTA: una vegada configurats els 3 routers, és necessàri per cadascun d'ells modificar el fitxer
+/etc/sysctl.conf afegint la línia següent:
+	
+	# Uncomment the next line to enable packet forwarding for IPv4
+	net.ipv4.ip_forward=1
+
+En cas de ja existir, només ens hem de fixar que estigui igualada a 1 i no a 0.
+
+
+#------------ CONFIGURACIÓ DEL SERVIDOR DHCP ------------#
+
+1. Obrim VirtualBox i creem una nova màquina anomenada DHCP-SERVER.
+
+2. Obrim la configuració de la màquina i l'apartat de xarxa afegirem(sino està ja), una xarxa
+amb mode NAT, per a poder instal·lar els paquets corresponents. 
+	Encenem la màquina i entrem amb el nostre usuari root:
+	
+	Primer actualitzarem la màquina amb:
+	
+	#apt-get update
+	#apt-get upgrade
+
+	Ara ens asegurarem de tenir instal·lat el paquet iproute2 amb la comanda: 
+
+	# dpkg -l | grep iproute2
+
+	Si no ho tenim, l'instal·larem, ja que serà la nostra eina principal durant tot el procès de
+	configuració.
+
+	# apt install iproute2
+
+	Ara instal·lem el paquet de dhcp-server de isc:
+
+	# apt install isc-dhcp-server
+
+	Una vegada fet se'ns haurà creat el firectori de configuració /etc/dhcp on tindrem tots els fitxers
+	de configuració pel nostre servei dhcp
+
+	Una vegada tenim tot comprovat, apagarem la màquina i tornarem a la configuració de xarxa de 
+	virutalbox per seguir els pasos del següent punt.
+
+3. Obrim la configuració de la màquina i a l'apartat de xarxa configurem l'adaptador 1:
+	* Adaptador 1:
+		- Configurat amb xarxa interna "xarxa-servidors"
+		- Al mateix apartat de xarxa, al subapartat avançat canviem la mac de l'adaptador per
+		la següent: "080027100502".
+
+4. Arrenquem la màquina per configurar-la
+	* Configurem el fitxer de configuració /etc/networks/interfaces:
+
+		# This file describes the network interfaces available on your system
+		# and how to activate them. For more information, see interfaces(5).
+
+		source /etc/network/interfaces.d/*
+
+		# The loopback network interface
+		auto lo
+		iface lo inet loopback
+
+		# The primary network interface
+		auto enp0s3
+		iface enp0s3 inet static
+			broadcast 10.10.5.15
+			network 10.10.5.0
+			netmask 255.255.255.240
+			address 10.10.5.2
+			gateway 10.10.5.1
+
+		Com podem veure tenim configurada l'interfície de forma estàtica amb: 
+
+			broadcast 10.10.5.15 --> adreça de broadcast
+			network 10.10.5.0 --> identificador de xarxa
+			netmask 255.255.255.240 --> Màscara de subxarxa
+			address 10.10.5.2 --> Adreça del servidor dhcp
+			gateway 10.10.5.1 --> Router assignat al servidor dhcp
+		
+		Una vegada fet reiniciem la xarxa:
+			# service networking restart
+
+	* Configurem el fitxer de configuració del dhcp /etc/dhcp/dhcpd.conf
+
+		# dhcpd.conf
+		#
+		# Sample configuration file for ISC dhcpd
+		#
+
+		# option definitions common to all supported networks...
+		option domain-name "seax.edu";
+		option domain-name-servers 10.10.1.3, 10.10.1.4; 
+
+		default-lease-time 600;
+		max-lease-time 7200;
+		min-lease-time 500;
+
+		# The ddns-updates-style parameter controls whether or not the server will
+		# attempt to do a DNS update when a lease is confirmed. We default to the
+		# behavior of the version 2 packages ('none', since DHCP v2 didn't
+		# have support for DDNS.)
+		ddns-update-style none;
+
+		# If this DHCP server is the official DHCP server for the local
+		# network, the authoritative directive should be uncommented.
+		authoritative;
+
+		# Use this to send dhcp log messages to a different log file (you also
+		# have to hack syslog.conf to complete the redirection).
+		#log-facility local7;
+
+		# No service will be given on this subnet, but declaring it helps the 
+		# DHCP server to understand the network topology.
+
+		# Subnet declaration.
+
+		#xarxa servidors
+		subnet 10.10.5.0 netmask 255.255.255.240 {
+		option routers 10.10.5.1;
+		option subnet-mask 255.255.255.240;
+		#option broadcast-address 10.10.5.255;
+		default-lease-time 800;
+		max-lease-time 10000;
+		option domain-name "seax.edu";
+		option domain-name-servers 10.10.1.3;
+		range 10.10.5.3 10.10.5.10;
+		range 10.10.5.12 10.10.5.14;
+		}
+		host monitor_xarxa_10.10.5.0 {
+		option host-name "monitor-xarxa-servidors";
+		hardware ethernet 08:00:27:10:00:11;
+		fixed-address 10.10.5.11;
+		}
+
+		#xarxa usuaris
+		subnet 10.10.4.0 netmask 255.255.255.240 {
+		option routers 10.10.4.1;
+		range 10.10.4.3 10.10.4.10;
+		range 10.10.4.12 10.10.4.14;
+		}
+		host monitor_xarxa_10.10.4.0 {
+		option host-name "monitor-xarxa-usuaris";
+		hardware ethernet 08:00:27:10:00:11;
+		fixed-address 10.10.4.11;
+		}
+
+		#xarxa DMZ
+		subnet 10.10.1.0 netmask 255.255.255.240 {
+		option routers 10.10.1.1;
+		range 10.10.1.5 10.10.1.10;
+		range 10.10.1.12 10.10.1.14;
+		}
+		host monitor_xarxa_10.10.1.0 {
+		option host-name "monitor-xarxa";
+		hardware ethernet 08:00:27:10:00:11;
+		fixed-address 10.10.1.11;
+		}
+		#xarxa admin
+		subnet 10.10.2.0 netmask 255.255.255.240 {
+		option routers 10.10.2.1;
+		range 10.10.2.6 10.10.2.10;
+		range 10.10.2.12 10.10.2.14;
+		}
+		host monitor_xarxa_10.10.2.0 {
+		option host-name "monitor-xarxa-admin";
+		hardware ethernet 08:00:27:10:00:11;
+		fixed-address 10.10.2.11;
+		}
+
+		# This declaration allows BOOTP clients to get dynamic addresses,
+		# which we don't really recommend.
+
+		#subnet 10.254.239.32 netmask 255.255.255.224 {
+		#  range dynamic-bootp 10.254.239.40 10.254.239.60;
+		#  option broadcast-address 10.254.239.31;
+		#  option routers rtr-239-32-1.example.org;
+		#}
+
+		# A slightly different configuration for an internal subnet.
+		#subnet 10.5.5.0 netmask 255.255.255.224 {
+		#  range 10.5.5.26 10.5.5.30;
+		#  option domain-name-servers ns1.internal.example.org;
+		#  option domain-name "internal.example.org";
+		#  option routers 10.5.5.1;
+		#  option broadcast-address 10.5.5.31;
+		#  default-lease-time 600;
+		#  max-lease-time 7200;
+		#}
+
+		# Hosts which require special configuration options can be listed in
+		# host statements.   If no address is specified, the address will be
+		# allocated dynamically (if possible), but the host-specific information
+		# will still come from the host declaration.
+
+		#host passacaglia {
+		#  hardware ethernet 0:0:c0:5d:bd:95;
+		#  filename "vmunix.passacaglia";
+		#  server-name "toccata.example.com";
+		#}
+
+		# Fixed IP addresses can also be specified for hosts.   These addresses
+		# should not also be listed as being available for dynamic assignment.
+		# Hosts for which fixed IP addresses have been specified can boot using
+		# BOOTP or DHCP.   Hosts for which no fixed address is specified can only
+		# be booted with DHCP, unless there is an address range on the subnet
+		# to which a BOOTP client is connected which has the dynamic-bootp flag
+		# set.
+		#host fantasia {
+		#  hardware ethernet 08:00:07:26:c0:a5;
+		#  fixed-address fantasia.example.com;
+		#}
+
+		# You can declare a class of clients and then do address allocation
+		# based on that.   The example below shows a case where all clients
+		# in a certain class get addresses on the 10.17.224/24 subnet, and all
+		# other clients get addresses on the 10.0.29/24 subnet.
+
+		#class "foo" {
+		#  match if substring (option vendor-class-identifier, 0, 4) = "SUNW";
+		#}
+
+		#shared-network 224-29 {
+		#  subnet 10.17.224.0 netmask 255.255.255.0 {
+		#    option routers rtr-224.example.org;
+		#  }
+		#  subnet 10.0.29.0 netmask 255.255.255.0 {
+		#    option routers rtr-29.example.org;
+		#  }
+		#  pool {
+		#    allow members of "foo";
+		#    range 10.17.224.10 10.17.224.250;
+		#  }
+		#  pool {
+		#    deny members of "foo";
+		#    range 10.0.29.10 10.0.29.230;
+		#  }
+		#}
+		
+		Explicació POOL's d'adreces de la configuració.
+		
+		POOL d'adreces per la xarxa Servidors
+			
+			#xarxa servidors
+			subnet 10.10.5.0 netmask 255.255.255.240 { --> definició de la subnet per la xarxa servidors indicant la ip de la xarxa 
+						    							   i la mascara
+			
+			option routers 10.10.5.1; --> indica el router que de la subxarxa del client
+			option subnet-mask 255.255.255.240; --> indica la màscara de subxarxa del client
+			option broadcast-address 10.10.5.15; --> indica la l'adreça de broadcast del client
+			default-lease-time 800; --> temps en segons al qual expira l'assignaió de la adreça ip obtinguda
+			max-lease-time 10000; --> temps màxim en segons al qual expira l'assignaió de la adreça ip obtinguda
+			option domain-name "seax.edu"; --> domini en el qual s'actualitza el dns
+			option domain-name-servers 10.10.1.3; --> definició de la ip del dns que dòna suport a la subxarxa.
+			range 10.10.5.3 10.10.5.10; --> Rang d'ip's que s'assignen dinàmicament per màquines de la subxarxa 10.10.5.0
+			range 10.10.5.12 10.10.5.14; --> Segon rang d'ip's que s'assignen dinàmicament
+			}
+			
+			host monitor_xarxa_10.10.5.0 {
+			option host-name "monitor-xarxa-servidors";
+			hardware ethernet 08:00:27:10:00:11;
+			fixed-address 10.10.5.11;
+			}
+			
+			Com podem veure tenim el monitor_xarxa_10.10.5.0 on aquest és una reserva que fem per la màquina
+			amb MAC 08:00:27:10:00:11 per a què sempre se li assigni al arrencar des de la xarxa dmz la ip 10.10.5.11.
+
+
+		POOL d'adreces per a la xarxa dmz		
+			#xarxa usuaris
+			subnet 10.10.4.0 netmask 255.255.255.240 { --> definició de la subnet per la xarxa dmz indicant la ip de xarxa i la màscara
+			option routers 10.10.4.1; --> Definició del router de la xarxa
+			range 10.10.4.3 10.10.4.10; --> Primer rang d'adreces ip que pot assignar el servidor dhcp
+			range 10.10.4.12 10.10.4.14; --> Segon rang d'adreces ip que pot assignar el servidor dhcp
+			}
+			
+			host monitor_xarxa_10.10.4.0 {
+			option host-name "monitor-xarxa-usuaris";
+			hardware ethernet 08:00:27:10:00:11;
+			fixed-address 10.10.4.11;
+			}
+
+			Com podem veure tenim el monitor_xarxa_10.10.4.0 on aquest és una reserva que fem per la màquina
+			amb MAC 08:00:27:10:00:11 per a què sempre se li assigni al arrencar des de la xarxa dmz la ip 10.10.4.11.
+
+		POOL d'adreces per a la xarxa dmz
+		
+			#xarxa DMZ
+			subnet 10.10.1.0 netmask 255.255.255.240 { --> definició de la subnet per la xarxa dmz indicant la ip de xarxa i la màscara
+			option routers 10.10.1.1; --> Definició del router de la xarxa
+			range 10.10.1.5 10.10.1.10; --> Primer rang d'adreces ip que pot assignar el servidor dhcp
+			range 10.10.1.12 10.10.1.14; --> Segon rang d'adreces ip que pot assignar el servidor dhcp
+			}
+			
+			host monitor_xarxa_10.10.1.0 {
+			option host-name "monitor-xarxa";
+			hardware ethernet 08:00:27:10:00:11;
+			fixed-address 10.10.1.11;
+			}
+			
+			Com podem veure tenim el monitor_xarxa_10.10.1.0 on aquest és una reserva que fem per la màquina
+			amb MAC 08:00:27:10:00:11 per a què sempre se li assigni al arrencar des de la xarxa dmz la ip 10.10.1.11.
+			
+			
+		POOL d'adreces per a la xarxa admin
+
+			#xarxa admin
+			subnet 10.10.2.0 netmask 255.255.255.240 { --> definició de la subnet per la xarxa dmz indicant la ip de xarxa i la màscara
+			option routers 10.10.2.1; --> Definició del router de la xarxa
+			range 10.10.2.6 10.10.2.10; --> Primer rang d'adreces ip que pot assignar el servidor dhcp
+			range 10.10.2.12 10.10.2.14; --> Segon rang d'adreces ip que pot assignar el servidor dhcp
+			}
+			host monitor_xarxa_10.10.2.0 {
+			option host-name "monitor-xarxa-admin";
+			hardware ethernet 08:00:27:10:00:11;
+			fixed-address 10.10.2.11;
+			}
+
+			Com podem veure tenim el monitor_xarxa_10.10.2.0 on aquest és una reserva que fem per la màquina
+			amb MAC 08:00:27:10:00:11 per a què sempre se li assigni al arrencar des de la xarxa admin la ip 10.10.2.11.
+			
+			
+	* Configurem el fitxer de configuració /etc/default/isc-dhcp-server afegint la interfície que volem que escolti
+	el servidor dhcp
+
+		INTERFACESv4="enp0s3"
+
+
+	* Insalem el paquet isc-dhcp-relay per cadascun dels routers per tal que els routers reenviin els paquets dhcp
+	i no els descartin:
+
+		Exemple amb la màquina ROUTER_SERVIDORS)
+			1. obrim la màquina amb accés a internet (configurem una dels adaptadors de xarxa amb NAT)
+			2. Arranquem la màquina
+			3. instal·lem el paquet: #apt install isc-dhcp-relay
+			4. Una vegada executa't sortirà una assistent per configuracions bàsiques:
+				- PAS 1: Afegim la ip del nostre servidor dhcp --> 10.10.5.2
+				- Afegim les interfícies que escoltarà: enp0s3, enps8, enp0s9
+				- Afegim el paràmetre "-D" perquè el servei relay s'executi en segon plà.
+			5. Una vegada fet el pas 4 acabarà l'assistent informant de que aquesta informació es troba al 
+			fitxer /etc/default/isc-dhcp-relay
+
+				# Defaults for isc-dhcp-relay initscript
+				# sourced by /etc/init.d/isc-dhcp-relay
+				# installed at /etc/default/isc-dhcp-relay by the maintainer scripts
+
+				#
+				# This is a POSIX shell fragment
+				#
+
+				# What servers should the DHCP relay forward requests to?
+				SERVERS="10.10.5.2"
+
+				# On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+				INTERFACES="enp0s3 enp0s8 enp0s9"
+
+				# Additional options that are passed to the DHCP relay daemon?
+				OPTIONS="-D"
 
 APUNTES PREVIOS
-
-ROUTER SREVIDORES 
+	
 	interface servidors
 		backbone --> usuaris
 		backbone --> dmz
-		admin --> xarxa troncal 
+		admin --> xarxa troncal
 		admin --> xarxa vpn
 
 	interface admin
@@ -37,19 +942,19 @@ ROUTER SREVIDORES
 ------------------
 	xarxa backbone --> xarxa usuaris
 	xarxa backbone --> xarxa dmz
-	xarxa admin --> xarxa troncal 
+	xarxa admin --> xarxa troncal
 	xarxa admin --> xarxa vpn
- 
+
 ROUTER USUARIS
 
-ROUTER 
+ROUTER
 
---> configurado los interfaces 
---> añadimos las rutas 
+--> configurado los interfaces
+--> añadimos las rutas
 
 ACTIVAR FORWARDING
 
---> modificamos el fichero y le asignamos al variable 1: 
+--> modificamos el fichero y le asignamos al variable 1:
 /etc/sysctl.conf:
 net.ipv4.ip_forward = 1
 
@@ -57,7 +962,7 @@ net.ipv4.ip_forward = 1
 
 # sysctl -p /etc/sysctl.conf
 
-o 
+o
 
 # /etc/init.d/procps.sh restart
 
@@ -67,7 +972,7 @@ DUDAS
 Como redireccionamos a internet
 porque cada ruter tiene su propio nat
 como hacer la redireciona a la troncal si es dinamica
-falla enp0s10 
+falla enp0s10
 escenario pensado es correcto
 
 xarxa acces tiene que tener dos caminos?
@@ -87,12 +992,12 @@ DHCP RELAY EN LOS ROUTERS (admin i usuaris)
 3 PASOS (por router)
 Ip del server dhcp server
 Interfaces → todas las inteficies de las que queremos escuchar peticiones dhcp para luego redirigirlas a nuestro servidor dhcp (enp0s3, enp0s8, enp0s9).
-Parameter -D : para que se ejecute en segundo plano 
+Parameter -D : para que se ejecute en segundo plano
 
 Fichero de conf:  /etc/default/isc-dhcp-relay
 
 
-CONFIGURACIÓN SERVER DHCP 
+CONFIGURACIÓN SERVER DHCP
 
 - Modificado el fichero de configración del isc-dhcp-server, para asingar solo la interfaz enp0s3 al servidor dhcp
 - Creación de todas las pools para todas las redes.
@@ -107,4 +1012,3 @@ Añadir un host reservado con la Ip x.y.z.11 para cada una de las redes de nuest
 CONLUSIÓN LUNES FASE 2
 --> Hemos instalado el realy en los routers usuaris i  servidor
 --> Hemos hecho funcional dhcp para toda la red, añadiendo la ip reservada de la maquina monitor
-
