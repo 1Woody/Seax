@@ -21,7 +21,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		 4.1. PROVES DE VALIDACIÓ DNS MASTER (dns1)
 		 4.2. PROVES DE VALIDACIÓ DNS SLAVE (dns2)
 
-####### 1. MODIFICAIONS PREVIES VIRTUALBOX #######
+####### 1. MODIFICACIONS PREVIES VIRTUALBOX #######
 
 	Primer creem dues maquines virtuals anomenades DNS1 i DNS2 amb el sistema operatiu debian 10 (sense interfície gràfica), per a cada
 	màquina farem el següent:
@@ -421,7 +421,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		a la última actualització.
 		En altres paraules, és un servidor dns de suport o còpia pel master.
 
-		- Obrim la màquina anomenada DNS1
+		- Obrim la màquina anomenada DNS2
 
 		- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local per crear les zones:
 		-----------------------------------------------------------------------------------
@@ -443,7 +443,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			//FALTA la cerca inversa
 			zone "10.10.in-addr.arpa" IN {
 				type slave;
-				file "/var/cache/bind/db.seax.edu";
+				file "/var/cache/bind/db.10.10";
 				masters {10.10.1.3;};
 			};
 		-----------------------------------------------------------------------------------
@@ -464,7 +464,8 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		servidor esclau s'ocuparà d'agafar automàticament els fitxers del servidor master i fins i tot de revisar de manera periódica si ha
 		hagut canvis en aquests i ha d'actualitzar-los.
 
-		Per a que funcionin aquestes actualitzacions, el servidor es basa en el valor Serial del fitxer de configuració SOA, per tant tornem a recordar que és important actualitzar aquest valor sempre que fem una modificació al master.
+		Per a que funcionin aquestes actualitzacions, el servidor es basa en el valor Serial del fitxer de configuració SOA, per tant tornem
+		a recordar que és important actualitzar aquest valor sempre que fem una modificació al master.
 
 		Per finalitzar i desar els canvis farem un:
 

@@ -938,6 +938,18 @@ iptables -t nat -L
 netstat-nat -n 
 netstat-nat -D
 
+PASOS HACER IPTABLES PERSISTENTES
+- Guardamos en un fichero la configuración actual y 
+
+iptables-save > /etc/iptables.up.rules
+
+nano /etc/network/if-pre-up.d/iptables
+		#!/bin/bash
+		/sbin/iptables-restore < /etc/iptables.up.rules
+
+chmod +x /etc/network/if-pre-up.d/iptables
+
+
 PREGUNTAS 
 - tablas NAT
 - comprobar que no funciona la connexión hacia dentro de la red
