@@ -922,6 +922,30 @@ amb mode NAT, per a poder instal·lar els paquets corresponents.
 				# Additional options that are passed to the DHCP relay daemon?
 				OPTIONS="-D"
 
+
+####### 3. FASE 3(Part1) CONFIGURACIÓ DE NAT (Sòrtida de xarxa interna a internet) #######
+- Idea: Hemos 
+
+
+INSTRUCCIONES POR VERIFICAR
+usuaris --> iptables -t nat -A POSTROUTING -s 10.10.4.0/28 -o enp0s3 -j MASQUERADE
+dmz --> iptables -t nat -A POSTROUTING -s 10.10.1.0/28 -o enp0s3 -j MASQUERADE
+servidors --> iptables -t nat -A POSTROUTING -s 10.10.5.0/28 -o enp0s3 -j MASQUERADE
+admin --> iptables -t nat -A POSTROUTING -s 10.10.2.0/28 -o enp0s3 -j MASQUERADE
+
+iptables -t nat -L
+
+netstat-nat -n 
+netstat-nat -D
+
+PREGUNTAS 
+- tablas NAT
+- comprobar que no funciona la connexión hacia dentro de la red
+- verificar el porque nos responden desde el exterior
+- Como hacer persistente
+
+
+
 APUNTES PREVIOS
 	
 	interface servidors
