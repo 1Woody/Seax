@@ -457,7 +457,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			farem amb:
 
 			masters {10.10.1.3;}; --> En aquest paràmetre posarem separats per ";" tots els masters amb els que treballa el nostre servidor
-																escalu, en el nostre cas només té un master a la direcció 10.10.1.3 .
+									  escalu, en el nostre cas només té un master a la direcció 10.10.1.3 .
 
 
 		Una vegada acabem la configuració del fitxer "/etc/bind/named.conf.local" no fara falta crear cap arxiu de zona, sino que el nostre

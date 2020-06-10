@@ -923,40 +923,71 @@ amb mode NAT, per a poder instal·lar els paquets corresponents.
 				OPTIONS="-D"
 
 
-####### 3. FASE 3(Part1) CONFIGURACIÓ DE NAT (Sòrtida de xarxa interna a internet) #######
-- Idea: Hemos 
+####### 3. FASE 3 CONFIGURACIÓ DE NAT (Sòrtida de xarxa interna a internet) #######
+
+Descripció: Aquesta fase consisteix en implementar el servei NAT al router d'accés per permetre
+la comunicació de dispositius de la nostra xarxa interna amb l'exterior
+
+Configuració:
+
+	1. Encenem el router d'accés.
+	2. Ens assegurem de tenir instal·lades les iptables a la nostra màquina amb: 
+	
+		# apt install iptables
+
+	3. Afegim les iptables per cadascuna de les xarxes que tindrà dispositius que vulguin sortir a internet.
+	Per fer-ho utilitzem DynamicNat per poder enmascarar la ip privada del dispositiu que vol
+	sortir a internet amb la ip que correspon a la interfície del router d'accés que surt cap a internet:
+		
+		# iptables -t nat -A POSTROUTING -s 10.10.4.0/28 -o enp0s3 -j MASQUERADE   --> usuaris 
+		# iptables -t nat -A POSTROUTING -s 10.10.1.0/28 -o enp0s3 -j MASQUERADE   --> dmz
+		# iptables -t nat -A POSTROUTING -s 10.10.5.0/28 -o enp0s3 -j MASQUERADE   --> Servidors
+		# iptables -t nat -A POSTROUTING -s 10.10.2.0/28 -o enp0s3 -j MASQUERADE   --> admin
+
+		Paràmetres de la comanda:
+		
+		# iptables -t <tipus> -A POSTROUTING -s <ip> -o <interficie> -j MASQUERADE
+
+			-t <tipus> --> tipus de la iptable (en aquest cas interesa nat)
+			-A POSTROUTING --> Afegeix (Add) una regla a la cadena POSTROUTING
+			-s <ip> --> S'hi aplica als paquets que tenguin com a adreça origen <ip>
+			-o <interfície> --> S'hi aplica als paquets que surtin (out-interface) per <interfície>
+			-j MASQUERADE --> S'utilitza per canviar l'adreça privada del dispositiu per l'adreça
+			que correspon a la interfície del router que en aquest cas pertany a la troncal.
+
+		Per confirmar que s'ha afegit correctament, podem llistar les taules que fan referència a la nat amb la comanda:	
+			
+			# iptables -t nat -L -n
+
+	4. Ara prepararem un fitxer amb totes les regles, per poder fer-les persistents a la nostra màquina:
+
+		- Guardem en un fitxer la configuració actual que hem fet al pas anterior 
+
+			# iptables-save > /etc/iptables.up.rules
+			
+		- Creem un script per tal de fer el restore de la configuració de iptables.up.rules
+		cada vegada que arrenquem la màquina.
+
+			# nano /etc/network/if-pre-up.d/iptables
+		
+				#!/bin/bash
+				/sbin/iptables-restore < /etc/iptables.up.rules
+
+		- Donem permisos d'execució a l'script per que tot funcioni correctament.
+
+			# chmod +x /etc/network/if-pre-up.d/iptables
+
+	5. Reiniciem la màquina i comprovem amb la comanda "iptables -t nat -L -n" que les iptables
+	segueixen configurades i establertes.
+	
+		!!!!FALTA FOTO DE LES IPTABLES!!!!
 
 
-INSTRUCCIONES POR VERIFICAR
-usuaris --> iptables -t nat -A POSTROUTING -s 10.10.4.0/28 -o enp0s3 -j MASQUERADE
-dmz --> iptables -t nat -A POSTROUTING -s 10.10.1.0/28 -o enp0s3 -j MASQUERADE
-servidors --> iptables -t nat -A POSTROUTING -s 10.10.5.0/28 -o enp0s3 -j MASQUERADE
-admin --> iptables -t nat -A POSTROUTING -s 10.10.2.0/28 -o enp0s3 -j MASQUERADE
-
-iptables -t nat -L
-
-netstat-nat -n 
-netstat-nat -D
-
-PASOS HACER IPTABLES PERSISTENTES
-- Guardamos en un fichero la configuración actual y 
-
-iptables-save > /etc/iptables.up.rules
-
-nano /etc/network/if-pre-up.d/iptables
-		#!/bin/bash
-		/sbin/iptables-restore < /etc/iptables.up.rules
-
-chmod +x /etc/network/if-pre-up.d/iptables
 
 
-PREGUNTAS 
-- tablas NAT
-- comprobar que no funciona la connexión hacia dentro de la red
-- verificar el porque nos responden desde el exterior
-- Como hacer persistente
 
 
+--------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
 APUNTES PREVIOS
 	
