@@ -984,6 +984,591 @@ Configuració:
 
 
 
+####### 4. FASE 4 CONFIGURAR EL DNS i SERVIDOR SSH A LA XARXA ACTUAL #######
+		
+	#### 4.1. MODIFICACIONS PREVIES VIRTUALBOX ####
+
+		Primer creem dues maquines virtuals anomenades DNS1 i DNS2 amb el sistema operatiu debian 10 (sense interfície gràfica), per a cada
+		màquina farem el següent:
+
+		DNS1:
+			Anirem a la configuració de la màquina, i a l'apartat de Xarxa activem (si no hi està ja) un Adaptador de xarxa en mode Xarxa
+			interna i un segon adaptador de xarxa en mode Adaptador Pont. Dels paràmetres Avanaçats per el primer adaptador modificarem la
+			direcció MAc per "08:00:27:10:01:03" i li posarem el nom de "xarxa-dmz" al nom de la nostra xarxa, en canvi, per el segon no ens
+			fara falta modificar res.
+
+			Resum configuració:
+				Nom màquina: DNS1
+				SO: Debian 10 (Buster / sense intefície gràfica)
+				Adaptador 1: Adaptador de xarxa de tipus interna
+										MAC: 08:00:27:10:01:03
+				Adaptador 2: Adaptador de xarxa de tipus Adaptador Pont
+
+		DN2:
+			Per aquesta segona màquina seguirem el mateix procès que la primera amb la diferència de la Mac que assignarem al primer Adaptador
+			(xarxa interna) serà "08:00:27:10:01:04".
+				Resum configuració:
+					Nom màquina: DNS2
+					SO: Debian 10 (Buster / sense intefície gràfica)
+					Adaptador 1: Adaptador de xarxa de tipus interna
+											MAC: 08:00:27:10:01:04
+					Adaptador 2: Adaptador de xarxa de tipus Adaptador Pont
+
+		IMPORTANT: En aquest procès i per evitar possibles errors, s'han configurat IP's fixes de la xarxa a la que es troba connectada les
+		màquines DNS1 i DNS2 (tot i que pot funcionar amb la IP donada per el servidor DHCP que hi hagi configurat a la nostra xarxa).
+
+
+	#### 4.2. CONFIGURACIONS PREVIES DE LES MÀQUINES ####
+
+		Amb tota la configuració prèvia de VirutalBox finalitzada, encenem les màquines i tornem a entrar com a root per configurar les
+		direccions IP estàtiques de les nostres interfícies al fitxer (/etc/network/interfaces):
+
+		MÀQUINA DNS1
+			Començarem modificant l'interfíce de la xarxa interna, amb el nom en aquest cas "enp0s3", seguint els següents paràmetres:
+
+				Primer de tot col·locarem com a estàtica la intefície amb "iface enp0s3 inet static", després, com voldrem configurar la xarxa
+				10.10.1.0/28, els paràmetres seràn:
+
+				address 10.10.1.3 --> adreça fixa del nostre servidor Master
+				netmask 255.255.255.240 --> Màscara de xarxa que fa referència a /28
+				network 10.10.1.0 --> Identificador de xarxa
+				dns-nameservers 10.10.1.3 --> Ip del Servidor DNS (en aquest cas s'està refernciant a ell mateix).
+				gateway 10.10.1.1 --> Ip del router de la xarxa.
+
+				Per la segona interfíce (de manera opcional) també s'ha configurat una Ip fixa amb els següents paràmetres:
+
+				address 192.168.1.120 --> Adreça disponible de la nostra xarxa (amb connexió a internet)
+				netmask 255.255.255.0 --> Màscara de xarxa que fa referència a /24
+				network 192.168.1.0 --> Identificador de xarxa
+
+				Finalment el fixter de intefícies (/etc/network/interfaces) de la màquina DNS1 ha de quedar així:
+			-------------------------------------------------------------------------
+				# This file describes the network interfaces available on your system
+				# and how to activate them. For more information, see interfaces(5).
+
+				source /etc/network/interfaces.d/*
+
+				# The loopback network interface
+				auto lo
+				iface lo inet loopback
+
+
+				iface enp0s3 inet static
+				address 10.10.1.3
+				netmask 255.255.255.240
+				network 10.10.1.0
+				dns-nameservers 10.10.1.3
+				gateway 10.10.1.1
+
+				auto enp0s8
+				iface enp0s8 inet static
+				address 192.168.1.120
+				netmask 255.255.255.0
+				network 192.168.1.0
+			-------------------------------------------------------------------------
+
+
+				També modificarem el fitxer (/etc/resolv.conf) per incloure el servidor DNS (a ell mateix en aquest cas)
+				Només farà falta que apareixi aquesta línia:
+
+			-----------------------
+				nameserver 10.10.1.3
+			-----------------------
+
+		MÀQUINA DNS2
+
+			A aquesta màquina farem exactament el mateix que a l'anterior amb la diferència a les IPs de les dues interfícies i el servidor
+			dns.
+
+			Al adaptador 1 (xarxa interna) li assignarem la IP 10.10.1.4, al mateix temps col·locarem el servidor dns amb la mateixa IP, com
+			es pot veure al fitxer.
+
+			El fitxer quedarà així:
+			-------------------------------------------------------------------------
+				# This file describes the network interfaces available on your system
+				# and how to activate them. For more information, see interfaces(5).
+
+				source /etc/network/interfaces.d/*
+
+				# The loopback network interface
+				auto lo
+				iface lo inet loopback
+
+				# The primary network interface
+				#allow-hotplug enp0s3
+				#iface enp0s3 inet dhcp
+
+				auto enp0s3
+				iface enp0s3 inet static
+				address 10.10.1.4
+				netmask 255.255.255.240
+				network 10.10.1.0
+				dns-nameservers 10.10.1.4
+				gateway 10.10.1.1
+
+
+				auto enp0s8
+				iface enp0s8 inet static
+				address 192.168.1.123
+				netmask 255.255.255.0
+				network 192.168.1.0
+				dns-nameservers 10.10.1.4
+			-------------------------------------------------------------------------
+
+			També modificarem el fitxer (/etc/resolv.conf) per incloure el servidor DNS (a ell mateix en aquest cas)
+			Només farà falta que apareixi aquesta línia:
+			-----------------------
+				nameserver 10.10.1.4
+			-----------------------
+
+			Amb tot modificat farem la comanda (# service networking restart) per aplicar tots els canvis.
+
+		## 4.2.1. INSTAL·LACIÓ DE PAQUETS ##
+
+			Una vegada tenim la configuració de xarxa completada, les actualitzem amb les comandes:
+				#apt-get update
+				#apt-get upgrade
+
+			Amb tot actualitzat, instal·larem els paquets que necessitarem per la configuració del nostre DNS amb la comanda:
+
+				#apt-get install dnsutils
+				- Paquet dnsutils --> Aquest paquet ens instal·la tot el necessàri per poder fer comandes com el dig o nslookup.
+
+				#apt-get install bind9
+				- Paquets bind9 --> Ens instal·la un servei de dns el qual, genera una carpeta a /etc/bind on tenim tots els fitxers de
+				configuració sobre el nostre dns (fitxers de zona per exemple).
+
+				Les operacions bàsiques que trobarem posteriorment a l'explicació i que podem fer amb el programa bind9 són:
+					-	service bind9 stop --> para el servei
+					- service bind9 start --> inicia el servei
+					- service bind9 restart --> reinicia el servei
+					- service bind9 reload --> actualitza els fitxers de zona en cas de haver-hi canvis
+
+
+			Una vegada instal·lat els paquets necessàris, ja podrem començar a configurar el nostre servei DNS.
+			A part, ja podem deshabilitar els adaptadors pont del DNS1 i DNS2.
+
+
+	#### 4.3. CONFIGURACIÓ DNS ####
+
+		SERVIDOR MASTER
+
+			El servidor DNS master és aquell al que se li fan les peticions de resolució en primera instància. Aquest servidor és el que conté
+			la informació completa de les zones del domini i al primer que pregunta qualsevol dels dispositius que vulgui resoldre algun nom o
+			adreça ip. En altres paraules, és el servidor dns principal del domini.	
+	
+		SERVIDOR SLAVE
+
+			El servidor dns slave pràcticament és una còpia del servidor master per en cas de fallada d'aquest, no provocar una caiguda del
+			servei de dns de la xarxa. Aquest Servidor, cada vegada que el master ha fet un canvi als fitxers de zona, rep un avís i una
+			transferència dels canvis. Per tant, el servidor slave en cas de caiguda del master, podrà resoldre tants noms o ip's com va rebre
+			a la última actualització.
+			En altres paraules, és un servidor dns de suport o còpia pel master.
+
+		Hem de tenir en compte que un servidor master pot fer d'esclau d'un altre domini, i el passa el mateix amb el servidor slave, com veurem
+		en aquesta pràctica, tindrem el domini "seax.edu", on la maquina DNS1 farà de servidor master i la màquina DNS2 de servidor slave. En canvi,
+		per al domini "public.edu", el DNS2 serà el nostre servidor master i el DNS1 en aquest cas serà l'slave.
+
+	  	## 4.3.1. CREACIÓ DEL DNS1 ##
+
+			- Obrim la màquina anomenada DNS1
+
+			- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local per crear les zones pels dominis seax.edu i public.edu:
+
+				---------------------------------------------------------------------------
+				//
+				// Do any local configuration here
+				//
+
+				// Consider adding the 1918 zones here, if they are not used in your
+				// organization
+				//include "/etc/bind/zones.rfc1918";
+
+
+				zone "seax.edu" IN {
+					type master;
+					file "/etc/bind/db.seax.edu";
+					allow-transfer { 10.10.1.4; }; //Allow Transfer of zone from the master
+					also-notify { 10.10.1.4; };
+				};
+
+				zone "10.10.in-addr.arpa" IN {
+					type master;
+					file "/etc/bind/db.10.10";
+					allow-transfer { 10.10.1.4; }; //Allow Transfer of zone from the master
+					also-notify { 10.10.1.4; };
+				};
+
+				#zone public.edu
+				zone "public.edu" IN {
+					type slave;
+					file "/var/cache/bind/db.public.edu";
+					masters {10.10.1.4;};
+				};
+
+				zone "1.168.192.in-addr.arpa" IN {
+					type slave;
+					file "/var/cache/bind/db.192.168.1";
+					masters {10.10.1.4;};
+				};
+				---------------------------------------------------------------------------
+
+					Com podem veure, tenim quatre zones:
+
+					MASTER ZONES "seax.edu"
+
+						- seax.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. Com es pot veure, permitim la
+						comunicació afegit el paràmetre "allow-transfer" amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com
+							avisar-li dels canvis amb el "also-notify".
+						Els dispusitius d'aquesta zona es declaren al fitxer "db.seax.edu"
+
+						- 10.10.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Com es pot veure, permitim la
+						comunicació afegit el paràmetre "allow-transfer" amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com
+							avisar-li dels canvis amb el "also-notify".
+						Els dispusitius d'aquesta zona es declaren al fitxer "db.10.10"
+
+					SLAVE ZONES "public.edu"
+
+						- public.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. En aquest cas la configurarem
+						de tipus slave, guardant els fitxer SOA que agafarà del servidor master(DNS2) a "/var/cache/bind/db.public.edu" i col·locarem
+						la ip del servidor master del que es slave amb:
+							
+							masters {10.10.1.4;}; --> En aquest paràmetre posarem separats per ";" tots els masters amb els que treballa el nostre servidor
+											escalu, en el nostre cas només té un master a la direcció 10.10.1.4
+
+						- 1.168.192.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Aquí farem exactament el mateix 
+						que en el cas directe del public.edu, però guardant els fitxers a "/var/cache/bind/db.192.168.1".
+						
+
+			Ara crearem els fitxers de zona per als dos dominis dels quals la nostra màquina serà master, ja que per els que fa d'slave el nostre
+			servidor esclau s'ocuparà d'agafar automàticament els fitxers del servidor master i fins i tot de revisar de manera periódica si ha
+			hagut canvis en aquests i ha d'actualitzar-los.
+
+			- Copiem el contingut del fitxer "db.local" al fitxer "db.seax.edu" com a base i l'editem per afegir els dispositius que pertanyen
+			  a la zona:
+
+				# cp db.local db.seax.edu
+					# nano db.seax.edu
+
+				--------------------------------------------------------
+				;
+				; BIND data file for local loopback interface
+				;
+				$TTL	604800
+				@	IN	SOA	seax.edu. root.seax.edu. (
+								15		; Serial
+							604800		; Refresh
+							86400		; Retry
+							2419200		; Expire
+							604800 )	; Negative Cache TTL
+				;
+				@		IN	NS	dns1.seax.edu.
+				dns1		IN	A	10.10.1.3
+				raccessDmz	IN	A	10.10.1.1
+				raccessAdmin	IN	A	10.10.2.1
+				raccessVpn	IN	A	10.10.6.1
+				rusuarisDmz	IN	A	10.10.1.2
+				ruBackbone	IN	A	10.10.3.1
+				ruUsuaris	IN	A	10.10.4.1
+				rsAdmin		IN	A	10.10.2.2
+				rsBackbone	IN	A	10.10.3.2
+				rsServers	IN	A	10.10.5.1
+				dns2		IN	A	10.10.1.4
+				dhcpServers	IN	A	10.10.5.2
+				ssh1		IN	CNAME	dns1.seax.edu.
+				ssh2		IN	CNAME	dns2.seax.edu.
+				;troncal
+				;monitores
+				--------------------------------------------------------
+
+					La primera varibale que trobem és $TTL que fa referència a una directiva estandritzada per definir un Time To Live en cas de que
+					no s'especifiqui, també trobem:
+					- $INCLUDE --> Ens permet incloure el les linies del fitxer definit.
+					- $ORIGIN --> Defineix el base name o label que serà utilitzat per substitucions de nom no qualificades.
+
+					Seguit d'aquesta varibale trobem el primer RR de tipus SOA, on nosaltres col·locarem el nom del host del servidor de noms que té autoritat per el domini seax.edu, l'altre nom és simplement el nom que pertany a un RR MX de correu electrònic que pertany en aquest cas a l'usuari root per posar-nos en contacte amb ell en cas de necessitat (actualment no existeix el registre MX comentat abans, es només per explicar la directiva). Finalment assignarem diversos paràmetres que s'aplicaràn a la zona.
+
+					Els paràmetres els deixarem per defecte, cadascún d'aquest fa referència a:
+
+					- Serial --> Varibale que hem d'actualitzar sempre que es fagi una modificació a algun dels RR del fitxer de zona.
+					- Refresh --> Indica el temps que trigarà el servidor slave a mirar si hi ha hagut modificacions al master.
+					- Retry --> Defineix el temps que trigarà el servidor slave a tornar a contactar amb el master en el cas que no hagi pogut.
+					- Expire --> Indica quan la informació del servidor Slave deixa de ser autoritativa (no és l'informació més actualitzada).
+					- Negative Cache TTL --> Indica el temps de vida que tenen les respostes negatives guardades.
+					NOTA: Valors de temps en segons.
+
+					Com podem veure tenim RR (Resource Records) de diferents tipus:
+						- NS(nameserver): on hem posat dns.seax.edu
+						- A (address): on afegim tots els dispositius de la nostra xarxa amb un nom per identificar-los i la seva adreça ip.
+						- CNAME (canonical name): hem creat un alias pel nom canònic "dns.seax.edu" anomenat dns1. D'aquesta manera podrem resoldre
+						el mateix fent dig "dns1.seax.edu" que fent "dig dns.seax.edu".
+						Aquest fitxer és el que ens permet obtenir les ip's de dispositius del domini a partir del seu nom.
+
+					Dintre dels RR tenim molt més tipus, els més importants són:
+					- SOA: Defineix el nom de la zona, email de contacte i diversos valors que quedaràn aplicats a la zona.
+					- NS: Nom del servidor dns
+					- A: Adreça de tipus IPv4
+					- AAAA: Adreça de tipus IPv6
+					- CNAME: Nom canónic del servidor o alias
+					- MX: Adreça de correu
+					- PTR: Adreça cap a nom, utilitzat a la configuració de zona Inversa
+
+
+			- Copiem el contingut del fitxer db.local al fitxer db.10.10 com a base i l'editem:
+				# cp db.local db.10.10
+					# nano db.10.10
+
+				--------------------------------------------------------
+				;
+				; BIND data file for local loopback interface
+				;
+				$TTL	604800
+				@	IN	SOA	seax.edu. root.seax.edu. (
+								10		; Serial
+							604800		; Refresh
+							86400		; Retry
+							2419200		; Expire
+							604800 )	; Negative Cache TTL
+				;
+				@	IN	NS	dns1.seax.edu.
+				3.1	IN	PTR	dns1.seax.edu.
+				1.1	IN	PTR	raccessDmz.seax.edu.
+				2.1	IN	PTR	rusuarisDmz.seax.edu.
+				4.1	IN	PTR	dns2.seax.edu.
+				1.2	IN	PTR	raccessAdmin.seax.edu.
+				2.2	IN	PTR	rsAdmin.seax.edu.
+				2.3	IN	PTR	rsBackbone.seax.edu.
+				1.4	IN	PTR	ruUsuaris.seax.edu.
+				2.5	IN	PTR	dhcpServers.seax.edu.
+				1.5	IN	PTR	rsServers.seax.edu.
+				1.6	IN	PTR	raccessVpn.seax.edu.
+				1.3	IN	PTR	ruBackbone.seax.edu.
+				1.4	IN	PTR	ruUsuaris.seax.edu.
+				;troncal
+				;monitores
+				--------------------------------------------------------
+
+				Com podem veure tenim RR de diferents tipus:
+					- NS(nameserver): on hem posat dns.seax.edu
+					- PTR (address): on afegim tots els dispositius de la nostra xarxa amb els 16 bits de menys pes de la seva adreça ip per
+					identificar-los i el seu nom.
+					Els RR de tipus PTR no són res més que un punter al digits posats a la zona en qüestió. Per exemple, en aquest cas
+					"zone 10.10.in-addr.arpa". Per tant, per que funcioni la ressolució, quan declarem un dispositiu al fitxer db.10.10 en aquest
+					cas, cal inidicar els 16 primers digits de la ip que li correspon així com el nom.
+
+				- Modifiquem el fitxer de configuració /etc/bind/name.conf.options per tal de limitar les peticions recursives a dispositius que
+				pertanyen la les nostres xarxes del domini:
+
+				-----------------------------------------------------------------------------------
+					acl "trusted" {
+					10.10.1.0/28;
+					10.10.2.0/28;
+					10.10.3.0/30;
+					10.10.4.0/28;
+					10.10.5.0/28;
+					10.10.6.0/28;
+					};
+
+					options {
+					directory "/var/cache/bind";
+
+					//Activem la recursivitat
+					recursion yes;
+					//recursivitat només per xarxes de confiança
+					allow-recursion { trusted; };
+					//allow-query { any; };
+					// If there is a firewall between you and nameservers you want
+					// to talk to, you may need to fix the firewall to allow multiple
+					// ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+					// If your ISP provided one or more IP addresses for stable
+					// nameservers, you probably want to use them as forwarders.
+					// Uncomment the following block, and insert the addresses replacing
+					// the all-0's placeholder.
+
+					//forwarders {
+					// 0.0.0.0;
+					//	8.8.8.8;
+					//	8.8.4.4;
+					//};
+
+					//========================================================================
+					// If BIND logs error messages about the root key being expired,
+					// you will need to update your keys.  See https://www.isc.org/bind-keys
+					//========================================================================
+					dnssec-validation auto;
+
+					listen-on-v6 { any; };
+					};
+				-----------------------------------------------------------------------------------
+
+					Com podem veure, tenim una llista d'accés amb el conjunt d'adreces de xarxa que pertanyen a les nostres xarxes internes. Aquesta
+					llista d'accés l'anomenem "trusted" o zona de confiança. Una vegada creada, a l'apartat options, hem declarat que permetem la
+					recursivitat amb la línia "recursion yes" tot i què realment la limitació de la recursivitat és fa amb a línia
+					"allow-recursion { trusted; };", ja que indica que només permet la recursivitat per adreces que estiguin dintre de les xarxes
+					declarades a la llista d'accés "trusted".
+
+			- Obrim en mode edició el fitxer /etc/resolv.conf
+
+				# nano /etc/resolv.conf
+
+				Editem el nameserver per la ip del servidor dns master: 10.10.1.3
+				Guardem i sortim
+
+			- Reiniciem el servei bind9:
+
+				# service bind9 restart
+
+					IMPORTANT: Cal comentar, que cada vegada que es faci una modificació al fitxer db.seax.edu o al db.10.10 és necessari incrementar el valor del "serial" de forma aleatòria.
+					Això ens permet que quan fem un "service bind9 reload" s'actualitzin únicament els fitxers relacionats amb les zones a més de
+					notificar al slave dels canvis i fer-li la transferència d'aquests canvis.
+
+
+		## 4.3.2. CREACIÓ DEL DNS2 ##
+
+			- Obrim la màquina anomenada DNS2
+
+			- Accedim a /etc/bind i modifiquem l'arxiu named.conf.local per crear les zones:
+			-----------------------------------------------------------------------------------
+			//
+			// Do any local configuration here
+			//
+
+			// Consider adding the 1918 zones here, if they are not used in your
+			// organization
+			//include "/etc/bind/zones.rfc1918";
+
+
+			zone "seax.edu" IN {
+				type slave;
+				file "/var/cache/bind/db.seax.edu";
+				masters {10.10.1.3;};
+			};
+
+			//FALTA la cerca inversa
+			zone "10.10.in-addr.arpa" IN {
+				type slave;
+				file "/var/cache/bind/db.10.10";
+				masters {10.10.1.3;};
+			};
+
+			#zone public
+			zone "public.edu" IN {
+				type master;
+				file "/etc/bind/db.public.edu";
+				allow-transfer {10.10.1.3; };
+				also-notify {10.10.1.3; };
+			};
+
+			zone "1.168.192.in-addr.arpa"{
+				type master;
+				file "/etc/bind/db.192.168.1";
+				allow-transfer {10.10.1.3; };
+				also-notify {10.10.1.3; };
+			};
+			-----------------------------------------------------------------------------------
+
+				Com podem veure, tenim quatre zones:
+
+				MASTER ZONES "public.edu"
+
+					- public.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. Com es pot veure, permitim la
+					comunicació afegit el paràmetre "allow-transfer" amb el dns1 (10.10.1.3) perquè pugui fer les actualitzacions, així com
+						avisar-li dels canvis amb el "also-notify".
+					Els dispusitius d'aquesta zona es declaren al fitxer "db.public.edu"
+
+					- 1.168.192.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Com es pot veure, permitim la
+					comunicació afegit el paràmetre "allow-transfer" amb el dns1 (10.10.1.3) perquè pugui fer les actualitzacions, així com
+						avisar-li dels canvis amb el "also-notify".
+					Els dispusitius d'aquesta zona es declaren al fitxer "db.192.168.1"
+
+				SLAVE ZONES "seax.edu"
+
+					- seax.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. En aquest cas la configurarem
+					de tipus slave, guardant els fitxer SOA que agafarà del servidor master(DNS1) a "/var/cache/bind/db.seax.edu" i col·locarem
+					la ip del servidor master del que es slave amb:
+					
+					masters {10.10.1.3;}; --> En aquest paràmetre posarem separats per ";" tots els masters amb els que treballa el nostre servidor
+					escalu, en el nostre cas només té un master a la direcció 10.10.1.3
+
+					- 10.10.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Aquí farem exactament el mateix 
+					que en el cas directe del seax.edu, però guardant els fitxers a "/var/cache/bind/db.10.10".
+
+
+			Una vegada acabem la configuració del fitxer "/etc/bind/named.conf.local" només fara falta crear els arxius de zona pel domini public.edu
+			i la seva inversa 1.168.192.in-addr.arpa, ja que el nostre servidor esclau s'ocuparà d'agafar automàticament els fitxers del servidor master 
+			i fins i tot de revisar de manera periódica si ha hagut canvis en aquests i ha d'actualitzar-los.
+
+			Per a que funcionin aquestes actualitzacions, el servidor es basa en el valor Serial del fitxer de configuració SOA, per tant tornem
+			a recordar que és important actualitzar aquest valor sempre que fem una modificació al master.
+
+			- Creació fitxers de zona dominis public.edu i inversa 1.168.192.in-addr.arpa: 
+
+			----------- db.public.edu -----------
+
+				;
+				; BIND data file for local loopback interface
+				;
+				$TTL	604800
+				@	IN	SOA	public.edu. root.public.edu. (
+								25		; Serial
+							604800		; Refresh
+							86400		; Retry
+							2419200		; Expire
+							604800 )	; Negative Cache TTL
+				;
+				@	IN	NS	dns2.public.edu.
+				dns1	IN	A	192.168.1.125
+				dns2	IN	A	192.168.1.125
+				ssh1	IN	CNAME	dns1.public.edu.
+				ssh2	IN	CNAME	dns2.public.edu.
+
+			--------------------------------------
+
+			----------- db.192.168.1 -------------
+
+			;
+			; BIND reverse data file for local loopback interface
+			;
+			$TTL	604800
+			@	IN	SOA	public.edu. root.public.edu. (
+							3		; Serial
+						604800		; Refresh
+						86400		; Retry
+						2419200		; Expire
+						604800 )	; Negative Cache TTL
+			;
+			@	IN	NS	dns2.public.edu.
+			125	IN	PTR	dns2.public.edu.
+			125	IN	PTR	dns1.public.edu.
+
+			--------------------------------------
+
+			Per finalitzar i desar els canvis farem un:
+
+			# service bind9 restart
+
+			Amb el nostres servidors MASTER i ESCLAU actius i funcionant, podrem anar a la ruta "/var/cache/bind" i hauriem de trobar els
+			fitxers de configuració de zona del nostre servidor master.
+
+			Fent la comanda ls al directori vurem els fitxers de zona entre altres:
+			- db.10.10
+			- db.seax.edu
+
+			NOTA: Recorda que no podràs fer cap modificació ja que estàn codificats.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1063,8 +1648,7 @@ Parameter -D : para que se ejecute en segundo plano
 
 Fichero de conf:  /etc/default/isc-dhcp-relay
 
-
-CONFIGURACIÓN SERVER DHCP
+MOCK UP SERVER DHCP
 
 - Modificado el fichero de configración del isc-dhcp-server, para asingar solo la interfaz enp0s3 al servidor dhcp
 - Creación de todas las pools para todas las redes.
