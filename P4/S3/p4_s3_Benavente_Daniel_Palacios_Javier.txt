@@ -1123,7 +1123,7 @@ Configuració:
 
 			Amb tot modificat farem la comanda (# service networking restart) per aplicar tots els canvis.
 
-		## 4.2.1. INSTAL·LACIÓ DE PAQUETS ##
+		## 4.2.1. INSTAL·LACIÓ DE PAQUETS TANT AL DNS1 COM A DNS2##
 
 			Una vegada tenim la configuració de xarxa completada, les actualitzem amb les comandes:
 				#apt-get update
@@ -1139,10 +1139,14 @@ Configuració:
 				configuració sobre el nostre dns (fitxers de zona per exemple).
 
 				Les operacions bàsiques que trobarem posteriorment a l'explicació i que podem fer amb el programa bind9 són:
-					-	service bind9 stop --> para el servei
+					- service bind9 stop --> para el servei
 					- service bind9 start --> inicia el servei
 					- service bind9 restart --> reinicia el servei
 					- service bind9 reload --> actualitza els fitxers de zona en cas de haver-hi canvis
+
+				#apt-get install openssh-server
+				- Paquets opemssh-server --> Ens instal·la un servidor ssh el qual ens permetrà accedir a altres màquines que
+				tinguin ssh i les veiem així com que accedeixin a nosaltres aquells que ens coneguin i tinguin permís.
 
 
 			Una vegada instal·lat els paquets necessàris, ja podrem començar a configurar el nostre servei DNS.
@@ -1165,11 +1169,19 @@ Configuració:
 			a la última actualització.
 			En altres paraules, és un servidor dns de suport o còpia pel master.
 
-		Hem de tenir en compte que un servidor master pot fer d'esclau d'un altre domini, i el passa el mateix amb el servidor slave, com veurem
+		Hem de tenir en compte que un servidor master pot fer d'esclau d'un altre domini, i passa el mateix amb el servidor slave, com veurem
 		en aquesta pràctica, tindrem el domini "seax.edu", on la maquina DNS1 farà de servidor master i la màquina DNS2 de servidor slave. En canvi,
 		per al domini "public.edu", el DNS2 serà el nostre servidor master i el DNS1 en aquest cas serà l'slave.
 
-	  	## 4.3.1. CREACIÓ DEL DNS1 ##
+		DOMINIS QUE TRACTAREM
+
+			- seax.edu: Aquest domini és el domini de la nostra xarxa interna.
+
+			- public.edu: Aquest domini és creat per permetre a màquines que estan fóra de la nostra
+			xarxa, poder accedir als recursos de la nostra xarxa interna DMZ, com ara al dns1 i dns2.
+			
+		
+		## 4.3.1. CREACIÓ DEL DNS1 ##
 
 			- Obrim la màquina anomenada DNS1
 
@@ -1219,12 +1231,12 @@ Configuració:
 
 						- seax.edu: És la zona directa amb les quals resoldrem adreces ip a partir de noms de domini. Com es pot veure, permitim la
 						comunicació afegit el paràmetre "allow-transfer" amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com
-							avisar-li dels canvis amb el "also-notify".
+						avisar-li dels canvis amb el "also-notify".
 						Els dispusitius d'aquesta zona es declaren al fitxer "db.seax.edu"
 
 						- 10.10.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Com es pot veure, permitim la
 						comunicació afegit el paràmetre "allow-transfer" amb el dns2 (10.10.1.4) perquè pugui fer les actualitzacions, així com
-							avisar-li dels canvis amb el "also-notify".
+						avisar-li dels canvis amb el "also-notify".
 						Els dispusitius d'aquesta zona es declaren al fitxer "db.10.10"
 
 					SLAVE ZONES "public.edu"
@@ -1234,7 +1246,7 @@ Configuració:
 						la ip del servidor master del que es slave amb:
 							
 							masters {10.10.1.4;}; --> En aquest paràmetre posarem separats per ";" tots els masters amb els que treballa el nostre servidor
-											escalu, en el nostre cas només té un master a la direcció 10.10.1.4
+							escalu, en el nostre cas només té un master a la direcció 10.10.1.4
 
 						- 1.168.192.in-addr.arpa: És la zona inversa amb les quals resoldrem noms a partir de adreces ip. Aquí farem exactament el mateix 
 						que en el cas directe del public.edu, però guardant els fitxers a "/var/cache/bind/db.192.168.1".
@@ -1283,8 +1295,6 @@ Configuració:
 
 					La primera varibale que trobem és $TTL que fa referència a una directiva estandritzada per definir un Time To Live en cas de que
 					no s'especifiqui, també trobem:
-					- $INCLUDE --> Ens permet incloure el les linies del fitxer definit.
-					- $ORIGIN --> Defineix el base name o label que serà utilitzat per substitucions de nom no qualificades.
 
 					Seguit d'aquesta varibale trobem el primer RR de tipus SOA, on nosaltres col·locarem el nom del host del servidor de noms que té autoritat per el domini seax.edu, l'altre nom és simplement el nom que pertany a un RR MX de correu electrònic que pertany en aquest cas a l'usuari root per posar-nos en contacte amb ell en cas de necessitat (actualment no existeix el registre MX comentat abans, es només per explicar la directiva). Finalment assignarem diversos paràmetres que s'aplicaràn a la zona.
 
@@ -1298,13 +1308,13 @@ Configuració:
 					NOTA: Valors de temps en segons.
 
 					Com podem veure tenim RR (Resource Records) de diferents tipus:
-						- NS(nameserver): on hem posat dns.seax.edu
+						- NS(nameserver): on hem posat dns1.seax.edu
 						- A (address): on afegim tots els dispositius de la nostra xarxa amb un nom per identificar-los i la seva adreça ip.
-						- CNAME (canonical name): hem creat un alias pel nom canònic "dns.seax.edu" anomenat dns1. D'aquesta manera podrem resoldre
-						el mateix fent dig "dns1.seax.edu" que fent "dig dns.seax.edu".
-						Aquest fitxer és el que ens permet obtenir les ip's de dispositius del domini a partir del seu nom.
+						- CNAME (canonical name): hem creat un àlies pel nom canònic "dns1.seax.edu" anomenat ssh1. D'aquesta manera podrem resoldre
+						el mateix fent dig "ssh1.seax.edu" que fent "dig dns1.seax.edu".
+							NOTA: També hem fet un àlies ssh2 pel dns2.seax.edu
 
-					Dintre dels RR tenim molt més tipus, els més importants són:
+					Dintre dels RR tenim més variants com:
 					- SOA: Defineix el nom de la zona, email de contacte i diversos valors que quedaràn aplicats a la zona.
 					- NS: Nom del servidor dns
 					- A: Adreça de tipus IPv4
@@ -1349,7 +1359,7 @@ Configuració:
 				--------------------------------------------------------
 
 				Com podem veure tenim RR de diferents tipus:
-					- NS(nameserver): on hem posat dns.seax.edu
+					- NS(nameserver): on hem posat dns1.seax.edu
 					- PTR (address): on afegim tots els dispositius de la nostra xarxa amb els 16 bits de menys pes de la seva adreça ip per
 					identificar-los i el seu nom.
 					Els RR de tipus PTR no són res més que un punter al digits posats a la zona en qüestió. Per exemple, en aquest cas
@@ -1544,7 +1554,11 @@ Configuració:
 
 			--------------------------------------
 
-			Per finalitzar i desar els canvis farem un:
+			Els fitxers de zona db.public.edu i db.192.168.1 estan creats seguint els mateixos pasos
+			que els db.seax.edu i db.10.10 del dns1 però amb la diferència de que aquí només ressolem 
+			els dns1 i dns2 i els seus àlies ssh1 i ssh2 respectivament, els quals comparteixen ip (la de la troncal).
+
+			Per finalitzar i desar els canvis reiniciarem el servei bind9:
 
 			# service bind9 restart
 
@@ -1560,7 +1574,64 @@ Configuració:
 
 
 
+####### 5. FASE 5 CONFIGURACIÓ DE NAT (Comunicació de internet) #######
 
+Descripció: Aquesta fase consisteix en implementar el servei NAT al router d'accés per permetre
+la comunicació de dispositius de la nostra xarxa interna amb l'exterior
+
+Configuració:
+
+	1. Encenem el router d'accés.
+	2. Ens assegurem de tenir instal·lades les iptables a la nostra màquina amb: 
+	
+		# apt install iptables
+
+	3. Afegim les iptables per cadascuna de les xarxes que tindrà dispositius que vulguin sortir a internet.
+	Per fer-ho utilitzem DynamicNat per poder enmascarar la ip privada del dispositiu que vol
+	sortir a internet amb la ip que correspon a la interfície del router d'accés que surt cap a internet:
+		
+		# iptables -t nat -A POSTROUTING -s 10.10.4.0/28 -o enp0s3 -j MASQUERADE   --> usuaris 
+		# iptables -t nat -A POSTROUTING -s 10.10.1.0/28 -o enp0s3 -j MASQUERADE   --> dmz
+		# iptables -t nat -A POSTROUTING -s 10.10.5.0/28 -o enp0s3 -j MASQUERADE   --> Servidors
+		# iptables -t nat -A POSTROUTING -s 10.10.2.0/28 -o enp0s3 -j MASQUERADE   --> admin
+
+		Paràmetres de la comanda:
+		
+		# iptables -t <tipus> -A POSTROUTING -s <ip> -o <interficie> -j MASQUERADE
+
+			-t <tipus> --> tipus de la iptable (en aquest cas interesa nat)
+			-A POSTROUTING --> Afegeix (Add) una regla a la cadena POSTROUTING
+			-s <ip> --> S'hi aplica als paquets que tenguin com a adreça origen <ip>
+			-o <interfície> --> S'hi aplica als paquets que surtin (out-interface) per <interfície>
+			-j MASQUERADE --> S'utilitza per canviar l'adreça privada del dispositiu per l'adreça
+			que correspon a la interfície del router que en aquest cas pertany a la troncal.
+
+		Per confirmar que s'ha afegit correctament, podem llistar les taules que fan referència a la nat amb la comanda:	
+			
+			# iptables -t nat -L -n
+
+	4. Ara prepararem un fitxer amb totes les regles, per poder fer-les persistents a la nostra màquina:
+
+		- Guardem en un fitxer la configuració actual que hem fet al pas anterior 
+
+			# iptables-save > /etc/iptables.up.rules
+			
+		- Creem un script per tal de fer el restore de la configuració de iptables.up.rules
+		cada vegada que arrenquem la màquina.
+
+			# nano /etc/network/if-pre-up.d/iptables
+		
+				#!/bin/bash
+				/sbin/iptables-restore < /etc/iptables.up.rules
+
+		- Donem permisos d'execució a l'script per que tot funcioni correctament.
+
+			# chmod +x /etc/network/if-pre-up.d/iptables
+
+	5. Reiniciem la màquina i comprovem amb la comanda "iptables -t nat -L -n" que les iptables
+	segueixen configurades i establertes.
+	
+		!!!!FALTA FOTO DE LES IPTABLES!!!!
 
 
 
