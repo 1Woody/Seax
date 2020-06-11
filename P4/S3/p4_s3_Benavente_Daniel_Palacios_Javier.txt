@@ -1653,16 +1653,15 @@ Configuració:
 					
 			Cada vegada que inciem el router d'accés tindrà carregades aquestes iptables
 
+####### 6. FASE 6 TALLAFOCS #######
 
+IMPORTANTE !!!! --> PREROUTING SIEMPRE ANTES QUE EL CORTAFUEGOS !!!
 
+INPUT : Ip de destino es la de nuestro cortafuegos
+FORWARD : Ni la ip de destino ni la ip de origen es la del cortafuegos
+OUTPUT : Ip de origen es la de nuestro cortafuegos
 
-
-
-
-
-
-
-
+--> En este caso la ip del cortafuegos es la de nuestro router de acceso (192.168.1.125)
 
 --------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
