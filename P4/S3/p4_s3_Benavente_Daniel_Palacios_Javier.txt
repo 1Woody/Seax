@@ -1682,6 +1682,9 @@ ACCES --> ok
 
 
 
+PROBLEMAS
+	- No nos podemos conectar por ssh al router servidores por interface backbone(desde admin)
+	- Falta en la reglas ICMP del router acces que se pueda hacer forward con la red 10.10.3.0/30
 --------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
 APUNTES PREVIOS
