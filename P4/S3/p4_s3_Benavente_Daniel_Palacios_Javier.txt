@@ -1663,6 +1663,25 @@ OUTPUT : Ip de origen es la de nuestro cortafuegos
 
 --> En este caso la ip del cortafuegos es la de nuestro router de acceso (192.168.1.125)
 
+
+PETICIÓN --> 192.168.1.106:random --> 192.168.1.125:3022
+PREROUTING --> 192.168.1.106:random --> 10.10.1.3:22
+RESPUESTA --> 10.10.1.3:22 --> 192.168.1.106:rand
+POSTROUTING --> 192.168.1.125:3022 --> 192.168.1.106:random
+
+
+DNS
+Exterior --> ok
+Interior --> ok
+
+PING 
+ACCES --> ok 
+
+
+
+
+
+
 --------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
 APUNTES PREVIOS
