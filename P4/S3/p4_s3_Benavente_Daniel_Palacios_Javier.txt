@@ -1663,6 +1663,10 @@ OUTPUT : Ip de origen es la de nuestro cortafuegos
 
 --> En este caso la ip del cortafuegos es la de nuestro router de acceso (192.168.1.125)
 
+
+PROBLEMAS
+	- No nos podemos conectar por ssh al router servidores por interface backbone(desde admin)
+	- Falta en la reglas ICMP del router acces que se pueda hacer forward con la red 10.10.3.0/30
 --------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
 APUNTES PREVIOS
