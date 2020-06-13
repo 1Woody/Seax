@@ -30,7 +30,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 
 
-	ROUTER SREVIDORS
+	ROUTER SERVIDORS
 
 		1. Obrim VirtualBox i creem una nova màquina anomenada ROUTER_SERVIDORS.
 
@@ -562,6 +562,54 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		net.ipv4.ip_forward=1
 
 	En cas de ja existir, només ens hem de fixar que estigui igualada a 1 i no a 0.
+	
+
+	PROVES DE VALIDACIÓ
+
+		ROUTER ACCESS
+
+			Ping del router access al router servidors per admin
+			18:59:18.470369 IP (tos 0x0, ttl 64, id 33980, offset 0, flags [DF], proto ICMP (1), length 84)
+				10.10.1.2 > 10.10.2.1: ICMP echo request, id 537, seq 1, length 64
+			18:59:18.470524 IP (tos 0x0, ttl 64, id 40904, offset 0, flags [none], proto ICMP (1), length 84)
+				10.10.2.1 > 10.10.1.2: ICMP echo reply, id 537, seq 1, length 64
+
+			Ping router access al router usuaris per backbone
+			18:55:33.059144 IP (tos 0x0, ttl 64, id 14785, offset 0, flags [DF], proto ICMP (1), length 84)
+				10.10.1.1 > 10.10.3.1: ICMP echo request, id 446, seq 1, length 64
+			18:55:33.059196 IP (tos 0x0, ttl 64, id 59547, offset 0, flags [none], proto ICMP (1), length 84)
+				10.10.3.1 > 10.10.1.1: ICMP echo reply, id 446, seq 1, length 64
+
+			Ping router access al router usuaris per usuaris
+			18:45:05.984029 IP (tos 0x0, ttl 64, id 10040, offset 0, flags [DF], proto ICMP (1), length 84)
+    			10.10.1.1 > 10.10.4.1: ICMP echo request, id 445, seq 1, length 64
+			18:45:05.984126 IP (tos 0x0, ttl 64, id 42304, offset 0, flags [none], proto ICMP (1), length 84)
+    			10.10.4.1 > 10.10.1.1: ICMP echo reply, id 445, seq 1, length 64
+
+
+		ROUTER SERVIDORS
+
+			Ping router servidors a router usuaris per backbone
+			19:09:14.399993 IP (tos 0x0, ttl 64, id 44850, offset 0, flags [DF], proto ICMP (1), length 84)
+				10.10.3.2 > 10.10.1.2: ICMP echo request, id 449, seq 1, length 64
+			19:09:14.400067 IP (tos 0x0, ttl 64, id 17539, offset 0, flags [none], proto ICMP (1), length 84)
+				10.10.1.2 > 10.10.3.2: ICMP echo reply, id 449, seq 1, length 64
+
+			Ping del router servidors a router usuaris cap a xarxa usuaris
+			19:07:10.941636 IP (tos 0x0, ttl 64, id 13507, offset 0, flags [DF], proto ICMP (1), length 84)
+				10.10.3.2 > 10.10.4.1: ICMP echo request, id 448, seq 1, length 64
+			19:07:10.941670 IP (tos 0x0, ttl 64, id 17962, offset 0, flags [none], proto ICMP (1), length 84)
+				10.10.4.1 > 10.10.3.2: ICMP echo reply, id 448, seq 1, length 64
+
+
+		ROUTER USUARIS
+
+			Ping del router usuaris al router servidors per backbone
+			19:05:22.350247 IP (tos 0x0, ttl 64, id 34308, offset 0, flags [DF], proto ICMP (1), length 84)
+				10.10.3.1 > 10.10.5.1: ICMP echo request, id 552, seq 1, length 64
+			19:05:22.350288 IP (tos 0x0, ttl 64, id 25866, offset 0, flags [none], proto ICMP (1), length 84)
+				10.10.5.1 > 10.10.3.1: ICMP echo reply, id 552, seq 1, length 64
+
 
 
 ###### 2. FASE 2 CONFIGURACIÓ DHCP AL ENTORN ######
@@ -910,6 +958,325 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 					# Additional options that are passed to the DHCP relay daemon?
 					OPTIONS="-D"
 
+	PROVES DE VALIDACIÓ 
+	- Aquestes proves estan recolçades per les ja fetes de la sessió dhcp
+		
+		- Captura d'ip per dhcp d'un client de la xarxa usuaris
+
+		19:41:44.990624 08:00:27:32:95:31 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:32:95:31, length 300, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Discover
+				Requested-IP Option 50, length 4: 10.10.4.10
+				Hostname Option 12, length 4: "seax"
+				Parameter-Request Option 55, length 13: 
+				Subnet-Mask, BR, Time-Zone, Default-Gateway
+				Domain-Name, Domain-Name-Server, Option 119, Hostname
+				Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+				NTP
+				Client-ID Option 61, length 19: hardware-type 255, 27:32:95:31:00:01:00:01:25:eb:8f:f1:08:00:27:00:00:01
+		19:41:44.994957 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 2, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995164 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 3, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995247 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 4, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995313 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 5, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995378 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 6, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995442 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 7, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995507 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 8, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995573 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 9, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.995638 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 10, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Offer
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:44.997791 08:00:27:32:95:31 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:32:95:31, length 300, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: Request
+				Server-ID Option 54, length 4: 10.10.5.2
+				Requested-IP Option 50, length 4: 10.10.4.10
+				Hostname Option 12, length 4: "seax"
+				Parameter-Request Option 55, length 13: 
+				Subnet-Mask, BR, Time-Zone, Default-Gateway
+				Domain-Name, Domain-Name-Server, Option 119, Hostname
+				Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+				NTP
+				Client-ID Option 61, length 19: hardware-type 255, 27:32:95:31:00:01:00:01:25:eb:8f:f1:08:00:27:00:00:01
+		19:41:45.004973 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 2, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.005765 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 3, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.005869 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 4, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.005946 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 5, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.006013 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 6, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.006480 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 7, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.009597 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 8, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.009764 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 9, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+		19:41:45.009862 08:00:27:10:04:01 > 08:00:27:32:95:31, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+			10.10.4.1.67 > 10.10.4.10.68: [udp sum ok] BOOTP/DHCP, Reply, length 300, hops 10, xid 0xe0248d22, secs 5, Flags [none] (0x0000)
+			Your-IP 10.10.4.10
+			Gateway-IP 10.10.4.1
+			Client-Ethernet-Address 08:00:27:32:95:31
+			Vendor-rfc1048 Extensions
+				Magic Cookie 0x63825363
+				DHCP-Message Option 53, length 1: ACK
+				Server-ID Option 54, length 4: 10.10.5.2
+				Lease-Time Option 51, length 4: 600
+				Subnet-Mask Option 1, length 4: 255.255.255.240
+				Default-Gateway Option 3, length 4: 10.10.4.1
+				Domain-Name Option 15, length 8: "seax.edu"
+				Domain-Name-Server Option 6, length 8: 10.10.1.3,10.10.1.4
+
+		- Captura d'un monitor per dhcp a la xarxa admin
+
+			19:36:45.183903 08:00:27:10:00:11 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:10:00:11, length 300, xid 0x59793e30, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:10:00:11
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Discover
+					Requested-IP Option 50, length 4: 10.10.2.11
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+					Subnet-Mask, BR, Time-Zone, Default-Gateway
+					Domain-Name, Domain-Name-Server, Option 119, Hostname
+					Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+					NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:10:00:11:00:01:00:01:25:eb:8f:f1:08:00:27:00:00:01
+			19:36:45.187294 08:00:27:10:00:11 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 342: (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 328)
+				0.0.0.0.68 > 255.255.255.255.67: [udp sum ok] BOOTP/DHCP, Request from 08:00:27:10:00:11, length 300, xid 0x59793e30, Flags [none] (0x0000)
+				Client-Ethernet-Address 08:00:27:10:00:11
+				Vendor-rfc1048 Extensions
+					Magic Cookie 0x63825363
+					DHCP-Message Option 53, length 1: Request
+					Server-ID Option 54, length 4: 10.10.5.2
+					Requested-IP Option 50, length 4: 10.10.2.11
+					Hostname Option 12, length 4: "seax"
+					Parameter-Request Option 55, length 13: 
+					Subnet-Mask, BR, Time-Zone, Default-Gateway
+					Domain-Name, Domain-Name-Server, Option 119, Hostname
+					Netbios-Name-Server, Netbios-Scope, MTU, Classless-Static-Route
+					NTP
+					Client-ID Option 61, length 19: hardware-type 255, 27:10:00:11:00:01:00:01:25:eb:8f:f1:08:00:27:00:00:01
+
 
 ####### 3. FASE 3 CONFIGURACIÓ DE NAT [PART 1] (Sòrtida de xarxa interna a internet) #######
 
@@ -982,6 +1349,18 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		COMMIT
 		# Completed on Wed Jun 10 18:48:50 2020
 		------------------------------------------------------------------------------------------------------------------
+
+	PROVES DE VALIDACIÓ
+	- Provem que funciona el postrouting i podem connectar i rebre pings de l'exterior
+		Ping a google
+		20:06:52.982252 IP 10.10.1.3 > 8.8.8.8: ICMP echo request, id 456, seq 1, length 64
+		20:06:53.009128 IP 8.8.8.8 > 10.10.1.3: ICMP echo reply, id 456, seq 1, length 64
+
+		Ping IP de la xarxa troncal
+		20:04:33.879831 IP 10.10.1.3 > 192.168.1.106: ICMP echo request, id 443, seq 1, length 64
+		20:04:33.881174 IP 192.168.1.106 > 10.10.1.3: ICMP echo reply, id 443, seq 1, length 64
+		20:04:34.881938 IP 10.10.1.3 > 192.168.1.106: ICMP echo request, id 443, seq 2, length 64
+		20:04:34.882963 IP 192.168.1.106 > 10.10.1.3: ICMP echo reply, id 443, seq 2, length 64
 
 
 
@@ -2092,8 +2471,10 @@ PRUEBAS VALIDACIÓN
 	
 	1. FASE 1 CONFIGURACIÓ DEL ROUTERS DEL ENTORN
 		- PINGS ENTRE TODOS LOS ROUTERS
+
 	2. FASE 2 CONFIGURACIÓ DHCP AL ENTORN
 		- Clientes en cada red, y host reservado (monitor de red)
+
 	3. FASE 3 CONFIGURACIÓ DE NAT [PART 1] (Sòrtida de xarxa interna a internet)
 		- Pings a el exterior
 		Capturas tcpdump postrouting
