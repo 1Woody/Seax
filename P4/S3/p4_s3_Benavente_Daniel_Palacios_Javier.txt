@@ -1950,6 +1950,90 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 			NOTA: Recorda que no podràs fer cap modificació ja que estàn codificats.
 
+	PROVES DE VALIDACIÓ 
+	- Aquesta fase està també recolçada per les prova de la sessió de dns.
+		
+		- Dig client de la xarxa usuaris:
+		--------------------------------------------------------
+		; <<>> DiG 9.11.5-P4-5.1+deb10u1-Debian <<>> -x 10.10.1.3
+		;; global options: +cmd
+		;; Got answer:
+		;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21828
+		;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 2
+
+		;; OPT PSEUDOSECTION:
+		; EDNS: version: 0, flags:; udp: 4096
+		; COOKIE: 86b777c3d6c953827438796a5ee510c75d7bca9e59f3a7f8 (good)
+		;; QUESTION SECTION:
+		;3.1.10.10.in-addr.arpa.		IN	PTR
+
+		;; ANSWER SECTION:
+		3.1.10.10.in-addr.arpa.	604800	IN	PTR	dns1.seax.edu.
+
+		;; AUTHORITY SECTION:
+		10.10.in-addr.arpa.	604800	IN	NS	dns1.seax.edu.
+
+		;; ADDITIONAL SECTION:
+		dns1.seax.edu.		604800	IN	A	10.10.1.3
+
+		;; Query time: 0 msec
+		;; SERVER: 10.10.1.3#53(10.10.1.3)
+		;; WHEN: sรกb jun 13 19:45:43 CEST 2020
+		;; MSG SIZE  rcvd: 136
+		--------------------------------------------------------
+		
+		--------------------------------------------------------
+		; <<>> DiG 9.11.5-P4-5.1+deb10u1-Debian <<>> dns1.seax.edu
+		;; global options: +cmd
+		;; Got answer:
+		;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 10403
+		;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 1
+
+		;; OPT PSEUDOSECTION:
+		; EDNS: version: 0, flags:; udp: 4096
+		; COOKIE: 69b02e525237d477f610ff645ee510da9932ff5a1dc0068e (good)
+		;; QUESTION SECTION:
+		;dns1.seax.edu.			IN	A
+
+		;; ANSWER SECTION:
+		dns1.seax.edu.		604800	IN	A	10.10.1.3
+
+		;; AUTHORITY SECTION:
+		seax.edu.		604800	IN	NS	dns1.seax.edu.
+
+		;; Query time: 1 msec
+		;; SERVER: 10.10.1.3#53(10.10.1.3)
+		;; WHEN: sรกb jun 13 19:46:03 CEST 2020
+		;; MSG SIZE  rcvd: 100
+		--------------------------------------------------------
+
+		--------------------------------------------------------
+		; <<>> DiG 9.11.5-P4-5.1+deb10u1-Debian <<>> ssh2.public.edu
+		;; global options: +cmd
+		;; Got answer:
+		;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 25291
+		;; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 1, ADDITIONAL: 1
+
+		;; OPT PSEUDOSECTION:
+		; EDNS: version: 0, flags:; udp: 4096
+		; COOKIE: 2ebbfecb983e16e5cedc46225ee510fc2ad14d761cbb3752 (good)
+		;; QUESTION SECTION:
+		;ssh2.public.edu.		IN	A
+
+		;; ANSWER SECTION:
+		ssh2.public.edu.	604800	IN	CNAME	dns2.public.edu.
+		dns2.public.edu.	604800	IN	A	192.168.1.125
+
+		;; AUTHORITY SECTION:
+		public.edu.		604800	IN	NS	dns2.public.edu.
+
+		;; Query time: 1 msec
+		;; SERVER: 10.10.1.3#53(10.10.1.3)
+		;; WHEN: sรกb jun 13 19:46:36 CEST 2020
+		;; MSG SIZE  rcvd: 121
+		--------------------------------------------------------
+
+
 
 
 ####### 5. FASE 5 CONFIGURACIÓ DE NAT [PART 2] (Des de fóra de la xarxa interna es puguin comunicar amb nosaltres) #######
@@ -2031,6 +2115,26 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 				------------------------------------------------------------------------------------------------------------------
 					
 			Cada vegada que inciem el router d'accés tindrà carregades aquestes iptables
+
+	PROVES VALIDACIÓ 
+	- Proves desde l'exterior als nostres servidors dns i per ssh.
+
+	Es pot veure a la comunicació com responem la petició del client 106 de la xarxa troncal.
+		20:14:14.902548 IP 192.168.1.106.43800 > 10.10.1.3.53: 49504+ [1au] A? dns1.public.edu. (56)
+		20:14:14.902804 IP 10.10.1.3.53 > 192.168.1.106.43800: 49504*- 1/1/2 A 192.168.1.125 (123)
+
+	Mateix cas per invertit en aquest cas del domini seax.edu i del servidor dns2
+		20:13:35.467111 IP 192.168.1.106.44027 > 10.10.1.4.53: 40445+ [1au] PTR? 3.1.10.10.in-addr.arpa. (63)
+		20:13:35.467785 IP 10.10.1.4.53 > 192.168.1.106.44027: 40445*- 1/1/2 PTR dns1.seax.edu. (136)
+
+	- Proves ssh a DNS 1
+		En aquest cas li demanarem a la intefície de la tronacal per el port 3022 i el prerouting ho modificarà per fer la petició al servidor dns1
+		20:16:34.271141 IP 192.168.1.106.55030 > 10.10.1.3.22: Flags [S], seq 2709023287, win 64240, options [mss 1460,sackOK,TS val 2431260978 ecr 0,nop,wscale 7], length 0
+		20:16:34.271187 IP 10.10.1.3.22 > 192.168.1.106.55030: Flags [S.], seq 2441799057, ack 2709023288, win 65160, options [mss 1460,sackOK,TS val 1788481931 ecr 2431260978,nop,wscale 7], length 0
+		20:16:34.271614 IP 192.168.1.106.55030 > 10.10.1.3.22: Flags [.], ack 1, win 502, options [nop,nop,TS val 2431260979 ecr 1788481931], length 0
+		20:16:34.272182 IP 192.168.1.106.55030 > 10.10.1.3.22: Flags [P.], seq 1:33, ack 1, win 502, options [nop,nop,TS val 2431260979 ecr 1788481931], length 32
+		20:16:34.272197 IP 10.10.1.3.22 > 192.168.1.106.55030: Flags [.], ack 33, win 509, options [nop,nop,TS val 1788481932 ecr 2431260979], length 0
+		20:16:34.281842 IP 10.10.1.3.22 > 192.168.1.106.55030: Flags [P.], seq 1:42, ack 33, win 509, options [nop,nop,TS val 1788481942 ecr 2431260979], length 41
 
 ####### 6. FASE 6 TALLAFOCS #######
 
@@ -2466,30 +2570,3 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 ####### 7. FASE 7 SCRIPT #######
 
 
-
-PRUEBAS VALIDACIÓN
-	
-	1. FASE 1 CONFIGURACIÓ DEL ROUTERS DEL ENTORN
-		- PINGS ENTRE TODOS LOS ROUTERS
-
-	2. FASE 2 CONFIGURACIÓ DHCP AL ENTORN
-		- Clientes en cada red, y host reservado (monitor de red)
-
-	3. FASE 3 CONFIGURACIÓ DE NAT [PART 1] (Sòrtida de xarxa interna a internet)
-		- Pings a el exterior
-		Capturas tcpdump postrouting
-
-	4. FASE 4 CONFIGURAR EL DNS i SERVIDOR SSH A LA XARXA ACTUAL
-		- digs de diferentes puntos de la red
-		- De los dos servidores 
-		- De los dos dominios
-
-	5. FASE 5 CONFIGURACIÓ DE NAT [PART 2] (Des de fóra de la xarxa interna es puguin comunicar amb nosaltres)
-		- Tcpdump prerouting, peticiones dns exterior
-		- Ssh al dns1 DNS2
-		- Implementación de la public
-
-	6. FASE 6 TALLAFOCS
-		- Tcpdump probar lo que permiten las tablas en cada red
-		- Asegurar cosas que no se pueden hacer (clientes que no pueden hacer ssh)
-		- Exterior no puede hacer ssh
