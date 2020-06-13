@@ -1664,13 +1664,13 @@ Configuració:
 	-Introducir regla
 	-Darle al save
 	-Hacer el script en el deamon
-	-...
+	-Darle permisos
 
 
 	En total tindrem 3 tallafocs, un a cada router:
 
 
-	POLÍTICA PER DEFECTE: "DROP"
+	POLÍTICA PER DEFECTE: "DROP" tant per FORWARD, INPUT i OUTPUT
 	- Per aconseguir la màxima seguretat al les nostres xarxes, s'ha decidit fer un tallafocs amb les politiques DROP per defecte, el que 
 	no deixarà pasar res a través del nostre router excepte les regles que apliquem nosaltres. Així asse
 
@@ -1679,12 +1679,11 @@ Configuració:
 		En aquest router hem de controlar a més dels paquets de les nostres xarxes internes, la protecció amb la xarxa pública a la que es 
 		troba connectat. Per aquesta raó tindrem en compte els serveis: 
 		
-		- SSH --> Permetrem el servei ssh del exterior a les nostres màquine de la xarxa dmz, permetrem el servei ssh des de la xarxa admin 
+		- SSH --> Permetrem el servei ssh del exterior a les nostres màquines de la xarxa dmz, per altra banda, permetrem el servei ssh des de la xarxa admin 
 		cap a totes les màquines de la nostra xarxa (dns, dhcp, routers).  
-		- DNS --> Permetrem el servei dns des de l'exterior a les nostres màquines de la xarxa dmz, permeterem el servei dns per a totes les 
-		xarxes del nostre sistema.
-		- ICMP --> Permetrem icmp des de l'exterior només a la nostra intefície connectada a la xarxa troncal i també a nivell intern per totes 
-		les xarxes.
+		- DNS --> Permetrem el servei dns des de totes les màquines (inclós des de l'exterior) a les nostres màquines de la xarxa dmz.
+		- ICMP --> Permetrem icmp des de l'exterior només a la nostra intefície connectada a la xarxa troncal, per altra banda les màquines de la nostra xarxa
+		inerna podran fer ping a totes les les xarxes, inclós internet.
 
 		Aquest és l'script que s'ha configurat i que s'aplicarà per defecte quan encenem la màquina: 
 
@@ -1737,7 +1736,8 @@ Configuració:
 		COMMIT
 		-------------------------------------------------------------------------------------------------------------
 		
-		A la part superior podem veure les tres polítiques per defecte aplicades, aquestes fan referència a: 
+		A la part superior podem veure les tres polítiques per defecte aplicades, per poder entendre cadascuna de les instruccions
+		que explicarem s'han de entendre primer a que fa referència cadascuna: 
 
 		INPUT: La ip de destí és la del nostre tallafocs, per tant és un paquet dirigit al nostre router.
 		FORWARD: Cap de les ip de destí i origen pertanyen al tallafocs, per tant és un paquet de pas.
@@ -1783,11 +1783,40 @@ Configuració:
 			Comanda: -A OUTPUT -p tcp --sport 22 -d 10.10.2.0/28 -m state --state ESTABLISHED -j ACCEPT
 
 		DNS
+
 			#DNS exterior
-			En aquesta comanda
+			En aquestes comandes permetrem tots els paquets amb protocol udp, amb el port de destí 53 (dns), i que van 
+			dirigits a les ips de destí 10.10.1.3 i 10.10.1.4 (el dos servidors, dns). Per la segona farem el mateix 
+			però en aquest cas el port 53 i les màquines DNS seràn origen (és a dir les respostes dels servidors).
 			Comanda: -A FORWARD -p udp --dport 53 -d 10.10.1.3,10.10.1.4 -j ACCEPT
 			Comanda: -A FORWARD -p udp --sport 53 -s 10.10.1.3,10.10.1.4 -j ACCEPT
 
+			#DNS acces
+			En aquestes comandes farem exactament el mateix que el cas anterior però ara tindrem en compte la interfíce
+			de sortida i la d'entrada, ja que fan referència a les peticions de dns del propi router.
+			Comanda: -A OUTPUT -p udp -d 10.10.1.3,10.10.1.4 --dport 53 -o enp0s9 -j ACCEPT
+			Comanda: -A INPUT -p udp -s 10.10.1.3,10.10.1.4 --sport 53 -i enp0s9 -j ACCEPT
+			Comanda: -A OUTPUT -p tcp -d 10.10.1.3,10.10.1.4 --dport 53 -o enp0s9 -j ACCEPT
+			Comanda: -A INPUT -p tcp -d 10.10.1.3,10.10.1.4 --sport 53  -i enp0s9 -j ACCEPT
+
+		ICMP 
+
+			#ICMP
+			
+			Aquestes comandes permeten poder fer-li ping al router d'accés.
+			Les dos primeres són per permetre el ping des de l'exterior a la interfície de la troncal.
+			En canvi, les dos següents són per permetre fer-li ping a les interfícies propies del router accés.
+			
+			Comanda: -A INPUT -p icmp -d 192.168.1.125 -j ACCEPT
+			Comanda: -A OUTPUT -p icmp -s 192.168.1.125 -j ACCEPT
+			Comanda: -A INPUT -p icmp -d 10.10.1.1,10.10.2.1 -j ACCEPT
+			Comanda: -A OUTPUT -p icmp -s 10.10.1.1,10.10.2.1 -j ACCEPT
+
+			Aquestes comandes de tipus forward són les que ens permeten que des de totes les xarxes podem fer ping a la resta
+			en cas d'haver de passar pel router accés.
+
+			Comanda: -A FORWARD -p icmp -d 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
+			Comanda: -A FORWARD -p icmp -s 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
 
 
 
@@ -1816,6 +1845,8 @@ ACCES --> ok
 PROBLEMAS
 	- No nos podemos conectar por ssh al router servidores por interface backbone(desde admin)
 	- Falta en la reglas ICMP del router acces que se pueda hacer forward con la red 10.10.3.0/30
+	- No podemos resolver recursivas con el dns2
+	- Acceder por ssh al router desde admin
 --------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
 APUNTES PREVIOS
