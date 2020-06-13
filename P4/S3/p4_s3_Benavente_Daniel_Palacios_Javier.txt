@@ -1907,8 +1907,8 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 							604800 )	; Negative Cache TTL
 				;
 				@	IN	NS	dns2.public.edu.
-				dns1	IN	A	192.168.1.125
-				dns2	IN	A	192.168.1.125
+				dns1	IN	A	192.168.0.125
+				dns2	IN	A	192.168.0.125
 				ssh1	IN	CNAME	dns1.public.edu.
 				ssh2	IN	CNAME	dns2.public.edu.
 
@@ -2022,7 +2022,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 		;; ANSWER SECTION:
 		ssh2.public.edu.	604800	IN	CNAME	dns2.public.edu.
-		dns2.public.edu.	604800	IN	A	192.168.1.125
+		dns2.public.edu.	604800	IN	A	192.168.0.125
 
 		;; AUTHORITY SECTION:
 		public.edu.		604800	IN	NS	dns2.public.edu.
@@ -2121,7 +2121,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 	Es pot veure a la comunicació com responem la petició del client 106 de la xarxa troncal.
 		20:14:14.902548 IP 192.168.1.106.43800 > 10.10.1.3.53: 49504+ [1au] A? dns1.public.edu. (56)
-		20:14:14.902804 IP 10.10.1.3.53 > 192.168.1.106.43800: 49504*- 1/1/2 A 192.168.1.125 (123)
+		20:14:14.902804 IP 10.10.1.3.53 > 192.168.1.106.43800: 49504*- 1/1/2 A 192.168.0.125 (123)
 
 	Mateix cas per invertit en aquest cas del domini seax.edu i del servidor dns2
 		20:13:35.467111 IP 192.168.1.106.44027 > 10.10.1.4.53: 40445+ [1au] PTR? 3.1.10.10.in-addr.arpa. (63)
@@ -2257,7 +2257,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		-A INPUT -p tcp -d 10.10.1.3,10.10.1.4 --sport 53  -i enp0s9 -j ACCEPT
 
 		#ICMP
-		-A OUTPUT -p icmp -s 192.168.1.125 -j ACCEPT
+		-A OUTPUT -p icmp -s 192.168.0.125 -j ACCEPT
 		-A INPUT -p icmp -i enp0s3 -m state --state ESTABLISHED,RELATED -j ACCEPT
 		-A INPUT -p icmp -i enp0s8 -j ACCEPT
 		-A INPUT -p icmp -i enp0s9 -j ACCEPT
@@ -2345,7 +2345,7 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			Aquestes comandes permeten poder fer-li ping al router d'accés. En aquest cas permetem tots els pings de la xarxa interna
 			evitant qualsevol usuari extern, gràcies al filtre per interfíce. 
 			
-			Comanda: -A OUTPUT -p icmp -s 192.168.1.125 -j ACCEPT
+			Comanda: -A OUTPUT -p icmp -s 192.168.0.125 -j ACCEPT
 			Comanda: -A INPUT -p icmp -i enp0s3 -m state --state ESTABLISHED,RELATED -j ACCEPT
 			Comanda: -A INPUT -p icmp -i enp0s8 -j ACCEPT
 			Comanda: -A INPUT -p icmp -i enp0s9 -j ACCEPT
@@ -2550,15 +2550,44 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		Comanda: -A INPUT -p tcp --dport 22 -s 10.10.2.0/28 -m state --state NEW,ESTABLISHED -j ACCEPT
 		Comanda: -A OUTPUT -p tcp --sport 22 -d 10.10.2.0/28 -m state --state ESTABLISHED -j ACCEPT
 
-		Per altra banda també acceptem les connexions per ssh al servidor dhcp de la xarxa servidors i les seves respostes.
-		Comanda: -A FORWARD -p tcp --dport 22 -d 10.10.5.2 -m state --state NEW,ESTABLISHED -j ACCEPT
-		Comanda: -A FORWARD -p tcp --sport 22 -s 10.10.5.2 -m state --state ESTABLISHED -j ACCEPT
+		Per altra banda també acceptem les connexions per ssh al servidor dhcp (sempre i quan les peticions vinguin de la xarxa 10.10.2.0/28) de la xarxa servidors i les seves respostes.
+		Comanda: -A FORWARD -p tcp -s 10.10.2.0/28 -d 10.10.5.2 -m state --state NEW,ESTABLISHED -j ACCEPT
+		Comanda: -A FORWARD -p tcp -d 10.10.2.0/28 -s 10.10.5.2 -m state --state ESTABLISHED -j ACCEPT
 		
 		#SSH des de monitor de xarxa
 		En aquest apartat, permetem la connexió per ssh al nostre router servidors, per part del monitor de xarxa que es troba a
 		la servidors.
 		Comanda: -A INPUT -p tcp --dport 22 -s 10.10.5.11  -j ACCEPT
 		Comanda: -A OUTPUT -p tcp --sport 22 -d 10.10.5.11 -j ACCEPT
+
+
+	PROVES DE VALIDACIÓ 
+	
+	- Respecte a les proves d'aquesta fase, cal dir que s'han repetit les mateixes fetes per cadascúna de les fases anteriors, 
+	  verificant així el funcionament de les regles escollides.
+
+	- També s'ha fet una prova adicional amb l'objectiu d'engañar a la xarxa creant un usuari a la xarxa troncal però assignat-li
+	la seva gateway de manera manual, en comptes de col·locar-la per defecte, l'hem assignat la ip del nostre router access (192.168.0.125)
+
+	Amb aquesta configuració hem provat d'atacar a la nostra xarxa per exemple intentant fer ping a màquines a partir de les seves ip internes,
+	intentant fer una connexió per ssh al router d'accés.
+
+	PROVA PING
+	23:33:09.360628 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.0.35 > 10.10.1.2: ICMP echo request, id 441, seq 1, length 64
+	23:33:10.375113 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.0.35 > 10.10.1.2: ICMP echo request, id 441, seq 2, length 64
+	23:33:12.051655 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.0.35 > 10.10.2.2: ICMP echo request, id 442, seq 1, length 64
+	23:33:15.614118 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.0.35 > 10.10.5.2: ICMP echo request, id 443, seq 1, length 64
+	23:33:22.736318 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.0.35 > 10.10.1.1: ICMP echo request, id 444, seq 1, length 64
+
+	PORVA SSH
+	23:34:21.724834 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 74: 192.168.0.35.33930 > 10.10.1.2.22: Flags [S], seq 1128927535, win 64240, options [mss 1460,sackOK,TS val 3463903409 ecr 0,nop,wscale 7], length 0
+	23:34:22.727404 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 74: 192.168.0.35.33930 > 10.10.1.2.22: Flags [S], seq 1128927535, win 64240, options [mss 1460,sackOK,TS val 3463904412 ecr 0,nop,wscale 7], length 0
+	23:34:26.054463 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 74: 192.168.0.35.46684 > 10.10.2.2.22: Flags [S], seq 2186404272, win 64240, options [mss 1460,sackOK,TS val 3386508241 ecr 0,nop,wscale 7], length 0
+	23:34:28.326671 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 74: 192.168.0.35.36422 > 10.10.5.2.22: Flags [S], seq 4000409744, win 64240, options [mss 1460,sackOK,TS val 1614573676 ecr 0,nop,wscale 7], length 0
+	23:34:34.788198 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 74: 192.168.0.35.35162 > 10.10.1.1.22: Flags [S], seq 845115870, win 64240, options [mss 1460,sackOK,TS val 3168924777 ecr 0,nop,wscale 7], length 0
+	23:34:35.815566 08:00:27:10:ea:bb > 08:00:27:00:00:01, ethertype IPv4 (0x0800), length 74: 192.168.0.35.35162 > 10.10.1.1.22: Flags [S], seq 845115870, win 64240, options [mss 1460,sackOK,TS val 3168925804 ecr 0,nop,wscale 7], length 0
+
+
 
 ####### 7. FASE 7 SCRIPT #######
 
