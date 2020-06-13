@@ -1670,6 +1670,9 @@ Configuració:
 	En total tindrem 3 tallafocs, un a cada router:
 
 
+	MONITOR DE XARXA: 
+
+
 	POLÍTICA PER DEFECTE: "DROP" tant per FORWARD, INPUT i OUTPUT
 	- Per aconseguir la màxima seguretat al les nostres xarxes, s'ha decidit fer un tallafocs amb les politiques DROP per defecte, el que 
 	no deixarà pasar res a través del nostre router excepte les regles que apliquem nosaltres. Així asse
@@ -1680,7 +1683,7 @@ Configuració:
 		troba connectat. Per aquesta raó tindrem en compte els serveis: 
 		
 		- SSH --> Permetrem el servei ssh del exterior a les nostres màquines de la xarxa dmz, per altra banda, permetrem el servei ssh des de la xarxa admin 
-		cap a totes les màquines de la nostra xarxa (dns, dhcp, routers).  
+		cap a totes les màquines de la nostra xarxa (dns, dhcp, routers) i del monitor de xarxa tant de admin com de dmz.  
 		- DNS --> Permetrem el servei dns des de totes les màquines (inclós des de l'exterior) a les nostres màquines de la xarxa dmz.
 		- ICMP --> Permetrem icmp des de l'exterior només a la nostra intefície connectada a la xarxa troncal, per altra banda les màquines de la nostra xarxa
 		inerna podran fer ping a totes les les xarxes, inclós internet.
@@ -1693,7 +1696,7 @@ Configuració:
 		:INPUT DROP [0:0]
 		:FORWARD DROP [0:0]
 		:OUTPUT DROP [0:0]
-		
+
 		#ssh a DMZ
 		-A FORWARD -p tcp --dport 22 -d 10.10.1.3 -m state --state NEW,ESTABLISHED -j ACCEPT
 		-A FORWARD -p tcp --sport 22 -s 10.10.1.3 -m state --state ESTABLISHED -j ACCEPT
@@ -1710,6 +1713,13 @@ Configuració:
 		-A FORWARD -p tcp --dport 22 -d 10.10.5.2 -m state --state NEW,ESTABLISHED -j ACCEPT
 		-A FORWARD -p tcp --sport 22 -s 10.10.5.2 -m state --state ESTABLISHED -j ACCEPT
 
+		#ssh monitor de xarxa
+		-A INPUT -p tcp --dport 22 -s 10.10.1.11 -m state --state NEW,ESTABLISHED -j ACCEPT
+		-A OUTPUT -p tcp --sport 22 -d 10.10.1.11 -m state --state ESTABLISHED -j ACCEPT
+		#-A FORWARD -p tcp --dport 22 -d 10.10.2.2,10.10.5.1,10.10.3.2,10.10.5.2 -i enp0s9 -j ACCEPT
+		#-A FORWARD -p tcp --sport 22 -s 10.10.2.2,10.10.5.1,10.10.3.2,10.10.5.2 -o enp0s9 -j ACCEPT
+		-A FORWARD -s 10.10.1.11 -j ACCEPT
+
 		#Conexión ssh xarxa admin 
 		-A INPUT -p tcp --dport 22 -s 10.10.2.0/28 -m state --state NEW,ESTABLISHED -j ACCEPT
 		-A OUTPUT -p tcp --sport 22 -d 10.10.2.0/28 -m state --state ESTABLISHED -j ACCEPT
@@ -1717,6 +1727,11 @@ Configuració:
 		#DNS exterior
 		-A FORWARD -p udp --dport 53 -d 10.10.1.3,10.10.1.4 -j ACCEPT
 		-A FORWARD -p udp --sport 53 -s 10.10.1.3,10.10.1.4 -j ACCEPT
+
+		-A FORWARD -p udp --dport 53 -s 10.10.1.3 -j ACCEPT
+		-A FORWARD -p udp --dport 53 -s 10.10.1.4 -j ACCEPT
+		-A FORWARD -p udp --sport 53 -d 10.10.1.3 -j ACCEPT
+		-A FORWARD -p udp --sport 53 -d 10.10.1.4 -j ACCEPT
 
 		#DNS acces
 		-A OUTPUT -p udp -d 10.10.1.3,10.10.1.4 --dport 53 -o enp0s9 -j ACCEPT
@@ -1727,11 +1742,17 @@ Configuració:
 		#ICMP
 		-A INPUT -p icmp -d 192.168.1.125 -j ACCEPT
 		-A OUTPUT -p icmp -s 192.168.1.125 -j ACCEPT
+		#-A INPUT -p icmp -s 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
 		-A INPUT -p icmp -d 10.10.1.1,10.10.2.1 -j ACCEPT
+		#-A OUTPUT -p icmp -d 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
 		-A OUTPUT -p icmp -s 10.10.1.1,10.10.2.1 -j ACCEPT
-
 		-A FORWARD -p icmp -d 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
 		-A FORWARD -p icmp -s 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
+
+		#internet
+		#-A FORWARD -p tcp -m multiport --dports 443,80,8080  -j ACCEPT
+		#-A FORWARD -p tcp -d 192.168.1.125 -m multiport --sports 443,80,8080 -j ACCEPT
+
 
 		COMMIT
 		-------------------------------------------------------------------------------------------------------------
@@ -1776,6 +1797,11 @@ Configuració:
 			Comanda: -A FORWARD -p tcp --dport 22 -d 10.10.5.2 -m state --state NEW,ESTABLISHED -j ACCEPT
 			Comanda: -A FORWARD -p tcp --sport 22 -s 10.10.5.2 -m state --state ESTABLISHED -j ACCEPT
 
+			#ssh monitor de xarxa
+			En aquestes comandes permetrem les connexions cap al router que tinguin com a destí el port 22, per part de la màquina
+			monitor de la xarxa dmz, permetent la connexió per ssh al router, y les seves respostes al monitor. 
+			Comanda: -A INPUT -p tcp --dport 22 -s 10.10.1.11 -m state --state NEW,ESTABLISHED -j ACCEPT
+			Comanda: -A OUTPUT -p tcp --sport 22 -d 10.10.1.11 -m state --state ESTABLISHED -j ACCEPT
 
 			#Conexión ssh xarxa admin 
 			Finalment, per al nostre router d'accès permetrem la connexió ssh des de qualsevol client de la xarxa 10.10.2.0/28
@@ -1818,6 +1844,94 @@ Configuració:
 			Comanda: -A FORWARD -p icmp -d 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
 			Comanda: -A FORWARD -p icmp -s 10.10.1.0/28,10.10.2.0/28,10.10.4.0/28,10.10.5.0/28 -j ACCEPT
 
+	#### 6.2. ROUTER USUARIS ####
+
+
+
+
+	#### 6.3. ROUTER SERVIDORS ####
+		En aquest router només controlarem la xarxa interna, però hem de valorar els missatges del servidor dhcp, perqué pugui funcionar
+		per totes les xarxes. Els serveis que tindrem en compte són: 
+	
+		- SSH --> Permetrem el servei ssh des de la xarxa admin i des de el montior de xarxa de la xarxa servidors.
+		- DNS --> Permetrem el servei dns des de totes les màquines a les nostres màquines de la xarxa DMZ (router inclòs).
+		- ICMP --> Permetrem icmp a totes les màquines de la nostra xarxa interna, també podran fer ping a internet.
+
+		Aquest és l'script que s'ha configurat i que s'aplicarà per defecte quan encenem la màquina: 
+		---------------------------------------------------------------------------------------------------------
+		# Generated by xtables-save v1.8.2 on Sat Jun 13 11:56:34 2020
+		*filter
+		:INPUT DROP [0:0]
+		:FORWARD DROP [0:0]
+		:OUTPUT DROP [0:0]
+
+		#DNS
+		-A FORWARD -d 10.10.1.3,10.10.1.4 -p udp --dport 53 -j ACCEPT
+		-A FORWARD -s 10.10.1.3,10.10.1.4 -p udp --sport 53 -j ACCEPT
+		-A OUTPUT -p udp -d 10.10.1.3,10.10.1.4 --dport 53 -o enp0s3 -j ACCEPT
+		-A INPUT -p udp -s 10.10.1.3,10.10.1.4 --sport 53 -i enp0s3 -j ACCEPT
+
+
+		#ICMP
+		-A FORWARD -d 10.10.1.0/28,10.10.2.0/28,10.10.3.0/30,10.10.4.0/28,10.10.5.0/28 -p icmp -j ACCEPT
+		-A FORWARD -s 10.10.1.0/28,10.10.2.0/28,10.10.3.0/30,10.10.4.0/28,10.10.5.0/28 -p icmp -j ACCEPT
+		-A INPUT -d 10.10.2.2,10.10.3.2,10.10.5.1 -p icmp -j ACCEPT
+		-A OUTPUT -s 10.10.2.2,10.10.3.2,10.10.5.1 -p icmp -j ACCEPT
+
+		#DHCP
+		-A INPUT -p udp --dport 67 -j ACCEPT
+		-A OUTPUT -p udp --sport 67 -j ACCEPT
+		-A FORWARD -p udp -s 0.0.0.0 -d 255.255.255.255 --dport 67 -j ACCEPT
+		-A FORWARD -p udp -s 10.10.5.2 --sport 67 -d 0.0.0.0/0 -j ACCEPT
+
+		#SSH des de admin
+		-A INPUT -p tcp --dport 22 -s 10.10.2.0/28 -m state --state NEW,ESTABLISHED -j ACCEPT
+		-A OUTPUT -p tcp --sport 22 -d 10.10.2.0/28 -m state --state ESTABLISHED -j ACCEPT
+		-A FORWARD -p tcp --dport 22 -d 10.10.5.2 -m state --state NEW,ESTABLISHED -j ACCEPT
+		-A FORWARD -p tcp --sport 22 -s 10.10.5.2 -m state --state ESTABLISHED -j ACCEPT
+		#SSH des de monitor de xarxa
+		-A INPUT -p tcp --dport 22 -s 10.10.5.11  -j ACCEPT
+		-A OUTPUT -p tcp --sport 22 -d 10.10.5.11 -j ACCEPT
+
+		COMMIT
+		# Completed on Sat Jun 13 11:56:34 2020
+		---------------------------------------------------------------------------------------------------------
+
+		#DNS
+		En aquestes comandes permetrem tots els paquets amb protocol udp, amb el port de destí 53 (dns), i que van 
+		dirigits a les ips de destí 10.10.1.3 i 10.10.1.4 (el dos servidors, dns). Per la segona farem el mateix 
+		però en aquest cas el port 53 i les màquines DNS seràn origen (és a dir les respostes dels servidors).
+		Comanda: -A FORWARD -d 10.10.1.3,10.10.1.4 -p udp --dport 53 -j ACCEPT
+		Comanda: -A FORWARD -s 10.10.1.3,10.10.1.4 -p udp --sport 53 -j ACCEPT
+
+		En aquestes comandes farem exactament el mateix que el cas anterior però ara tindrem en compte la interfíce
+		de sortida i la d'entrada, ja que fan referència a les peticions de dns del propi router.
+		Comanda:-A OUTPUT -p udp -d 10.10.1.3,10.10.1.4 --dport 53 -o enp0s3 -j ACCEPT
+		Comanda:-A INPUT -p udp -s 10.10.1.3,10.10.1.4 --sport 53 -i enp0s3 -j ACCEPT
+
+
+		#ICMP
+		Comanda: -A FORWARD -d 10.10.1.0/28,10.10.2.0/28,10.10.3.0/30,10.10.4.0/28,10.10.5.0/28 -p icmp -j ACCEPT
+		Comanda: -A FORWARD -s 10.10.1.0/28,10.10.2.0/28,10.10.3.0/30,10.10.4.0/28,10.10.5.0/28 -p icmp -j ACCEPT
+		Comanda: -A INPUT -d 10.10.2.2,10.10.3.2,10.10.5.1 -p icmp -j ACCEPT
+		Comanda: -A OUTPUT -s 10.10.2.2,10.10.3.2,10.10.5.1 -p icmp -j ACCEPT
+
+		#DHCP
+		-A INPUT -p udp --dport 67 -j ACCEPT
+		-A OUTPUT -p udp --sport 67 -j ACCEPT
+		-A FORWARD -p udp -s 0.0.0.0 -d 255.255.255.255 --dport 67 -j ACCEPT
+		-A FORWARD -p udp -s 10.10.5.2 --sport 67 -d 0.0.0.0/0 -j ACCEPT
+
+		#SSH des de admin
+		-A INPUT -p tcp --dport 22 -s 10.10.2.0/28 -m state --state NEW,ESTABLISHED -j ACCEPT
+		-A OUTPUT -p tcp --sport 22 -d 10.10.2.0/28 -m state --state ESTABLISHED -j ACCEPT
+		-A FORWARD -p tcp --dport 22 -d 10.10.5.2 -m state --state NEW,ESTABLISHED -j ACCEPT
+		-A FORWARD -p tcp --sport 22 -s 10.10.5.2 -m state --state ESTABLISHED -j ACCEPT
+		#SSH des de monitor de xarxa
+		-A INPUT -p tcp --dport 22 -s 10.10.5.11  -j ACCEPT
+		-A OUTPUT -p tcp --sport 22 -d 10.10.5.11 -j ACCEPT
+
+
 
 
 ------------------ APUNTES FASE 6 ----------------------------------
@@ -1844,9 +1958,7 @@ ACCES --> ok
 
 PROBLEMAS
 	- No nos podemos conectar por ssh al router servidores por interface backbone(desde admin)
-	- Falta en la reglas ICMP del router acces que se pueda hacer forward con la red 10.10.3.0/30
 	- No podemos resolver recursivas con el dns2
-	- Acceder por ssh al router desde admin
 --------------------------------------------------- BORRADOR COSICAS ---------------------------------------------------
 
 APUNTES PREVIOS
