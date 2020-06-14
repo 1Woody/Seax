@@ -1,0 +1,27 @@
+;
+; BIND data file for local loopback interface
+;
+$TTL	604800
+@	IN	SOA	seax.edu. root.seax.edu. (
+			      5		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+@	IN	NS	dns.seax.edu.
+3.1	IN	PTR	dns.seax.edu.
+1.1	IN	PTR	raccessDmz.seax.edu.
+2.1	IN	PTR	rusuarisDmz.seax.edu.
+4.1	IN	PTR	dns2.seax.edu.
+1.2	IN	PTR	raccessAdmin.seax.edu.
+2.2	IN	PTR	rsAdmin.seax.edu.
+2.3	IN	PTR	rsBackbone.seax.edu.
+1.4	IN	PTR	ruUsuaris.seax.edu.
+2.5	IN	PTR	dhcpServers.seax.edu.
+1.5	IN	PTR	rsServers.seax.edu.
+1.6	IN	PTR	raccessVpn.seax.edu.
+1.3	IN	PTR	ruBackbone.seax.edu.
+1.4	IN	PTR	ruUsuaris.seax.edu.
+;troncal
+;monitores

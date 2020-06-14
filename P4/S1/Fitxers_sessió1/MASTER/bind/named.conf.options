@@ -1,0 +1,41 @@
+
+acl "trusted" {
+	10.10.1.0/28;
+	10.10.2.0/28;
+	10.10.3.0/30;
+	10.10.4.0/28;
+	10.10.5.0/28;
+	10.10.6.0/28;
+};
+
+options {
+	directory "/var/cache/bind";
+
+	//Activem la recursivitat
+	recursion yes;
+	//recursivitat només per xarxes de confiança
+	allow-recursion { trusted; };
+	//allow-query { any; };
+	// If there is a firewall between you and nameservers you want
+	// to talk to, you may need to fix the firewall to allow multiple
+	// ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+	// If your ISP provided one or more IP addresses for stable 
+	// nameservers, you probably want to use them as forwarders.  
+	// Uncomment the following block, and insert the addresses replacing 
+	// the all-0's placeholder.
+
+	//forwarders {
+	// 	0.0.0.0;
+	//	8.8.8.8;
+	//	8.8.4.4;
+	//};
+
+	//========================================================================
+	// If BIND logs error messages about the root key being expired,
+	// you will need to update your keys.  See https://www.isc.org/bind-keys
+	//========================================================================
+	dnssec-validation auto;
+
+	listen-on-v6 { any; };
+};

@@ -1,0 +1,51 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+
+zone "seax.edu" IN {
+	type slave;
+	file "/var/cache/bind/db.seax.edu";
+	masters {10.10.1.3;};
+};
+
+//FALTA la cerca inversa
+zone "1.10.10.in-addr.arpa" IN {
+	type slave;
+	file "/var/cache/bind/db.10.10.1";
+	masters {10.10.1.3;};
+};
+
+zone "2.10.10.in-addr.arpa" IN {
+	type slave;
+	file "/var/cache/bind/db.10.10.2";
+	masters {10.10.1.3;};
+};
+
+zone "3.10.10.in-addr.arpa" IN {
+	type slave;
+	file "/var/cache/bind/db.10.10.3";
+	masters {10.10.1.3;};
+};
+
+zone "4.10.10.in-addr.arpa" IN {
+	type slave;
+	file "/var/cache/bind/db.10.10.4";
+	masters {10.10.1.3;};
+};
+
+zone "5.10.10.in-addr.arpa" IN {
+	type slave;
+	file "/var/cache/bind/db.10.10.5";
+	masters {10.10.1.3;};
+};
+
+zone "6.10.10.in-addr.arpa" IN {
+	type slave;
+	file "/var/cache/bind/db.10.10.6";
+	masters {10.10.1.3;};
+};

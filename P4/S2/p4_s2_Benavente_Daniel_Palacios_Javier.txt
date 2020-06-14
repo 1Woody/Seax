@@ -34,8 +34,6 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 
 	NOTA el procés 3 i 4 es fan constantment per verificar la comunicació.
 
-	-- falta ampliar --
-
 ####### 2. MODIFICAIONS PREVIES VIRTUALBOX #######
 
 	Primer creem una maquina virtual anomenada Servidor_DHCP amb el sistema operatiu debian 10 (sense interfície gràfica) i farem el següent:
@@ -254,10 +252,6 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 		# ifup enp0s3 --> Per tornar a activar l'interfície, aquí el nostre ordinador executarà el procés per aconseguir una IP.
 
 
-	#### DEMANAR UN LEASE TIME DETERMINAT ####
-	-- falta --  dhcp-lease-list
-
-
 ####### 6. MILLORES DE SEGURETAT #######
 
 	LEASE-TIME
@@ -274,12 +268,6 @@ Informe pràctica 4 - Benavente Daniel - Palacios Javier
 			- Màquines connectades per WIFI -->  En el cas del wifi, s'ha de tenir en compte que es rebràn clients de manera més dinàmica
 			i que poden abandonar la xarxa en un breu periòde de temps. Per tant, s'hauràn de valorar lease-times més baixos per aprofitat
 			el pool d'ips del que disposem. Temps per sota de 24h són els més freqüents.
-
-		EL NOSTRE CAS
-			-- falta ampliar --
-
-	CREACIÓ DE CLASES DE CLIENTS
-	-- falta ampliar --
 
 
 ####### 7. PROVES DE VALIDACIÓ #######
